@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="DLLInterface.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="792" topLine="3" />
+	</File>
+	<File name="DLLWrapper.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="568" topLine="0" />
+	</File>
+</CodeBlocks_layout_file>
