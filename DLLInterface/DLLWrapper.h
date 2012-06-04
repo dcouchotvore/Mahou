@@ -33,6 +33,7 @@ class DLLWrapper {
         int GetParameterCount();
         int GetParameterData(char *name, int *type, int *is_read_only);
         int SetParameter(const char *name, const char *value);
+        int SetParameterAlways(const char *name, const char *value);
         int GetParameter(const char *name, char *value);                                           // If called with value=0 return size of required buffer.
 
         /* Dardware access methods */
@@ -58,6 +59,7 @@ class DLLWrapper {
         int _cdecl (*f_getParameterCount)();
         int _cdecl (*f_getParameterData)(char *name, int *type, int *is_read_only);
         int _cdecl (*f_setParameter)(const char *name, const char *value);
+        int _cdecl (*f_setParameterAlways)(const char *name, const char *value);
         int _cdecl (*f_getParameter)(const char *name, char *value);                                           // If called with value=0 return size of required buffer.
         int _cdecl (*f_goTo)(double pos);
         double _cdecl (*f_poll)();

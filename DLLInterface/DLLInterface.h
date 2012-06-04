@@ -31,8 +31,11 @@ class DLLInterface {
     public:
         DLLInterface();
         ~DLLInterface();
+        void Initialize(HINSTANCE hinst);
         void AddLibraryPath(const char *const path);
-        void LoadLibrary(const char *const libname);
+        void LoadLibraries();
+        int GetLibraryCount() const;
+        int GetLibraryName(char *buffer) const;
 
         int GetDeviceName(const char *const libname, char *value);
 
@@ -55,8 +58,11 @@ class DLLInterface {
         int RecvMsg(const char *const libname, char *msg, const unsigned int max_len);
     private:
         DLLWrapper &library(const char *const libname) const;
-        mutable std::map<std::string, DLLWrapper*> m_library_list;
         std::vector<std::string> m_library_paths;
+        mutable std::map<std::string, DLLWrapper*> m_library_list;
+        mutable std::map<std::string, DLLWrapper*>::iterator m_iterator;
+        std::string m_root_path;
+        HANDLE m_instance_handle;
 };
 
 

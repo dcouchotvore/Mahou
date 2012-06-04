@@ -23,8 +23,17 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
         f_getParameterCount(0), f_getParameterData(0), f_setParameter(0), f_getParameter(0), f_goTo(0), f_poll(0),
         f_setData(0), f_getData(0), f_ioCtrl(), f_sendMsg(), f_recvMsg(0) {
     m_module_handle = ::LoadLibrary(file_path);
-    if ( !m_module_handle )
-        throw ExceptionLoadLibrary(file_path);
+    if ( !m_module_handle ){
+        LPVOID lpMsgBuf;
+        int err = ::GetLastError();
+        ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_IGNORE_INSERTS|FORMAT_MESSAGE_FROM_SYSTEM, NULL, err,
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL);
+        std::string msg(file_path);
+        msg += ": ";
+        msg += (LPCSTR)lpMsgBuf;
+        LocalFree(lpMsgBuf);
+        throw ExceptionLoadLibrary(msg.c_str());
+        }
     load_proc_address("Initialize", reinterpret_cast<void **>(&f_initialize));
     load_proc_address("Terminate", reinterpret_cast<void **>(&f_terminate));
     load_proc_address("GetDeviceName", reinterpret_cast<void **>(&f_getDeviceName));
@@ -32,6 +41,7 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
     load_proc_address("GetParameterCount", reinterpret_cast<void **>(&f_getParameterCount));
     load_proc_address("GetParameterData", reinterpret_cast<void **>(&f_getParameterData));
     load_proc_address("SetParameter", reinterpret_cast<void **>(&f_setParameter));
+    load_proc_address("SetParameterAlways", reinterpret_cast<void **>(&f_setParameterAlways));
     load_proc_address("GetParameter", reinterpret_cast<void **>(&f_getParameter));
     load_proc_address("GoTo", reinterpret_cast<void **>(&f_goTo));
     load_proc_address("Poll", reinterpret_cast<void **>(&f_poll));
@@ -39,7 +49,7 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
     load_proc_address("GetData", reinterpret_cast<void **>(&f_getData));
     load_proc_address("IoCtrl", reinterpret_cast<void **>(&f_ioCtrl));
     load_proc_address("SendMsg", reinterpret_cast<void **>(&f_sendMsg));
-    load_proc_address("RecvMst", reinterpret_cast<void **>(&f_recvMsg));
+    load_proc_address("RecvMsg", reinterpret_cast<void **>(&f_recvMsg));
 }
 
 DLLWrapper::~DLLWrapper() {
@@ -69,6 +79,10 @@ int DLLWrapper::GetParameterData(char *name, int *type, int *is_read_only) {
 
 int DLLWrapper::SetParameter(const char *name, const char *value) {
     return (*f_setParameter)(name, value);
+}
+
+int DLLWrapper::SetParameterAlways(const char *name, const char *value) {
+    return (*f_setParameterAlways)(name, value);
 }
 
 int DLLWrapper::GetParameter(const char *name, char *value) {

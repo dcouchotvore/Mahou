@@ -17,7 +17,9 @@
 #ifndef __DBINTERFACE_H__
 #define __DBINTERFACE_H__
 
-#include "NamedParameterList.h"
+#include "DLLWrapper.h"
+#include <string>
+#include <vector>
 
 namespace Mahou {
 
@@ -28,10 +30,10 @@ class DBInterface {
         ~DBInterface();
         void SaveAll();
         void LoadAll();
-        void RegisterParameterList(const std::string &name, NamedParameterList &parameterList);
+        void RegisterHardwareDLL(DLLWrapper &dll);
     protected:
         static std::string m_file_path;
-        std::map<std::string, NamedParameterList*> m_parameter_lists;
+        std::vector<DLLWrapper *> m_dlls;
     private:
         DBInterface() { }
         static DBInterface *m_instance;

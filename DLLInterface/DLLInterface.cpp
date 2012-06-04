@@ -19,17 +19,32 @@
 
 #include "DLLInterface.h"
 #include "Hardware/Exceptions.h"
+#include <strings.h>
+#include "DBInterface.h"
 
 namespace Mahou {
 
-DLLInterface::DLLInterface() {
+DLLInterface::DLLInterface() : m_instance_handle(0) {
     m_library_paths.push_back(std::string(""));
+    DBInterface::Instance().SetFilePath("experiment.cfg");
 }
 
 DLLInterface::~DLLInterface() {
+    DBInterface::Instance().SaveAll();
     std::map<std::string, DLLWrapper*>::iterator ii;
-    for ( ii=m_library_list.begin(); ii!=m_library_list.end(); ii++ )
+    for ( ii=m_library_list.begin(); ii!=m_library_list.end(); ii++ ){
+        ii->second->Terminate();
         delete ii->second;
+        }
+}
+
+void DLLInterface::Initialize(HINSTANCE hinst) {
+    m_instance_handle = hinst;
+    char fbuf[MAX_PATH];
+    ::GetModuleFileName(hinst, fbuf, sizeof(fbuf));
+    char *pos = strrchr(fbuf, '\\');
+    if ( pos ) pos[1]=0;
+    m_root_path = fbuf;
 }
 
 void DLLInterface::AddLibraryPath(const char *const path) {
@@ -45,9 +60,41 @@ void DLLInterface::AddLibraryPath(const char *const path) {
         m_library_paths.push_back(std::string(path));
 }
 
-void DLLInterface::LoadLibrary(const char *const libname) {
+void DLLInterface::LoadLibraries() {
     std::vector<std::string>::const_iterator ii;
     std::string path;
+    for ( ii=m_library_paths.begin(); ii!=m_library_paths.end(); ii++ ){
+        path = m_root_path+(*ii);
+        WIN32_FIND_DATA fd;
+        path += "*.dll";
+        HANDLE handle = ::FindFirstFile(path.c_str(), &fd);
+        if ( handle==INVALID_HANDLE_VALUE )
+            continue;
+        do {
+            if ( stricmp(fd.cFileName, "DLLInterface.dll")!=0 ){
+                std::string dllpath = m_root_path+(*ii)+fd.cFileName;
+                DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
+                wrapper->Initialize();
+                char dname[100];
+                wrapper->GetDeviceName(dname);
+                m_library_list[dname] = wrapper;
+                DBInterface::Instance().RegisterHardwareDLL(*wrapper);
+                }
+            } while ( ::FindNextFile(handle, &fd) );
+        }
+    DBInterface::Instance().LoadAll();
+}
+
+int DLLInterface::GetLibraryCount() const {
+    m_iterator = m_library_list.begin();
+    return m_library_list.size();
+}
+
+int DLLInterface::GetLibraryName(char *buffer) const {
+    if ( m_iterator==m_library_list.end() )
+        return 0;
+    strcpy(buffer, m_iterator++->first.c_str());
+    return 1;
 }
 
 int DLLInterface::GetDeviceName(const char *const libname, char *value) {

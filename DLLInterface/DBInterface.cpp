@@ -15,6 +15,7 @@
 ************************************************************************/
 
 #include "DBInterface.h"
+#include "../Hardware/Exceptions.h"
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
@@ -35,77 +36,46 @@ DBInterface &DBInterface::Instance() {
 }
 
 DBInterface::~DBInterface() {
-    m_parameter_lists.clear();
+    m_dlls.clear();
 }
 
-void DBInterface::RegisterParameterList(const std::string &name, NamedParameterList &parameterList) {
-    m_parameter_lists[name] = &parameterList;
+void DBInterface::SetFilePath(const char * const filePath) {
+    m_file_path = filePath;
+}
+
+void DBInterface::RegisterHardwareDLL(DLLWrapper &dll) {
+    m_dlls.push_back(&dll);
 }
 
 void DBInterface::SaveAll() {
-    std::map<std::string, NamedParameterList*>::iterator ii;
-    for ( ii = m_parameter_lists.begin(); ii!=m_parameter_lists.end(); ii++ ){
-        const char *sectionname = ii->first.c_str();
-        const std::vector<ParameterGeneric *> &parms = ii->second->getParameters();
-        std::vector<ParameterGeneric *>::const_iterator jj;
-        for ( jj = parms.begin(); jj!=parms.end(); jj++ ) {
-            const char *key = (*jj)->Name();
-            const int MAX_BUF = 1024;
-            char value[MAX_BUF];
-            ParameterGeneric *parm = (*jj);
-            if ( dynamic_cast<Parameter<int>*>(parm) ){
-                long val = (int)*(dynamic_cast<Parameter<int>*>(parm));
-                sprintf(value, "%.*ld", MAX_BUF-1, val);
-                }
-            else if ( dynamic_cast<Parameter<float>*>(parm) ){
-                float val = static_cast<double>(*(dynamic_cast<Parameter<float>*>(parm)));
-                sprintf(value, "%.*G", MAX_BUF-1, val);
-                }
-            else if ( dynamic_cast<Parameter<double>*>(parm) ){
-                double val = *(dynamic_cast<Parameter<double>*>(parm));
-                sprintf(value, "%.*G", MAX_BUF-1, val);
-                }
-            else if ( dynamic_cast<Parameter<std::string>*>(parm) ){
-                std::string val = (*(dynamic_cast<Parameter<std::string>*>(parm)));
-                strncpy(value, val.c_str(), MAX_BUF-1);
-                }
-            else throw ExceptionSystem("Unknown parameter type in DBInterface.");
-            ::WritePrivateProfileString(sectionname, key, value, m_file_path.c_str());
+    std::vector<DLLWrapper*>::iterator ii;
+    for ( ii = m_dlls.begin(); ii!=m_dlls.end(); ii++ ){
+        char section_name[100];
+        (*ii)->GetDeviceName(section_name);
+        int pcount = (*ii)->GetParameterCount();
+        for ( int jj=0; jj<pcount; jj++ ){
+            char parameter_name[100];
+            char parameter_data[100];
+            (*ii)->GetParameterData(parameter_name, 0, 0);
+            (*ii)->GetParameter(parameter_name, parameter_data);
+            ::WritePrivateProfileString(section_name, parameter_name, parameter_data, m_file_path.c_str());
             }
         }
 }
 
 void DBInterface::LoadAll() {
-    std::map<std::string, NamedParameterList*>::iterator ii;
-    for ( ii = m_parameter_lists.begin(); ii!=m_parameter_lists.end(); ii++ ){
-        const char *sectionname = ii->first.c_str();
-        const std::vector<ParameterGeneric *> &parms = ii->second->getParameters();
-        std::vector<ParameterGeneric *>::const_iterator jj;
-        for ( jj = parms.begin(); jj!=parms.end(); jj++ ) {
-            const char *key = (*jj)->Name();
-            const int MAX_BUF = 1024;
-            char value[MAX_BUF];
-            ::GetPrivateProfileString(sectionname, key, "", value, MAX_BUF-1, m_file_path.c_str());        //@@@ Should get default from object.
-            ParameterGeneric *parm = (*jj);
-            if ( !parm->isReadOnly() ){
-                if ( dynamic_cast<Parameter<int>*>(parm) ){
-                    Parameter<int> &param = *(dynamic_cast<Parameter<int>*>(parm));
-                    param = static_cast<int>(atol(value));
-                    }
-                else if ( dynamic_cast<Parameter<float>*>(parm) ){
-                    Parameter<float> &param = *(dynamic_cast<Parameter<float>*>(parm));
-                    param = atof(value);
-                    }
-                else if ( dynamic_cast<Parameter<double>*>(parm) ){
-                    Parameter<double> &param = *(dynamic_cast<Parameter<double>*>(parm));
-                    param = atof(value);
-                    }
-                else if ( dynamic_cast<Parameter<std::string>*>(parm) ){
-                    Parameter<std::string> &param = *(dynamic_cast<Parameter<std::string>*>(parm));
-                    param = std::string(value);
-                    }
-                else throw ExceptionSystem("Unknown parameter type in DBInterface.");
-                }
+    std::vector<DLLWrapper*>::iterator ii;
+    for ( ii = m_dlls.begin(); ii!=m_dlls.end(); ii++ ){
+        char section_name[100];
+        (*ii)->GetDeviceName(section_name);
+        int pcount = (*ii)->GetParameterCount();
+        for ( int jj=0; jj<pcount; jj++ ) {
+            char parameter_name[100];
+            char parameter_data[100];
+            (*ii)->GetParameterData(parameter_name, 0, 0);
+            (*ii)->GetParameter(parameter_name, parameter_data);
+            ::GetPrivateProfileString(section_name, parameter_name, "", parameter_data, sizeof(parameter_data)-1, m_file_path.c_str());
+            (*ii)->SetParameterAlways(parameter_name, parameter_data);
             }
         }
 }
