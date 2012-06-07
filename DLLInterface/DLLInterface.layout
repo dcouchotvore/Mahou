@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="DLLInterface.cpp" open="1" top="0" tabpos="2">
-		<Cursor position="2418" topLine="62" />
+	<File name="DBInterface.cpp" open="0" top="0" tabpos="5">
+		<Cursor position="2545" topLine="49" />
 	</File>
-	<File name="DLLInterface.h" open="1" top="0" tabpos="3">
-		<Cursor position="2522" topLine="35" />
+	<File name="DBInterface.h" open="0" top="0" tabpos="3">
+		<Cursor position="772" topLine="9" />
 	</File>
-	<File name="DLLWrapper.cpp" open="1" top="0" tabpos="1">
-		<Cursor position="2343" topLine="24" />
+	<File name="DLLInterface.cpp" open="0" top="0" tabpos="4">
+		<Cursor position="2576" topLine="69" />
 	</File>
-	<File name="DLLWrapper.h" open="1" top="0" tabpos="6">
-		<Cursor position="640" topLine="9" />
+	<File name="DLLInterface.h" open="0" top="0" tabpos="2">
+		<Cursor position="2417" topLine="35" />
 	</File>
-	<File name="main.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="311" topLine="0" />
+	<File name="DLLWrapper.cpp" open="0" top="0" tabpos="7">
+		<Cursor position="2999" topLine="41" />
 	</File>
-	<File name="main.h" open="1" top="0" tabpos="4">
+	<File name="DLLWrapper.h" open="0" top="0" tabpos="1">
+		<Cursor position="1943" topLine="19" />
+	</File>
+	<File name="main.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="285" topLine="0" />
+	</File>
+	<File name="main.h" open="0" top="0" tabpos="4">
 		<Cursor position="376" topLine="7" />
 	</File>
 </CodeBlocks_layout_file>

@@ -43,7 +43,9 @@ class DeviceFunction : public virtual ParameteredContainer {
                 m_parameter_list.Add(&m_data_size);
             }
         virtual ~DeviceFunction() { }
-        virtual void GoTo(double pos) = 0;
+        virtual void InitializeHardware() = 0;
+        virtual void TerminateHardware() = 0;
+        virtual void GoTo(double pos, bool async) = 0;
         virtual double Poll() const = 0;
         virtual void SetData(const double *data) = 0;
         virtual void GetData(double *data) = 0;
@@ -55,6 +57,8 @@ class CommunicationsMethod : public virtual ParameteredContainer {
     public:
         CommunicationsMethod(const char *const deviceName) : ParameteredContainer(deviceName) { }
         virtual ~CommunicationsMethod() { }
+        virtual void Connect() = 0;
+        virtual void Disconnect() = 0;
         virtual void IoCtrl(const int method, void *data) = 0;                                                                      /// @@@ Be alert for a way to improve on this.
         virtual void SendMsg(const std::string msg) = 0;
         virtual void RecvMsg(std::string msg) = 0;
@@ -65,16 +69,22 @@ class TranslationStage : public DeviceFunction {
         TranslationStage(const char *const deviceName) : ParameteredContainer(deviceName), DeviceFunction(deviceName),
             m_minimum("Minumum", 0),
             m_maximum("Maximum", 100),
-            m_acceleration("Acceleration", 10)
+            m_acceleration("Acceleration", 0.0001),
+            m_deceleration("Deceleration", 0.0001),
+            m_speed("Speed", 0.01)
             {
                 m_parameter_list.Add(&m_minimum);
                 m_parameter_list.Add(&m_maximum);
                 m_parameter_list.Add(&m_acceleration);
+                m_parameter_list.Add(&m_deceleration);
+                m_parameter_list.Add(&m_speed);
             }
     protected:
         Parameter<float> m_minimum;
         Parameter<float> m_maximum;
         Parameter<float> m_acceleration;
+        Parameter<float> m_deceleration;
+        Parameter<float> m_speed;
 };
 
 class Spectrometer : public DeviceFunction {
@@ -137,7 +147,7 @@ class DigitalToAnalog : public DeviceFunction {
 class SerialChannel : public CommunicationsMethod {
     public:
         SerialChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName),
-            m_port("Port", "COM1"),
+            m_port("Port", 7),
             m_baud("Baud", 57600),
             m_start_bits("Start Bits", 1),
             m_stop_bits("Stop Bits", 2),
@@ -151,13 +161,13 @@ class SerialChannel : public CommunicationsMethod {
                 m_parameter_list.Add(&m_data_bits);
                 m_parameter_list.Add(&m_parity);
             }
-        virtual void CommOpen();
-        virtual void CommClose();
+        virtual void Connect();
+        virtual void Disconnect();
         virtual void IoCtrl(const int method, void *data) { }
         virtual void SendMsg(const std::string msg);
         virtual void RecvMsg(std::string msg);
     protected:
-        Parameter<std::string> m_port;
+        Parameter<int> m_port;
         Parameter<int> m_baud;
         Parameter<int> m_start_bits;
         Parameter<int> m_stop_bits;
@@ -194,6 +204,8 @@ class DLLChannel : public CommunicationsMethod {
 class OCXChannel : public CommunicationsMethod {
     public:
         OCXChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName) { }
+        virtual void Connect() = 0;
+        virtual void Disconnect() = 0;
         virtual void IoCtrl(const int method, void *data);
         virtual void SendMsg(const std::string msg);
         virtual void RecvMsg(std::string msg);

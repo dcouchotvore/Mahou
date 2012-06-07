@@ -34,6 +34,8 @@ DLLInterface::~DLLInterface() {
     std::map<std::string, DLLWrapper*>::iterator ii;
     for ( ii=m_library_list.begin(); ii!=m_library_list.end(); ii++ ){
         ii->second->Terminate();
+        ii->second->Disconnect();
+        ii->second->Destroy();
         delete ii->second;
         }
 }
@@ -74,7 +76,7 @@ void DLLInterface::LoadLibraries() {
             if ( stricmp(fd.cFileName, "DLLInterface.dll")!=0 ){
                 std::string dllpath = m_root_path+(*ii)+fd.cFileName;
                 DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
-                wrapper->Initialize();
+                wrapper->Create();
                 char dname[100];
                 wrapper->GetDeviceName(dname);
                 m_library_list[dname] = wrapper;
@@ -83,6 +85,14 @@ void DLLInterface::LoadLibraries() {
             } while ( ::FindNextFile(handle, &fd) );
         }
     DBInterface::Instance().LoadAll();
+
+    // Must hold off initialization until after saved parameters are read in.
+
+    std::map<std::string, DLLWrapper*>::iterator jj;
+    for ( jj=m_library_list.begin(); jj!=m_library_list.end(); jj++ ){
+        jj->second->Connect();
+        jj->second->Initialize();
+        }
 }
 
 int DLLInterface::GetLibraryCount() const {
@@ -117,8 +127,8 @@ int DLLInterface::GetParameter(const char *const libname, const char *name, char
     return library(libname).GetParameter(name, value);
 }
 
-int DLLInterface::GoTo(const char *const libname, double pos) {
-    return library(libname).GoTo(pos);
+int DLLInterface::GoTo(const char *const libname, double pos, bool async) {
+    return library(libname).GoTo(pos, async);
 }
 
 double DLLInterface::Poll(const char *const libname) const {

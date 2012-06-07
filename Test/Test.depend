@@ -26,7 +26,7 @@
 	"Exceptions.h"
 	<windows.h>
 
-1336571689 c:\development\mahou shoujo\hardware\exceptions.h
+1337979322 c:\development\mahou shoujo\hardware\exceptions.h
 	<string>
 	<vector>
 	<exception>
@@ -57,11 +57,13 @@
 1332775363 c:\development\mahou shoujo\hardware\dbinterface.h
 	"NamedParameterList.h"
 
-1336510382 c:\development\mahou shoujo\hardware\namedparameterlist.h
+1337612211 c:\development\mahou shoujo\hardware\namedparameterlist.h
 	"Exceptions.h"
 	<map>
 	<vector>
 	<string.h>
+	<iostream>
+	<sstream>
 	<stdlib.h>
 	<stdio.h>
 
@@ -3119,12 +3121,11 @@
 	"json_spirit_value.h"
 	<map>
 
-1336506139 c:\development\mahou shoujo\hardware\devicecontainer.h
+1338320243 c:\development\mahou shoujo\hardware\devicecontainer.h
 	"NamedParameterList.h"
-	"DBInterface.h"
 	"windows.h"
 
-1333143287 c:\development\mahou shoujo\hardware\hardwaredll.h
+1337875995 c:\development\mahou shoujo\hardware\hardwaredll.h
 	"NamedParameterList.h"
 
 1333141399 source:c:\development\mahou shoujo\hardware\hardwaredll.cpp
@@ -3134,7 +3135,7 @@
 1336510442 source:c:\development\mahou shoujo\hardware\comserial.cpp
 	"DeviceContainer.h"
 
-1336577809 c:\development\mahou shoujo\hardware\pi_translationstage.h
+1336760415 c:\development\mahou shoujo\hardware\pi_translationstage.h
 	"DeviceContainer.h"
 	<string>
 

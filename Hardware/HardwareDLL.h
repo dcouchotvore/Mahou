@@ -36,18 +36,20 @@ class HardwareDLL {
 
         /* Global access methods */
 
+        virtual int Create() = 0;
+        virtual int Destroy() = 0;
         virtual int Initialize() = 0;
         virtual int Terminate() = 0;
         int GetDeviceName(char *value);
 
         int GetParameterCount();
         int GetParameterData(char *name, int *type, int *is_read_only);
-        int SetParameter(const char *name, const char *value);
+        int SetParameter(const char *name, const char *value, bool force=false);
         int GetParameter(const char *name, char *value);                                           // If called with value=0 return size of required buffer.
 
         /* Device hardware access methods */
 
-        virtual int GoTo(double pos);
+        virtual int GoTo(double pos, int async);
         virtual double Poll() const;
         virtual int SetData(const double *data);
         virtual int GetData(double *data);

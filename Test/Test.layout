@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="..\Hardware\ComSerial.cpp" open="1" top="0" tabpos="12">
+	<File name="..\Hardware\ComSerial.cpp" open="1" top="0" tabpos="16">
 		<Cursor position="671" topLine="5" />
 	</File>
 	<File name="..\Hardware\DBInterface.cpp" open="1" top="0" tabpos="3">
@@ -10,37 +10,37 @@
 	<File name="..\Hardware\DBInterface.h" open="1" top="0" tabpos="9">
 		<Cursor position="671" topLine="6" />
 	</File>
-	<File name="..\Hardware\DeviceContainer.h" open="1" top="0" tabpos="2">
+	<File name="..\Hardware\DeviceContainer.h" open="1" top="0" tabpos="8">
 		<Cursor position="1822" topLine="29" />
 	</File>
 	<File name="..\Hardware\Exceptions.cpp" open="0" top="0" tabpos="7">
 		<Cursor position="489" topLine="0" />
 	</File>
-	<File name="..\Hardware\Exceptions.h" open="1" top="0" tabpos="6">
+	<File name="..\Hardware\Exceptions.h" open="1" top="0" tabpos="11">
 		<Cursor position="6569" topLine="150" />
 	</File>
-	<File name="..\Hardware\HardwareDLL.cpp" open="1" top="0" tabpos="5">
+	<File name="..\Hardware\HardwareDLL.cpp" open="1" top="0" tabpos="10">
 		<Cursor position="943" topLine="149" />
 	</File>
-	<File name="..\Hardware\HardwareDLL.h" open="1" top="0" tabpos="4">
+	<File name="..\Hardware\HardwareDLL.h" open="1" top="0" tabpos="9">
 		<Cursor position="1182" topLine="29" />
 	</File>
-	<File name="..\Hardware\NamedParameterList.h" open="1" top="0" tabpos="1">
+	<File name="..\Hardware\NamedParameterList.h" open="1" top="0" tabpos="7">
 		<Cursor position="3169" topLine="81" />
 	</File>
-	<File name="..\Hardware\PI_TranslationStage.cpp" open="1" top="1" tabpos="10">
-		<Cursor position="1808" topLine="36" />
+	<File name="..\Hardware\PI_TranslationStage.cpp" open="1" top="0" tabpos="14">
+		<Cursor position="3400" topLine="87" />
 	</File>
-	<File name="..\Hardware\PI_TranslationStage.h" open="1" top="0" tabpos="11">
+	<File name="..\Hardware\PI_TranslationStage.h" open="1" top="0" tabpos="15">
 		<Cursor position="931" topLine="7" />
 	</File>
 	<File name="..\Hardware\constants.h" open="0" top="0" tabpos="2">
 		<Cursor position="536" topLine="0" />
 	</File>
-	<File name="main.cpp" open="1" top="0" tabpos="8">
-		<Cursor position="106" topLine="0" />
+	<File name="main.cpp" open="1" top="1" tabpos="13">
+		<Cursor position="559" topLine="0" />
 	</File>
-	<File name="main.h" open="1" top="0" tabpos="7">
+	<File name="main.h" open="1" top="0" tabpos="12">
 		<Cursor position="0" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

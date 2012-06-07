@@ -34,6 +34,8 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
         LocalFree(lpMsgBuf);
         throw ExceptionLoadLibrary(msg.c_str());
         }
+    load_proc_address("Create", reinterpret_cast<void **>(&f_create));
+    load_proc_address("Destroy", reinterpret_cast<void **>(&f_destroy));
     load_proc_address("Initialize", reinterpret_cast<void **>(&f_initialize));
     load_proc_address("Terminate", reinterpret_cast<void **>(&f_terminate));
     load_proc_address("GetDeviceName", reinterpret_cast<void **>(&f_getDeviceName));
@@ -55,6 +57,14 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
 DLLWrapper::~DLLWrapper() {
     if ( m_module_handle )
         ::FreeLibrary(m_module_handle);
+}
+
+int DLLWrapper::Create() {
+    return (*f_create)();
+};
+
+int DLLWrapper::Destroy() {
+    return (*f_destroy)();
 }
 
 int DLLWrapper::Initialize() {
@@ -89,8 +99,8 @@ int DLLWrapper::GetParameter(const char *name, char *value) {
     return (*f_getParameter)(name, value);
 }
 
-int DLLWrapper::GoTo(double pos) {
-    return (*f_goTo)(pos);
+int DLLWrapper::GoTo(double pos, bool async) {
+    return (*f_goTo)(pos, async ? 1 : 0);
 }
 
 double DLLWrapper::Poll() const {

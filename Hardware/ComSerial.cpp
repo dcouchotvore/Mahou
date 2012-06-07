@@ -20,7 +20,7 @@
 
 namespace Mahou {
 
-void SerialChannel::CommOpen() {
+void SerialChannel::Connect() {
     m_serial_handle = ::CreateFile(static_cast<const char *>(m_port), GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
     if ( m_serial_handle==INVALID_HANDLE_VALUE ) {
         if ( ::GetLastError()==ERROR_FILE_NOT_FOUND )
@@ -39,7 +39,7 @@ void SerialChannel::CommOpen() {
         throw ExceptionIOUnknown(m_port);
 }
 
-void SerialChannel::CommClose() {
+void SerialChannel::Disconnect() {
     ::CloseHandle(m_serial_handle);
 }
 

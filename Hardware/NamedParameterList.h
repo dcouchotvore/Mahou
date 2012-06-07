@@ -62,9 +62,13 @@ struct ParameterData {
     bool IsReadOnly;
     };
 
+class ParameteredContainer;
+
 class ParameterGeneric {
+    friend class NamedParameterList;
+    friend class ParameteredContainer;
 	public:
-        ParameterGeneric(const char *name, const bool readOnly): m_name(name), m_read_only(readOnly) { };
+        ParameterGeneric(const char *name, const bool readOnly): m_name(name), m_read_only(readOnly), f_obj(0), f_action(0) { }
 		virtual ~ParameterGeneric() {}
         const char *const Name() const { return m_name.c_str(); }
 		bool isReadOnly() const { return m_read_only; }
@@ -79,12 +83,15 @@ class ParameterGeneric {
 		virtual ParameterGeneric &operator=(const long int data) = 0;
 		virtual ParameterGeneric &operator=(const double data) = 0;
 		virtual ParameterGeneric &operator=(const bool data) = 0;
+		void SetAction(ParameteredContainer *const obj , int (*action)(ParameteredContainer*)) { f_obj = obj; f_action = action; }
+		virtual void DispatchAction() { if ( f_action ) (*f_action)(f_obj); }
     protected:
 		std::string m_name;
 		bool m_read_only;
+		ParameteredContainer *f_obj;
+		int (*f_action)(ParameteredContainer *);
 		mutable char m_cbuf[128];             // @@@ !!! Warning!  Not thread safe!
 };
-
 
 template <class T>
 class Parameter : public ParameterGeneric {
@@ -156,6 +163,7 @@ template <> class Parameter<bool> : public ParameterGeneric {
 
 class NamedParameterList {
     friend class DBInterface;
+    friend class ParameteredContainer;
 	public:
 		NamedParameterList() { }
 		virtual ~NamedParameterList() { }           // Can't delete parameters here because they're declared elsewhere.
@@ -222,21 +230,28 @@ class NamedParameterList {
     protected:
 		const std::vector<ParameterGeneric *> &getParameters() const { return m_list; }
 		void clear() { m_list.clear(); }
-
+        void assert() {
+  			std::vector<ParameterGeneric *>::const_iterator ii;
+			for ( ii=m_list.begin(); ii!=m_list.end(); ii++ )
+			    (*ii)->DispatchAction();
+        }
 	private:
 		std::vector<ParameterGeneric *> m_list;
+
 };
 
 class ParameteredContainer {
     public:
-        ParameteredContainer(const char *const deviceName) : m_device_name(deviceName) { }
+        ParameteredContainer(const char *const deviceName) : m_device_name(deviceName), m_alive(false) { }
 //        NamedParameterList &GetParameters() { return m_parameter_list; }          // Exposing this would allow writing of read-only properties from outside the class.
         const std::string &GetDeviceName() const { return m_device_name; }
-        template <class T> bool SetParameter(const char * key, T val){
+        template <class T> bool SetParameter(const char * key, T val, bool force=false){
             ParameterGeneric &parm = m_parameter_list.GetRef(key);
             bool ro = parm.isReadOnly();
-            if ( !ro )
+            if ( !ro || force ){
                 parm = val;
+                parm.DispatchAction();
+                }
             return !ro;
             }
         ParameterGeneric *GetParameter(const char *key) { return &m_parameter_list.GetRef(key); }
@@ -245,6 +260,9 @@ class ParameteredContainer {
         bool ValidateParameterName(const char *const name) { return m_parameter_list.ValidateName(name); }
         std::string m_device_name;
         NamedParameterList m_parameter_list;
+    protected:
+        void assert() {}
+        bool m_alive;
 };
 
 }

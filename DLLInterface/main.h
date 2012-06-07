@@ -32,7 +32,7 @@ int DLL_EXPORT GetParameterData(const char *const libname, char *name, int *type
 int DLL_EXPORT SetParameter(const char *const libname, const char *name, const char *value);
 int DLL_EXPORT GetParameter(const char *const libname, const char *name, char *value);
 
-int DLL_EXPORT GoTo(const char *const libname, double pos);
+int DLL_EXPORT GoTo(const char *const libname, double pos, int async);
 double DLL_EXPORT Poll(const char *const libname);
 int DLL_EXPORT SetData(const char *const libname, const double *data);
 int DLL_EXPORT GetData(const char *const libname, double *data);

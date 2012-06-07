@@ -17,17 +17,53 @@ void check_windows_error() {
 typedef int (*VoidProc)();
 typedef int (*PointerProc)(void *);
 typedef int (*Pointer2Proc)(const char *, void *);
+typedef int (*CharPtrProc)(const char *);
+typedef int (*HandleProc)(HANDLE handle);
+typedef int (*GetParmDataProc)(const char *module, char *parmname, int *type, int *is_read_only);
+typedef int (*GetSetParmProc)(const char *module, char *parmname, char *value);
+typedef int (*DoubleIntProc)(const char *name, const double val, const int async);
 
 int main()
 {
-    HINSTANCE hinst = ::LoadLibrary("..\\..\\bin\\Debug\\PI_TranslationStage.dll");
+    HINSTANCE hinst = ::LoadLibrary("..\\..\\..\\DLLInterface\\bin\\Debug\\DLLInterface.dll");
     if ( hinst==0 )
         check_windows_error();
     else {
-        VoidProc initialize = (VoidProc)::GetProcAddress(hinst, "Initialize");
-        initialize();
-        VoidProc getParameterCount = (VoidProc)::GetProcAddress(hinst, "GetParameterCount");
-        int pcount = (*getParameterCount)();
+        HandleProc initialize = (HandleProc)::GetProcAddress(hinst, "Initialize");
+        initialize(hinst);
+        CharPtrProc addlibpath = (CharPtrProc)::GetProcAddress(hinst, "AddLibraryPath");
+        addlibpath("Hardware\\");
+        VoidProc loadlibs = (VoidProc)::GetProcAddress(hinst, "LoadLibraries");
+        loadlibs();
+        VoidProc getLibCount = (VoidProc)::GetProcAddress(hinst, "GetLibraryCount");
+        int lcount = getLibCount();
+        std::map<std::string, std::vector<std::string> > module_data;
+        CharPtrProc getLibaryName = (CharPtrProc)::GetProcAddress(hinst, "GetLibraryName");
+        CharPtrProc getParameterCount = (CharPtrProc)::GetProcAddress(hinst, "GetParameterCount");
+        GetParmDataProc getParameterData = (GetParmDataProc)::GetProcAddress(hinst, "GetParameterData");
+
+        for ( int ii=0; ii<lcount; ii++ ){
+            char name_buf[200];
+            getLibaryName(name_buf);
+            std::string module_name = name_buf;
+            std::vector<std::string> parameters;
+            int pcount = getParameterCount(name_buf);
+            for ( int jj=0; jj<pcount; jj++ ){
+                char parm_name[100];
+                getParameterData(name_buf, parm_name, 0, 0);
+                parameters.push_back(std::string(parm_name));
+                }
+            module_data[module_name] = parameters;
+            }
+
+        GetSetParmProc setParameter = (GetSetParmProc)::GetProcAddress(hinst, "SetParameter");
+        setParameter("PI_TranslationStage1", "Speed", "0.75");
+        DoubleIntProc goTo = (DoubleIntProc)::GetProcAddress(hinst, "GoTo");
+        goTo("PI_TranslationStage1", 7.0, 0);
+        goTo("PI_TranslationStage1", 15.0, 1);
+        goTo("PI_TranslationStage1", 0.0, 0);
+
+/*        int pcount = (*getParameterCount)();
         Mahou::ParameterData parm_data[pcount];
         PointerProc getParameters = (PointerProc)::GetProcAddress(hinst, "GetParameters");
         (*getParameters)(parm_data);
@@ -41,7 +77,7 @@ int main()
         (*getParameter)("Minumum", buf);
         PointerProc getName = (PointerProc)::GetProcAddress(hinst, "GetDeviceName");
         (*getName)(buf);
-
+*/
 
 
         ::FreeLibrary(hinst);

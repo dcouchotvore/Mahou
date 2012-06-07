@@ -1,9 +1,9 @@
 # depslib dependency file v1.0
-1338841680 source:c:\development\mahou shoujo\dllinterface\dllwrapper.cpp
+1339080972 source:c:\development\mahou shoujo\dllinterface\dllwrapper.cpp
 	"DLLWrapper.h"
 	"Hardware/Exceptions.h"
 
-1338841703 c:\development\mahou shoujo\dllinterface\dllwrapper.h
+1339095590 c:\development\mahou shoujo\dllinterface\dllwrapper.h
 	<windows.h>
 
 1337979322 c:\development\mahou shoujo\\hardware\exceptions.h
@@ -11,20 +11,20 @@
 	<vector>
 	<exception>
 
-1338492379 source:c:\development\mahou shoujo\dllinterface\main.cpp
+1339080887 source:c:\development\mahou shoujo\dllinterface\main.cpp
 	"main.h"
 	"DLLInterface.h"
 
-1338492379 c:\development\mahou shoujo\dllinterface\main.h
+1339080887 c:\development\mahou shoujo\dllinterface\main.h
 	<windows.h>
 
-1338838278 source:c:\development\mahou shoujo\dllinterface\dllinterface.cpp
+1339080929 source:c:\development\mahou shoujo\dllinterface\dllinterface.cpp
 	"DLLInterface.h"
 	"Hardware/Exceptions.h"
 	<strings.h>
 	"DBInterface.h"
 
-1338492738 c:\development\mahou shoujo\dllinterface\dllinterface.h
+1339080887 c:\development\mahou shoujo\dllinterface\dllinterface.h
 	"DLLWrapper.h"
 	<vector>
 	<map>

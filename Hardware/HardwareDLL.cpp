@@ -74,13 +74,13 @@ int HardwareDLL::GetParameterData(char *name, int *type, int *is_read_only) {
     else return 0;
 }
 
-int HardwareDLL::SetParameter(const char *name, const char *value) {
+int HardwareDLL::SetParameter(const char *name, const char *value, bool force) {
     if ( !m_container )
         return ERR_DLL_MALFORMEDCLASS;
     try {
         if ( !m_container->ValidateParameterName(name) )
             return ERR_DLL_NOSUCHPARAMETER;
-        return m_container->SetParameter<std::string>(name, value);                                // @@@ NOTE: beware of type conversions in parameters not being correct.
+        return m_container->SetParameter<std::string>(name, value, force);                                // @@@ NOTE: beware of type conversions in parameters not being correct.
         }
     catch (Exception E) {
         return resolve_exception(E);
@@ -105,12 +105,12 @@ int HardwareDLL::GetParameter(const char *name, char *value) {    // If called w
     return string_size;
 }
 
-int HardwareDLL::GoTo(double pos) {
+int HardwareDLL::GoTo(double pos, int async) {
     DeviceFunction *funct = dynamic_cast<DeviceFunction *>(m_container);
     if ( !funct )
         return ERR_DLL_MALFORMEDCLASS;
     try {
-        funct->GoTo(pos);
+        funct->GoTo(pos, async!=0);
         }
     catch (Exception E) {
         return resolve_exception(E);

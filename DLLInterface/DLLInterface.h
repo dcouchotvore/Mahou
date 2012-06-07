@@ -46,7 +46,7 @@ class DLLInterface {
 
         /* Device hardware access methods */
 
-        int GoTo(const char *const libname, double pos);
+        int GoTo(const char *const libname, double pos, bool async);
         double Poll(const char *const libname) const;
         int SetData(const char *const libname, const double *data);
         int GetData(const char *const libname, double *data);

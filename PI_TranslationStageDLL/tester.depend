@@ -1,10 +1,10 @@
 # depslib dependency file v1.0
-1337631979 source:c:\development\mahou shoujo\pi_translationstagedll\testermain.cpp
+1339095941 source:c:\development\mahou shoujo\pi_translationstagedll\testermain.cpp
 	<iostream>
 	<windows.h>
 	"../Hardware/NamedParameterList.h"
 
-1337612211 c:\development\mahou shoujo\hardware\namedparameterlist.h
+1339095499 c:\development\mahou shoujo\hardware\namedparameterlist.h
 	"Exceptions.h"
 	<map>
 	<vector>

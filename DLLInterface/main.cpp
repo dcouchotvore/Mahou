@@ -43,8 +43,8 @@ int DLL_EXPORT GetParameter(const char *const libname, const char *name, char *v
     return dll.GetParameter(libname, name, value);
 }
 
-int DLL_EXPORT GoTo(const char *const libname, double pos) {
-    return dll.GoTo(libname, pos);
+int DLL_EXPORT GoTo(const char *const libname, double pos, int async) {
+    return dll.GoTo(libname, pos, async!=0);
 }
 
 double DLL_EXPORT Poll(const char *const libname) {

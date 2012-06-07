@@ -26,6 +26,8 @@ class DLLWrapper {
         DLLWrapper(const char *const file_path);
         virtual ~DLLWrapper();
 
+        int Create();
+        int Destroy();
         int Initialize();
         int Terminate();
         int GetDeviceName(char *value);
@@ -38,7 +40,7 @@ class DLLWrapper {
 
         /* Dardware access methods */
 
-        int GoTo(double pos);
+        int GoTo(double pos, bool async);
         double Poll() const;
         int SetData(const double *data);
         int GetData(double *data);
@@ -52,6 +54,8 @@ class DLLWrapper {
         HMODULE m_module_handle;
         void load_proc_address(const char *const name, void **fcall);
 
+        int _cdecl (*f_create)();
+        int _cdecl (*f_destroy)();
         int _cdecl (*f_initialize)();
         int _cdecl (*f_terminate)();
         int _cdecl (*f_getDeviceName)(char *value);
@@ -61,7 +65,7 @@ class DLLWrapper {
         int _cdecl (*f_setParameter)(const char *name, const char *value);
         int _cdecl (*f_setParameterAlways)(const char *name, const char *value);
         int _cdecl (*f_getParameter)(const char *name, char *value);                                           // If called with value=0 return size of required buffer.
-        int _cdecl (*f_goTo)(double pos);
+        int _cdecl (*f_goTo)(double pos, int async);
         double _cdecl (*f_poll)();
         int _cdecl (*f_setData)(const double *data);
         int _cdecl (*f_getData)(double *data);
