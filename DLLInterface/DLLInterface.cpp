@@ -73,7 +73,7 @@ void DLLInterface::LoadLibraries() {
         if ( handle==INVALID_HANDLE_VALUE )
             continue;
         do {
-            if ( stricmp(fd.cFileName, "DLLInterface.dll")!=0 ){
+            if ( stricmp(fd.cFileName, "DLLInterface-32.dll")!=0 && stricmp(fd.cFileName, "DLLInterface-64.dll")!=0 ){
                 std::string dllpath = m_root_path+(*ii)+fd.cFileName;
                 DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
                 wrapper->Create();

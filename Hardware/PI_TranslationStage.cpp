@@ -21,8 +21,7 @@
 namespace Mahou {
 
 PI_TranslationStage::PI_TranslationStage(const char *const deviceName) : ParameteredContainer(deviceName), TranslationStage(deviceName), SerialChannel(deviceName),
-        m_id("ID", -1, true), m_idName("IDName", "", true), m_axis("Axis", "A", true),
-         m_idStage("Stage ID", "M-505.4PD", true) {
+        m_id("ID", -1, true), m_idName("IDName", "", true), m_axis("Axis", "A", true), m_idStage("Stage ID", "M-505.4PD", true) {
     m_parameter_list.Add(&m_id);
     m_parameter_list.Add(&m_idName);
     m_parameter_list.Add(&m_axis);
@@ -208,5 +207,4 @@ std::string PI_TranslationStage::prepare_message(const char *msg){
 }
 
 }
-
 

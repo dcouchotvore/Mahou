@@ -186,6 +186,30 @@ class ExceptionGDI : public ExceptionEnumeratedSystem {
 		ExceptionGDI(const std::string &id, const std::string &message, const int err) : ExceptionEnumeratedSystem(id, message, err) { }
 };
 
+class ExceptionCOM : public ExceptionSystem {
+	public:
+		ExceptionCOM(const std::string &message) : ExceptionSystem("COM exception", message) { }
+		ExceptionCOM(const std::string &id, const std::string &message) : ExceptionSystem(id, message) { }
+};
+
+class ExceptionCOMCreateObject : public ExceptionCOM {
+	public:
+		ExceptionCOMCreateObject(const std::string &message) : ExceptionCOM("Cannot create COM object", message) { }
+		ExceptionCOMCreateObject(const std::string &id, const std::string &message) : ExceptionCOM(id, message) { }
+};
+
+class ExceptionCOMInterface : public ExceptionCOM {
+	public:
+		ExceptionCOMInterface(const std::string &message) : ExceptionCOM("Cannot find interface", message) { }
+		ExceptionCOMInterface(const std::string &id, const std::string &message) : ExceptionCOM(id, message) { }
+};
+
+class ExceptionCOMMethodFailed : public ExceptionCOM {
+	public:
+		ExceptionCOMMethodFailed(const std::string &message) : ExceptionCOM("Method failed", message) { }
+		ExceptionCOMMethodFailed(const std::string &id, const std::string &message) : ExceptionCOM(id, message) { }
+};
+
 class ExceptionMechanical : public Exception {
 	public:
 		ExceptionMechanical(const std::string &message) : Exception("Mechanical exception", message) { }

@@ -25,7 +25,7 @@ typedef int (*DoubleIntProc)(const char *name, const double val, const int async
 
 int main()
 {
-    HINSTANCE hinst = ::LoadLibrary("..\\..\\..\\DLLInterface\\bin\\Debug\\DLLInterface.dll");
+    HINSTANCE hinst = ::LoadLibrary("..\\..\\..\\DLLInterface\\bin\\Debug\\DLLInterface-32.dll");
     if ( hinst==0 )
         check_windows_error();
     else {

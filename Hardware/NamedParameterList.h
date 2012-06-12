@@ -244,6 +244,8 @@ class ParameteredContainer {
     public:
         ParameteredContainer(const char *const deviceName) : m_device_name(deviceName), m_alive(false) { }
 //        NamedParameterList &GetParameters() { return m_parameter_list; }          // Exposing this would allow writing of read-only properties from outside the class.
+		virtual void Create() = 0;
+		virtual void Destroy() = 0;
         const std::string &GetDeviceName() const { return m_device_name; }
         template <class T> bool SetParameter(const char * key, T val, bool force=false){
             ParameterGeneric &parm = m_parameter_list.GetRef(key);

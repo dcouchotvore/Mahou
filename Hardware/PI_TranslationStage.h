@@ -28,6 +28,8 @@ class PI_TranslationStage : public TranslationStage, public SerialChannel {
 public:
     PI_TranslationStage(const char *const deviceName);
     virtual ~PI_TranslationStage();
+    virtual void Create() { };
+    virtual void Destroy() { };
     virtual void InitializeHardware();
     virtual void TerminateHardware();
     virtual void GoTo(double pos, bool async);

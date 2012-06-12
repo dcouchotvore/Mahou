@@ -24,6 +24,8 @@ int _cdecl DLL_EXPORT Create();
 int _cdecl DLL_EXPORT Destroy();
 int _cdecl DLL_EXPORT Initialize();
 int _cdecl DLL_EXPORT Terminate();
+int _cdecl DLL_EXPORT Connect();
+int _cdecl DLL_EXPORT Disconnect();
 int _cdecl DLL_EXPORT GetDeviceName(char *name);
 int _cdecl DLL_EXPORT GetParameterCount();
 int _cdecl DLL_EXPORT GetParameterData(char *name, int *type, int *is_read_only);
@@ -47,23 +49,11 @@ int _cdecl DLL_EXPORT RecvMsg(char *msg, const unsigned int max_len);
 
 namespace Mahou {
 
-class PI_TranslationStageDLL : public HardwareDLL {
-    public:
-
-        enum {  ERR_DLL_NONE            =    0,
-                ERR_DLL_UNKNOWN         =   -1,
-                ERR_DLL_NOSUCHPARAMETER =   -4,
-                ERR_DLL_DATATRUNCATED   =   -8,
-                ERR_DLL_MALFORMEDCLASS  =  -32
-                } ErrorCode;
-
-        PI_TranslationStageDLL(const char *deviceName) : HardwareDLL(deviceName) { }
-        virtual ~PI_TranslationStageDLL() { }
-
-        virtual int Create();
-        virtual int Destroy();
-        virtual int Initialize();
-        virtual int Terminate();
+class PI_TranslationStageDLL : public HardwareDLL<PI_TranslationStage> {
+	public:
+		PI_TranslationStageDLL(const char *const device_name) : HardwareDLL<PI_TranslationStage>(device_name) { }
+	virtual int Create();
+	virtual int Destroy();
 };
 
 }

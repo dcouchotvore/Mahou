@@ -38,6 +38,8 @@ DLLWrapper::DLLWrapper(const char *const file_path) : m_module_handle(0), f_init
     load_proc_address("Destroy", reinterpret_cast<void **>(&f_destroy));
     load_proc_address("Initialize", reinterpret_cast<void **>(&f_initialize));
     load_proc_address("Terminate", reinterpret_cast<void **>(&f_terminate));
+    load_proc_address("Connect", reinterpret_cast<void **>(&f_connect));
+    load_proc_address("Disconnect", reinterpret_cast<void **>(&f_disconnect));
     load_proc_address("GetDeviceName", reinterpret_cast<void **>(&f_getDeviceName));
 
     load_proc_address("GetParameterCount", reinterpret_cast<void **>(&f_getParameterCount));
@@ -73,6 +75,14 @@ int DLLWrapper::Initialize() {
 
 int DLLWrapper::Terminate() {
     return (*f_terminate)();
+}
+
+int DLLWrapper::Connect() {
+    return (*f_connect)();
+}
+
+int DLLWrapper::Disconnect() {
+    return (*f_disconnect)();
 }
 
 int DLLWrapper::GetDeviceName(char *value) {

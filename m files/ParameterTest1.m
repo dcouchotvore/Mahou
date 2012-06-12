@@ -64,9 +64,9 @@ guidata(hObject, handles);
 %if strcmp(get(hObject,'Visible'),'off')
 %    plot(rand(5));
 %end
-    debug = get(handles.listbox2, 'String');
     
-    global dllinfo;             %%%Could be put into handles
+   loadlibrary('DLLInterface');
+   global dllinfo;             %%%Could be put into handles
 
     files = dir('hardware/*.dll');
     count = size(files);
@@ -75,7 +75,6 @@ guidata(hObject, handles);
         filename = ['hardware/' fname];
         [path modulename] = fileparts(filename);
         headername = ['hardware/' modulename '.h'];
-        loadlibrary(filename, headername);
         calllib(modulename, 'Initialize');
         str = repmat(' ', 1, 100);                           %# allocate buffer
         pStr = libpointer('stringPtr', str);
