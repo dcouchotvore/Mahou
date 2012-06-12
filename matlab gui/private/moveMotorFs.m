@@ -5,7 +5,7 @@ function new_position = moveMotorFs(handles,motor_index,desired_position)
 % limit switch, etc)
 
 %dummy code
-pause(0.01);
+pause(0.1);
 new_position = desired_position;
 
 %update the gui
