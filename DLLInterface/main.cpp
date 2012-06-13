@@ -3,8 +3,8 @@
 
 Mahou::DLLInterface dll;
 
-void DLL_EXPORT Initialize(HINSTANCE hinst) {
-    dll.Initialize(hinst);
+void DLL_EXPORT Initialize(const char *const db_path) {
+    dll.Initialize(db_path);
 }
 
 void DLL_EXPORT AddLibraryPath(const char *const path) {

@@ -21,10 +21,12 @@
 #include "Hardware/Exceptions.h"
 #include <strings.h>
 #include "DBInterface.h"
+#include <stdio.h>
+
 
 namespace Mahou {
 
-DLLInterface::DLLInterface() : m_instance_handle(0) {
+DLLInterface::DLLInterface() {
     m_library_paths.push_back(std::string(""));
     DBInterface::Instance().SetFilePath("experiment.cfg");
 }
@@ -40,12 +42,13 @@ DLLInterface::~DLLInterface() {
         }
 }
 
-void DLLInterface::Initialize(HINSTANCE hinst) {
-    m_instance_handle = hinst;
-    char fbuf[MAX_PATH];
-    ::GetModuleFileName(hinst, fbuf, sizeof(fbuf));
+void DLLInterface::Initialize(const char *const db_path) {
+    DBInterface::Instance().SetFilePath(db_path);
+	HMODULE handle = ::GetModuleHandle("DLLInterface");
+	char fbuf[MAX_PATH];
+    ::GetModuleFileName(handle, fbuf, sizeof(fbuf));
     char *pos = strrchr(fbuf, '\\');
-    if ( pos ) pos[1]=0;
+   if ( pos ) pos[1]=0;
     m_root_path = fbuf;
 }
 
@@ -68,20 +71,19 @@ void DLLInterface::LoadLibraries() {
     for ( ii=m_library_paths.begin(); ii!=m_library_paths.end(); ii++ ){
         path = m_root_path+(*ii);
         WIN32_FIND_DATA fd;
-        path += "*.dll";
+        path += "SGR_*.dll";
         HANDLE handle = ::FindFirstFile(path.c_str(), &fd);
         if ( handle==INVALID_HANDLE_VALUE )
             continue;
         do {
-            if ( stricmp(fd.cFileName, "DLLInterface-32.dll")!=0 && stricmp(fd.cFileName, "DLLInterface-64.dll")!=0 ){
-                std::string dllpath = m_root_path+(*ii)+fd.cFileName;
-                DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
-                wrapper->Create();
-                char dname[100];
-                wrapper->GetDeviceName(dname);
-                m_library_list[dname] = wrapper;
-                DBInterface::Instance().RegisterHardwareDLL(*wrapper);
-                }
+			std::string dllpath = m_root_path+(*ii)+fd.cFileName;
+	::MessageBoxA(0, dllpath.c_str(), "DEBUG", MB_ICONINFORMATION|MB_OK);
+			DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
+			wrapper->Create();
+			char dname[100];
+			wrapper->GetDeviceName(dname);
+			m_library_list[dname] = wrapper;
+			DBInterface::Instance().RegisterHardwareDLL(*wrapper);
             } while ( ::FindNextFile(handle, &fd) );
         }
     DBInterface::Instance().LoadAll();

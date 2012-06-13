@@ -53,6 +53,9 @@ class DeviceFunction : public virtual ParameteredContainer {
         virtual void GetData(double *data) = 0;
     protected:
         Parameter<int> m_data_size;
+        void debug_box(const char *const msg) {
+			::MessageBoxA(0, msg, "DEBUG", MB_ICONINFORMATION | MB_OK);
+		}
 };
 
 class CommunicationsMethod : public virtual ParameteredContainer {

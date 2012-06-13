@@ -19,7 +19,7 @@ extern "C"
 {
 #endif
 
-void DLL_EXPORT Initialize(HINSTANCE hinst);
+void DLL_EXPORT Initialize(const char *const db_path);
 void DLL_EXPORT AddLibraryPath(const char *const path);
 void DLL_EXPORT LoadLibraries();
 int DLL_EXPORT GetLibraryCount();

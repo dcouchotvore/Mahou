@@ -25,12 +25,13 @@ typedef int (*DoubleIntProc)(const char *name, const double val, const int async
 
 int main()
 {
-    HINSTANCE hinst = ::LoadLibrary("..\\..\\..\\DLLInterface\\bin\\Debug\\DLLInterface-32.dll");
+    HINSTANCE hinst = ::LoadLibrary("..\\..\\..\\DLLInterface\\bin\\Debug\\DLLInterface.dll");
+    //HINSTANCE hinst = ::LoadLibrary("DLLInterface.dll");
     if ( hinst==0 )
         check_windows_error();
     else {
-        HandleProc initialize = (HandleProc)::GetProcAddress(hinst, "Initialize");
-        initialize(hinst);
+        CharPtrProc initialize = (CharPtrProc)::GetProcAddress(hinst, "Initialize");
+        initialize("C:\\temp\\experiment.cfg");
         CharPtrProc addlibpath = (CharPtrProc)::GetProcAddress(hinst, "AddLibraryPath");
         addlibpath("Hardware\\");
         VoidProc loadlibs = (VoidProc)::GetProcAddress(hinst, "LoadLibraries");
@@ -59,7 +60,9 @@ int main()
         GetSetParmProc setParameter = (GetSetParmProc)::GetProcAddress(hinst, "SetParameter");
         setParameter("PI_TranslationStage1", "Speed", "0.75");
         DoubleIntProc goTo = (DoubleIntProc)::GetProcAddress(hinst, "GoTo");
-        goTo("PI_TranslationStage1", 7.0, 0);
+		VoidProc poll = (VoidProc)::GetProcAddress(hinst, "Poll");
+		goTo("PI_TranslationStage1", 7.0, 0);
+        double pos = poll();
         goTo("PI_TranslationStage1", 15.0, 1);
         goTo("PI_TranslationStage1", 0.0, 0);
 

@@ -41,10 +41,10 @@ public:
     virtual void Connect() { }
     virtual void Disconnect() { }
 protected:
-    void throw_exception_no_device(const char *const msg);
-    void throw_exception_cannot_open(const char *const msg);
-    void format_error_message(char *buf, const char *const msg);
-    std::string prepare_message(const char *msg);
+    void throw_exception_no_device(const char *const msg) ;
+    void throw_exception_cannot_open(const char *const msg) ;
+    void format_error_message(char *buf, const char *const msg) ;
+    std::string prepare_message(const char *msg) ;
     static int accelerationAction(ParameteredContainer*);
     static int decelerationAction(ParameteredContainer*);
     static int speedAction(ParameteredContainer*);
