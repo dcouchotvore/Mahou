@@ -43,36 +43,22 @@ PI_TranslationStage::~PI_TranslationStage() {
 void PI_TranslationStage::InitializeHardware() {
 
     // Connect to the device.
-debug_box("Initializing hardware.");
-debug_box((const char *)m_port);
-char bb[256];
-sprintf(bb, "Baud=%d", (int)m_baud);
-debug_box(bb);
    m_id = PI_ConnectRS232(m_port, m_baud);
-sprintf(bb, "%d", (int)m_id);
-debug_box(bb);
-debug_box("Initializing hardware call.");
     if ( static_cast<int>(m_id)<0 )
         throw ExceptionNoDevice(prepare_message(m_device_name.c_str()));
 
-debug_box("ID OK.");
     char buffer[255];
     if ( !PI_qIDN(m_id, buffer, 255) )
 		throw ExceptionCannotOpen(prepare_message("Could not read *IDN?"));
-debug_box("IDN? OK.");
 
     if ( !PI_qSAI_ALL(m_id, buffer, 255) )
         throw ExceptionCannotOpen(prepare_message("Could not read SAI? ALL"));
-debug_box("SAI? ALL OK.");
 
     // Init stage
 
-debug_box((const char *)m_axis);
-debug_box((const char *)m_idStage);
 	if ( !PI_CST(m_id, m_axis, (const char *)m_idStage) ){
         throw ExceptionCannotOpen(prepare_message("CST failed"));
         }
-debug_box("CST OK.");
     m_alive = true;                                     // We can update hardware settings now.
     accelerationAction(this);
     decelerationAction(this);
@@ -151,7 +137,10 @@ void PI_TranslationStage::GoTo(double target, bool async) {
 }
 
 double PI_TranslationStage::Poll() const {
-    return 0.0;             // @@@ write this
+	double position;
+	if ( !PI_qMOV(m_id, m_axis, &position))
+		throw ExceptionMovement(prepare_message("qMOV failed"));
+    return position;
 }
 
 void PI_TranslationStage::SetData(const double *) { }
@@ -162,7 +151,6 @@ int PI_TranslationStage::accelerationAction(ParameteredContainer *pobj) {
     PI_TranslationStage *obj = dynamic_cast<PI_TranslationStage *>(pobj);
     if ( obj->m_alive ) {
         double val = obj->m_acceleration;
-obj->debug_box((const char *)(obj->m_axis));
         if ( !PI_ACC(obj->m_id, obj->m_axis, &val) )
             throw ExceptionMovement(obj->prepare_message("ACC failed"));            // @@@ Create appropriate exception class
         }
@@ -189,26 +177,26 @@ int PI_TranslationStage::speedAction(ParameteredContainer *pobj) {
     return 0;
 }
 
-void PI_TranslationStage::throw_exception_no_device(const char *const msg) {
+void PI_TranslationStage::throw_exception_no_device(const char *const msg) const {
     char buffer[1024];
     format_error_message(buffer, msg);
     throw ExceptionNoDevice(prepare_message(buffer));
 }
 
-void PI_TranslationStage::throw_exception_cannot_open(const char *const msg) {
+void PI_TranslationStage::throw_exception_cannot_open(const char *const msg) const {
     char buffer[1024];
     format_error_message(buffer, msg);
     throw ExceptionCannotOpen(prepare_message(buffer));
 }
 
-void PI_TranslationStage::format_error_message(char *buf, const char *const msg) {
+void PI_TranslationStage::format_error_message(char *buf, const char *const msg) const {
 	int error_num = PI_GetError(m_id);
 	char error_str[1024];
 	PI_TranslateError(error_num, error_str, 1024);
 	printf("%s - error %d, %s\n", buf, error_num, error_str);
 }
 
-std::string PI_TranslationStage::prepare_message(const char *msg){
+std::string PI_TranslationStage::prepare_message(const char *msg) const {
     std::string result(msg);
     result += ": ";
     long err = PI_GetError(m_id);

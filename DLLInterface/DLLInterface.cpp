@@ -77,7 +77,6 @@ void DLLInterface::LoadLibraries() {
             continue;
         do {
 			std::string dllpath = m_root_path+(*ii)+fd.cFileName;
-	::MessageBoxA(0, dllpath.c_str(), "DEBUG", MB_ICONINFORMATION|MB_OK);
 			DLLWrapper *wrapper = new DLLWrapper(dllpath.c_str());
 			wrapper->Create();
 			char dname[100];

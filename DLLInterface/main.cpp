@@ -48,7 +48,7 @@ int DLL_EXPORT GoTo(const char *const libname, double pos, int async) {
 }
 
 double DLL_EXPORT Poll(const char *const libname) {
-    return dll.Poll(libname);
+	return dll.Poll(libname);
 }
 
 int DLL_EXPORT SetData(const char *const libname, const double *data) {
