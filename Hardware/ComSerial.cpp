@@ -43,7 +43,7 @@ void SerialChannel::Disconnect() {
     ::CloseHandle(m_serial_handle);
 }
 
-void SerialChannel::SendMsg(const std::string msg){
+void SerialChannel::SendMsg(const std::string &msg){
     int remaining = msg.length();
     const char *p = msg.data();
     while ( remaining>0 ){
@@ -56,7 +56,7 @@ void SerialChannel::SendMsg(const std::string msg){
         }
 }
 
-void SerialChannel::RecvMsg(std::string msg) {
+void SerialChannel::RecvMsg(std::string &msg) {
     struct block {
         char data[BLOCKSIZE];
         DWORD data_count;

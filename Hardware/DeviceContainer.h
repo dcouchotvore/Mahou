@@ -18,7 +18,9 @@
 #define __DEVICECONTAINER_H__
 
 #include "NamedParameterList.h"
-#include "windows.h"
+#include <windows.h>
+#include "../System/Tools.h"
+#include "../System/XYDispDriver.h"
 
 namespace Mahou {
 
@@ -51,6 +53,9 @@ class DeviceFunction : public virtual ParameteredContainer {
         virtual void GetData(double *data) = 0;
     protected:
         Parameter<int> m_data_size;
+        void debug_box(const char *const msg) {
+			::MessageBoxA(0, msg, "DEBUG", MB_ICONINFORMATION | MB_OK);
+		}
 };
 
 class CommunicationsMethod : public virtual ParameteredContainer {
@@ -60,8 +65,8 @@ class CommunicationsMethod : public virtual ParameteredContainer {
         virtual void Connect() = 0;
         virtual void Disconnect() = 0;
         virtual void IoCtrl(const int method, void *data) = 0;                                                                      /// @@@ Be alert for a way to improve on this.
-        virtual void SendMsg(const std::string msg) = 0;
-        virtual void RecvMsg(std::string msg) = 0;
+        virtual void SendMsg(const std::string &msg) = 0;
+        virtual void RecvMsg(std::string &msg) = 0;
 };
 
 class TranslationStage : public DeviceFunction {
@@ -164,8 +169,8 @@ class SerialChannel : public CommunicationsMethod {
         virtual void Connect();
         virtual void Disconnect();
         virtual void IoCtrl(const int method, void *data) { }
-        virtual void SendMsg(const std::string msg);
-        virtual void RecvMsg(std::string msg);
+        virtual void SendMsg(const std::string &msg);
+        virtual void RecvMsg(std::string &msg);
     protected:
         Parameter<int> m_port;
         Parameter<int> m_baud;
@@ -180,16 +185,16 @@ class USBChannel : public CommunicationsMethod {
     public:
         USBChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName) { }
         virtual void IoCtrl(const int method, void *data);
-        virtual void SendMsg(const std::string msg);
-        virtual void RecvMsg(std::string msg);
+        virtual void SendMsg(const std::string &msg);
+        virtual void RecvMsg(std::string &msg);
 };
 
 class EthernetChannel : public CommunicationsMethod {
     public:
         EthernetChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName) { }
         virtual void IoCtrl(const int method, void *data);
-        virtual void SendMsg(const std::string msg);
-        virtual void RecvMsg(std::string msg);
+        virtual void SendMsg(const std::string &msg);
+        virtual void RecvMsg(std::string &msg);
 };
 
 class DLLChannel : public CommunicationsMethod {
@@ -197,18 +202,43 @@ class DLLChannel : public CommunicationsMethod {
         DLLChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName) { }
         ~DLLChannel() { }
         virtual void IoCtrl(const int method, void *data);
-        virtual void SendMsg(const std::string msg);
-        virtual void RecvMsg(std::string msg);
+        virtual void SendMsg(const std::string &msg);
+        virtual void RecvMsg(std::string &msg);
 };
 
 class OCXChannel : public CommunicationsMethod {
     public:
-        OCXChannel(const char *const deviceName) : ParameteredContainer(deviceName), CommunicationsMethod(deviceName) { }
-        virtual void Connect() = 0;
-        virtual void Disconnect() = 0;
-        virtual void IoCtrl(const int method, void *data);
-        virtual void SendMsg(const std::string msg);
-        virtual void RecvMsg(std::string msg);
+        OCXChannel(const char *const deviceName, const char *const class_name);
+        virtual ~OCXChannel();
+        virtual void Connect() { }
+        virtual void Disconnect() { }
+        virtual void IoCtrl(const int method, void *data) { }
+        virtual void SendMsg(const std::string &msg) { }
+        virtual void RecvMsg(std::string &msg) { }
+    protected:
+		typedef enum { P_I2, P_I4, P_BSTR, P_FLOAT, P_DOUBLE } ParmType;
+		struct MethodInfo {
+			DISPID m_dispID;
+			char *m_name;
+			WORD m_wFlag;
+			short m_VFOffset;
+			CALLCONV m_callconv;
+			VARTYPE m_vtOutputType;
+			union {
+				short int u_sint;
+				int u_int;
+				float u_float;
+				double u_double;
+				char *u_char;
+				} m_data;
+			int m_nParamCount;
+			WORD* m_pParamTypes;
+};
+		int InvokeMethod(const char *const method_name, ...);
+        std::string m_class_name;
+        CLSID m_class_id;
+        IUnknown *m_p_iunknown;
+        IDispatch *m_p_idispatch;
 };
 
 }

@@ -21,13 +21,13 @@
 namespace Mahou {
 
 PI_TranslationStage::PI_TranslationStage(const char *const deviceName) : ParameteredContainer(deviceName), TranslationStage(deviceName), SerialChannel(deviceName),
-        m_id("ID", -1, true), m_idName("IDName", "", true), m_axis("Axis", "A", true),
-         m_idStage("Stage ID", "M-505.4PD", true) {
+        m_id("ID", -1, true), m_idName("IDName", "", true), m_axis("Axis", "1", true), m_idStage("Stage ID", "M-505.4PD", true) {
     m_parameter_list.Add(&m_id);
     m_parameter_list.Add(&m_idName);
     m_parameter_list.Add(&m_axis);
     m_parameter_list.Add(&m_idStage);
 
+	m_baud = 38400;
     m_acceleration = 10.0;
     m_acceleration.SetAction(this, accelerationAction);
     m_deceleration = 10.0;
@@ -43,26 +43,36 @@ PI_TranslationStage::~PI_TranslationStage() {
 void PI_TranslationStage::InitializeHardware() {
 
     // Connect to the device.
-
-    m_id = PI_ConnectRS232(m_port, m_baud);
+debug_box("Initializing hardware.");
+debug_box((const char *)m_port);
+char bb[256];
+sprintf(bb, "Baud=%d", (int)m_baud);
+debug_box(bb);
+   m_id = PI_ConnectRS232(m_port, m_baud);
+sprintf(bb, "%d", (int)m_id);
+debug_box(bb);
+debug_box("Initializing hardware call.");
     if ( static_cast<int>(m_id)<0 )
         throw ExceptionNoDevice(prepare_message(m_device_name.c_str()));
 
+debug_box("ID OK.");
     char buffer[255];
     if ( !PI_qIDN(m_id, buffer, 255) )
 		throw ExceptionCannotOpen(prepare_message("Could not read *IDN?"));
+debug_box("IDN? OK.");
 
     if ( !PI_qSAI_ALL(m_id, buffer, 255) )
         throw ExceptionCannotOpen(prepare_message("Could not read SAI? ALL"));
+debug_box("SAI? ALL OK.");
 
     // Init stage
 
-	PI_qCST(m_id, m_axis, buffer, 255);                 // @@@ DEBUG
-
+debug_box((const char *)m_axis);
+debug_box((const char *)m_idStage);
 	if ( !PI_CST(m_id, m_axis, (const char *)m_idStage) ){
         throw ExceptionCannotOpen(prepare_message("CST failed"));
         }
-
+debug_box("CST OK.");
     m_alive = true;                                     // We can update hardware settings now.
     accelerationAction(this);
     decelerationAction(this);
@@ -152,6 +162,7 @@ int PI_TranslationStage::accelerationAction(ParameteredContainer *pobj) {
     PI_TranslationStage *obj = dynamic_cast<PI_TranslationStage *>(pobj);
     if ( obj->m_alive ) {
         double val = obj->m_acceleration;
+obj->debug_box((const char *)(obj->m_axis));
         if ( !PI_ACC(obj->m_id, obj->m_axis, &val) )
             throw ExceptionMovement(obj->prepare_message("ACC failed"));            // @@@ Create appropriate exception class
         }
@@ -208,5 +219,4 @@ std::string PI_TranslationStage::prepare_message(const char *msg){
 }
 
 }
-
 

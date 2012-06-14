@@ -28,6 +28,8 @@ class PI_TranslationStage : public TranslationStage, public SerialChannel {
 public:
     PI_TranslationStage(const char *const deviceName);
     virtual ~PI_TranslationStage();
+    virtual void Create() { };
+    virtual void Destroy() { };
     virtual void InitializeHardware();
     virtual void TerminateHardware();
     virtual void GoTo(double pos, bool async);
@@ -39,10 +41,10 @@ public:
     virtual void Connect() { }
     virtual void Disconnect() { }
 protected:
-    void throw_exception_no_device(const char *const msg);
-    void throw_exception_cannot_open(const char *const msg);
-    void format_error_message(char *buf, const char *const msg);
-    std::string prepare_message(const char *msg);
+    void throw_exception_no_device(const char *const msg) ;
+    void throw_exception_cannot_open(const char *const msg) ;
+    void format_error_message(char *buf, const char *const msg) ;
+    std::string prepare_message(const char *msg) ;
     static int accelerationAction(ParameteredContainer*);
     static int decelerationAction(ParameteredContainer*);
     static int speedAction(ParameteredContainer*);

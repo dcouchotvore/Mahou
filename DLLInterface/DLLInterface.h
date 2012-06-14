@@ -31,7 +31,7 @@ class DLLInterface {
     public:
         DLLInterface();
         ~DLLInterface();
-        void Initialize(HINSTANCE hinst);
+        void Initialize(const char *const db_path);
         void AddLibraryPath(const char *const path);
         void LoadLibraries();
         int GetLibraryCount() const;
@@ -62,7 +62,6 @@ class DLLInterface {
         mutable std::map<std::string, DLLWrapper*> m_library_list;
         mutable std::map<std::string, DLLWrapper*>::iterator m_iterator;
         std::string m_root_path;
-        HANDLE m_instance_handle;
 };
 
 

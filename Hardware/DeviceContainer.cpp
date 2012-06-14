@@ -19,7 +19,7 @@
 namespace Mahou {
 
 void DLLChannel::IoCtrl(const int method, void *data) { }
-void DLLChannel::SendMsg(const std::string msg) { }
-void DLLChannel::RecvMsg(std::string msg) { }
+void DLLChannel::SendMsg(const std::string &msg) { }
+void DLLChannel::RecvMsg(std::string &msg) { }
 
 }

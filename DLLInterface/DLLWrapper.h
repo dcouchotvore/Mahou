@@ -30,6 +30,8 @@ class DLLWrapper {
         int Destroy();
         int Initialize();
         int Terminate();
+        int Connect();
+        int Disconnect();
         int GetDeviceName(char *value);
 
         int GetParameterCount();
@@ -58,6 +60,8 @@ class DLLWrapper {
         int _cdecl (*f_destroy)();
         int _cdecl (*f_initialize)();
         int _cdecl (*f_terminate)();
+        int _cdecl (*f_connect)();
+        int _cdecl (*f_disconnect)();
         int _cdecl (*f_getDeviceName)(char *value);
 
         int _cdecl (*f_getParameterCount)();
