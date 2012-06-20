@@ -94,7 +94,7 @@ void PI_TranslationStage::InitializeHardware() {
                 throw ExceptionCannotOpen(prepare_message("qLIM failed"));
             if ( bFlag ) {
                 if ( !PI_FNL(m_id, m_axis) )
-                    throw ExceptionCannotOpen(prepare_message("MNL failed"));
+                    throw ExceptionCannotOpen(prepare_message("FNL failed"));
                 }
             else break;
             }
@@ -111,6 +111,7 @@ void PI_TranslationStage::InitializeHardware() {
             break;
         else break;
     } while ( false );
+
 
     // Get the limits
 

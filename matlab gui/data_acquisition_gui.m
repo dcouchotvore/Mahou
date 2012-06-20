@@ -22,7 +22,7 @@ function varargout = data_acquisition_gui(varargin)
 
 % Edit the above text to modify the response to help data_acquisition_gui
 
-% Last Modified by GUIDE v2.5 18-Jun-2012 11:03:10
+% Last Modified by GUIDE v2.5 19-Jun-2012 10:40:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,6 +57,7 @@ initializePIMotor(hObject);
 handles.output = hObject;
 
 % Update handles structure
+
 guidata(hObject, handles);
 
 % UIWAIT makes data_acquisition_gui wait for user response (see UIRESUME)
@@ -180,7 +181,7 @@ params = read_parameters_panel(handles);
 old_scan_max = params.scan_max;
 
 %initialize data structure
-[data,avg_data] = initializeData(params);
+[data,avg_data,numpoints] = initializeData(params);
 size(data);
 
 %set up the plots
@@ -210,6 +211,10 @@ while (i_scan ~= params.scan_max) && (strcmpi(get(handles.btnStop,'String'),'Sto
       %do the full AC procedure with the meter
       [data,avg_data] = scanLabMax(labMax,handles,params,data,avg_data,i_scan,hPlots);
 
+    case 'labmax ac overlapped'
+      params.shots = numpoints;
+      [data,avg_data] = scanLabMaxOverlapped(labMax,handles,params,data,avg_data,i_scan,hPlots);
+   
     otherwise
       %exit with warning
       warning('SGRLAB:methodUnknown','unknown method');
@@ -245,6 +250,7 @@ p.end = str2double(get(handles.edtEnd,'String'));
 p.resolution = str2double(get(handles.edtResolution,'String'));
 contents = get(handles.lstMethod,'String'); %get list of methods
 p.method = contents{get(handles.lstMethod,'Value')}; %get which method is selected
+p.speed = str2double(get(handles.editSpeed,'String'));
 
 
 % --- Executes on button press in btnStop.
@@ -371,7 +377,7 @@ set(handles.edtMotor1,'String','moving...');
 % command to move motor goes here
 %
 motor_index = 1;
-new_position = moveMotorFs(handles,motor_index,desired_position, 0);
+new_position = moveMotorFs(handles,motor_index,desired_position, 800, 0, 0);
 
 
 function edtShots_Callback(hObject, eventdata, handles)
@@ -383,7 +389,6 @@ function edtShots_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edtShots as a double
 
 
-
 function edtStart_Callback(hObject, eventdata, handles)
 % hObject    handle to edtStart (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -391,7 +396,6 @@ function edtStart_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edtStart as text
 %        str2double(get(hObject,'String')) returns contents of edtStart as a double
-
 
 
 function edtEnd_Callback(hObject, eventdata, handles)
@@ -473,7 +477,7 @@ function pbM1Down_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global PI_1;
-moveMotorFs(handles, 1, -25, 1);
+moveMotorFs(handles, 1, -25, 1, 0, 0);
 
 % --- Executes on button press in pbMIUp.
 function pbMIUp_Callback(hObject, eventdata, handles)
@@ -482,4 +486,27 @@ function pbMIUp_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 global PI_1;
-moveMotorFs(handles, 1, 25, 1);
+moveMotorFs(handles, 1, 25, 1, 0, 0);
+
+
+
+function editSpeed_Callback(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSpeed as text
+%        str2double(get(hObject,'String')) returns contents of editSpeed as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editSpeed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

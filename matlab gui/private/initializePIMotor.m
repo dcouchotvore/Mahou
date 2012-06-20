@@ -16,6 +16,7 @@ PI_1.terminator = {'LF','LF'};
 PI_1.maximum = 15.0;
 PI_1.minimum = 0.0;
 PI_1.center = 0.0;
+PI_1.factor = 1666.667;     % units per physical millimeter
 
 cc = PI_1.os_name;
 obj = instrfind('Type', 'serial', 'Port', cc, 'Tag', '');
@@ -44,11 +45,22 @@ set(obj, 'BaudRate', PI_1.baud);
 set(obj, 'Terminator', PI_1.terminator);
 
 %%
-fprintf(obj,'*IDN?');
-fscanf(obj,'%s')
+sendPIMotorCommand(1, '*IDN?', 1);
 
 %% reference move to negative limit
-fprintf(obj,'RON 1 1');
-fprintf(obj,'FNL');
+sendPIMotorCommand(1, 'RON 1 1', 0);
+sendPIMotorCommand(1, 'SVO 1 1', 0);
+sendPIMotorCommand(1, 'VEL 1 0.5', 0);
+sendPIMotorCommand(1, 'FNL 1', 0);
 
+%Wait until motor gets to limit.
+while 1==1
+  status = sendPIMotorCommand(1, 'SRG? 1 1', 1);
+  num = uint16(hex2dec(status(7:end-1)));
+  if bitand(num, hex2dec('A000'))==hex2dec('8000')
+    break;
+  else
+    pause(0.1);
+  end
+end
 
