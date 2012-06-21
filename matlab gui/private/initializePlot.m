@@ -27,12 +27,12 @@ switch lower(params.method)
     set(h(2),'XDataSource','avg_data.x','YDataSource','avg_data.y');
     
   case 'labmax ac overlapped'
-    h(1) = plot(handles.axes1,data(1).x,data(1).y,'o');
+    h(1) = plot(handles.axes1,data(1).x,data(1).y, '');
     hold on
-%    h(2) = plot(handles.axes1,avg_data.x,avg_data.y);
+    h(2) = plot(handles.axes1,avg_data.x,avg_data.y, '-');
     hold off
-    set(h(1),'XDataSource','data(1).x','YDataSource','data(1).y');
-%    set(h(2),'XDataSource','avg_data.x','YDataSource','avg_data.y');
+    set(h(1),'XDataSource','data(i_scan).x','YDataSource','data(i_scan).y');
+    set(h(2),'XDataSource','avg_data.x','YDataSource','avg_data.y');
      
   otherwise
     error('SGRLAB:methodUnknown','unknown method');

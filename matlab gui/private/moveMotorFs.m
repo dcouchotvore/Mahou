@@ -44,10 +44,9 @@ if move_async==0
       pause(0.1);
     end
   end
-end
 
 %% update the gui
-h = eval(sprintf('handles.edtMotor%i',1));
-pos = getMotorPos(motor_index);
-set(h, 'String', num2str((pos-PI_1.center)*PI_1.factor));
-
+  h = eval(sprintf('handles.edtMotor%i',1));
+  pos = getMotorPos(motor_index);
+  set(h, 'String', num2str((pos-PI_1.center)*PI_1.factor));
+end
