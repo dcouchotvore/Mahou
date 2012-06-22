@@ -138,8 +138,8 @@ void PI_TranslationStage::GoTo(double target, bool async) {
 
 double PI_TranslationStage::Poll() const {
 	double position;
-	if ( !PI_qMOV(m_id, m_axis, &position))
-		throw ExceptionMovement(prepare_message("qMOV failed"));
+	if ( !PI_qPOS(m_id, m_axis, &position))
+		throw ExceptionMovement(prepare_message("qPOS failed"));
     return position;
 }
 
