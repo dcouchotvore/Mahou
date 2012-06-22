@@ -1,5 +1,7 @@
 function [data,avg_data] = scanLabMax(labMax,handles,params,data,avg_data,i_scan,hPlots)
 
+global PI_1;
+
 %if first scan set up the powermeter acquisition and initialize variables
 if i_scan == 1
   %initialize code goes here
@@ -14,7 +16,7 @@ if params.scan_max == -1, i_scan = 1;end
 for i_step = 1:length(data(1).x)
   
   %move to the desired position
-  moveMotorFs(handles,1,data(i_scan).x(i_step),800, 0, 0);
+  moveMotorFs(handles,1,data(i_scan).x(i_step),0.5*PI_1.factor, 0, 0);
   
   %acquire the current data point from meter
   labMaxCommandHandshake(labMax, 'INIT');

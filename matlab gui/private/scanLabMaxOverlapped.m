@@ -16,7 +16,7 @@ if params.scan_max == -1, i_scan = 1;end
 %for i_scan = 1:params.scan_max
   
   %move to the start position
-  moveMotorFs(handles,1,data(i_scan).x(1),800, 0, 0);
+  moveMotorFs(handles,1,data(i_scan).x(1),0.5*PI_1.factor, 0, 0);
   % start the scan
 
   %acquire the current data point from meter

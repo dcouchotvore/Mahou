@@ -370,6 +370,9 @@ function btnMotor1_Callback(hObject, eventdata, handles)
 % hObject    handle to btnMotor1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+global PI_1;
+
 desired_position = str2double(get(handles.edtMotor1,'String'));
 set(handles.edtMotor1,'String','moving...');
 
@@ -377,7 +380,7 @@ set(handles.edtMotor1,'String','moving...');
 % command to move motor goes here
 %
 motor_index = 1;
-new_position = moveMotorFs(handles,motor_index,desired_position, 800, 0, 0);
+new_position = moveMotorFs(handles,motor_index,desired_position, .5*PI_1.factor, 0, 0);
 
 
 function edtShots_Callback(hObject, eventdata, handles)

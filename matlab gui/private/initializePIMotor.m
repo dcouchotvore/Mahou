@@ -16,7 +16,7 @@ PI_1.terminator = {'LF','LF'};
 PI_1.maximum = 15.0;
 PI_1.minimum = 0.0;
 PI_1.center = 0.0;
-PI_1.factor = 1666.667;     % units per physical millimeter
+PI_1.factor = 6666.667;     % units per physical millimeter
 
 cc = PI_1.os_name;
 obj = instrfind('Type', 'serial', 'Port', cc, 'Tag', '');
