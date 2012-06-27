@@ -15,15 +15,16 @@ end
 fopen(obj1);
 
 % Configure instrument object, obj1.
-set(obj1, 'BaudRate', 19200);
+set(obj1, 'BaudRate', 115200);
 set(obj1, 'Terminator', {'CR/LF','CR/LF'});
 handshake_flag = true;
 fprintf(obj1,'SYST:COMM:HAND OFF');
-if strcmpi(query('SYST:COMM:HAND?'),'OFF')
+if strcmpi(query(obj1, 'SYST:COMM:HAND?'),'OFF')
   handshake_flag = false;
 else
   handshake_flag = true;
-  handshake(obj1);
+  
+  handshake(obj1,handshake_flag);
 end
 
 % Communicating with instrument object, obj1.

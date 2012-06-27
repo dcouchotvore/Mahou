@@ -12,7 +12,7 @@ function varargout = data_acquisition_gui(varargin)
 %      DATA_ACQUISITION_GUI('Property','Value',...) creates a new DATA_ACQUISITION_GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
 %      applied to the GUI before data_acquisition_gui_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
+%      unrecognized pguideroperty name or invalid value makes property application
 %      stop.  All inputs are passed to data_acquisition_gui_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
@@ -22,7 +22,7 @@ function varargout = data_acquisition_gui(varargin)
 
 % Edit the above text to modify the response to help data_acquisition_gui
 
-% Last Modified by GUIDE v2.5 12-Jun-2012 17:46:40
+% Last Modified by GUIDE v2.5 19-Jun-2012 10:40:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -43,7 +43,6 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
 % --- Executes just before data_acquisition_gui is made visible.
 function data_acquisition_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
@@ -52,21 +51,28 @@ function data_acquisition_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to data_acquisition_gui (see VARARGIN)
 
+initializePIMotor(hObject);
+
 % Choose default command line output for data_acquisition_gui
 handles.output = hObject;
 
 % Update handles structure
+
 guidata(hObject, handles);
 
 % UIWAIT makes data_acquisition_gui wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
-
-global dllinfo USE_DLLS USE_LABMAX labMax;             %%%Could be put into handles
+global PI_1;
+global dllinfo USE_DLLS USE_LABMAX labMax motor_offset;             %%%Could be put into handles
 dllinfo = [];
 USE_DLLS = 0;
 USE_LABMAX = 1;
+motor_offset =0;
 labMax = [];
+
+% Load DLL interface
+
 
 if USE_DLLS,
   %load dlls here
@@ -107,8 +113,11 @@ if USE_LABMAX
   set(labMax, 'BaudRate', LABMAX_BAUD);
   set(labMax, 'Terminator', LABMAX_TERMINATOR);
   
+  %turn handshaking off so we can set the baudrate
+  fprintf(labMax,'SYST:COMM:HAND OFF');%communicate without handshake
+  fprintf(labMax, ['SYST:COMM:SER:BAUD ' num2str(LABMAX_BAUD)]);%communicate without handshake
   % Baud rate
-  labMaxCommandHandshake(labMax, ['SYST:COMM:SER:BAUD ' num2str(LABMAX_BAUD)]);
+%  labMaxCommandHandshake(labMax, ['SYST:COMM:SER:BAUD ' num2str(LABMAX_BAUD)]);
   %make sure we are handshaking
   labMaxCommandHandshake(labMax, 'SYST:COMM:HAND ON');
   %make meter under remote (computer) control
@@ -172,7 +181,7 @@ params = read_parameters_panel(handles);
 old_scan_max = params.scan_max;
 
 %initialize data structure
-[data,avg_data] = initializeData(params);
+[data,avg_data,numpoints] = initializeData(params);
 size(data);
 
 %set up the plots
@@ -202,6 +211,10 @@ while (i_scan ~= params.scan_max) && (strcmpi(get(handles.btnStop,'String'),'Sto
       %do the full AC procedure with the meter
       [data,avg_data] = scanLabMax(labMax,handles,params,data,avg_data,i_scan,hPlots);
 
+    case 'labmax ac overlapped'
+      params.shots = numpoints;
+      [data,avg_data] = scanLabMaxOverlapped(labMax,handles,params,data,avg_data,i_scan,hPlots);
+   
     otherwise
       %exit with warning
       warning('SGRLAB:methodUnknown','unknown method');
@@ -237,6 +250,7 @@ p.end = str2double(get(handles.edtEnd,'String'));
 p.resolution = str2double(get(handles.edtResolution,'String'));
 contents = get(handles.lstMethod,'String'); %get list of methods
 p.method = contents{get(handles.lstMethod,'Value')}; %get which method is selected
+p.speed = str2double(get(handles.editSpeed,'String'));
 
 
 % --- Executes on button press in btnStop.
@@ -356,6 +370,9 @@ function btnMotor1_Callback(hObject, eventdata, handles)
 % hObject    handle to btnMotor1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+global PI_1;
+
 desired_position = str2double(get(handles.edtMotor1,'String'));
 set(handles.edtMotor1,'String','moving...');
 
@@ -363,7 +380,7 @@ set(handles.edtMotor1,'String','moving...');
 % command to move motor goes here
 %
 motor_index = 1;
-new_position = moveMotorFs(handles,motor_index,desired_position);
+new_position = moveMotorFs(handles,motor_index,desired_position, .5*PI_1.factor, 0, 0);
 
 
 function edtShots_Callback(hObject, eventdata, handles)
@@ -375,7 +392,6 @@ function edtShots_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of edtShots as a double
 
 
-
 function edtStart_Callback(hObject, eventdata, handles)
 % hObject    handle to edtStart (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -383,7 +399,6 @@ function edtStart_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edtStart as text
 %        str2double(get(hObject,'String')) returns contents of edtStart as a double
-
 
 
 function edtEnd_Callback(hObject, eventdata, handles)
@@ -406,8 +421,9 @@ function edtResolution_Callback(hObject, eventdata, handles)
 
 function new_position = reset_motor(motor_index);
 %put code to reset the "0" position of the motors here
-reached_position = 0;
-
+global PI_1;
+PI_1.center = getMotorPos(motor_index);
+new_position = 0;
 
 % --- Executes on button press in chkAutoscale.
 function chkAutoscale_Callback(hObject, eventdata, handles)
@@ -430,6 +446,11 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global USE_LABMAX labMax USE_DLLS dllinfo
 
+global PI_1;
+fclose(PI_1.object);
+
+disp('Figure 1 delete function');
+
 if USE_DLLS
   %clean up dlls here
   disp('Clean up dlls');
@@ -437,9 +458,58 @@ end
 
 if USE_LABMAX
   disp('Clean up LabMax');
-  %make meter local
-  labMaxCommandHandshake(labMax,'SYST:LOC');
-  
-  %hang up connection
-  fclose(labMax);
+  if exist('labMax','var'),%is the variable defined
+    if ~isempty(labMax), %is it not empty
+      if strcmpi(class(labMax),'serial'),%is it a serial port object
+        %make meter local
+        labMaxCommandHandshake(labMax,'SYST:LOC');
+        
+        %hang up connection
+        fclose(labMax);
+        delete(labMax);
+      end
+    end
+  end
+end
+
+
+% --- Executes on button press in pbM1Down.
+function pbM1Down_Callback(hObject, eventdata, handles)
+% hObject    handle to pbM1Down (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global PI_1;
+moveMotorFs(handles, 1, -25, 1, 0, 0);
+
+% --- Executes on button press in pbMIUp.
+function pbMIUp_Callback(hObject, eventdata, handles)
+% hObject    handle to pbMIUp (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global PI_1;
+moveMotorFs(handles, 1, 25, 1, 0, 0);
+
+
+
+function editSpeed_Callback(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSpeed as text
+%        str2double(get(hObject,'String')) returns contents of editSpeed as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editSpeed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
