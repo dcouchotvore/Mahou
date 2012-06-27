@@ -22,6 +22,7 @@ typedef int (*HandleProc)(HANDLE handle);
 typedef int (*GetParmDataProc)(const char *module, char *parmname, int *type, int *is_read_only);
 typedef int (*GetSetParmProc)(const char *module, char *parmname, char *value);
 typedef int (*DoubleIntProc)(const char *name, const double val, const int async);
+typedef double (*DCharPtrProc)(const char *);
 
 int main()
 {
@@ -60,9 +61,9 @@ int main()
         GetSetParmProc setParameter = (GetSetParmProc)::GetProcAddress(hinst, "SetParameter");
         setParameter("PI_TranslationStage1", "Speed", "0.75");
         DoubleIntProc goTo = (DoubleIntProc)::GetProcAddress(hinst, "GoTo");
-		VoidProc poll = (VoidProc)::GetProcAddress(hinst, "Poll");
+		DCharPtrProc poll = (DCharPtrProc)::GetProcAddress(hinst, "Poll");
 		goTo("PI_TranslationStage1", 7.0, 0);
-        double pos = poll();
+        double pos = poll("PI_TranslationStage1");
         goTo("PI_TranslationStage1", 15.0, 1);
         goTo("PI_TranslationStage1", 0.0, 0);
 
