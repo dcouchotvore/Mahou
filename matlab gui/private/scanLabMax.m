@@ -1,5 +1,7 @@
 function [data,avg_data] = scanLabMax(labMax,handles,params,data,avg_data,i_scan,hPlots)
 
+global PI_1;
+
 %if first scan set up the powermeter acquisition and initialize variables
 if i_scan == 1
   %initialize code goes here
@@ -14,7 +16,7 @@ if params.scan_max == -1, i_scan = 1;end
 for i_step = 1:length(data(1).x)
   
   %move to the desired position
-  moveMotorFs(handles,1,data(i_scan).x(i_step));
+  moveMotorFs(handles,1,data(i_scan).x(i_step),0.5*PI_1.factor, 0, 0);
   
   %acquire the current data point from meter
   labMaxCommandHandshake(labMax, 'INIT');
@@ -30,15 +32,15 @@ for i_step = 1:length(data(1).x)
     if nrecs >= params.shots, flag_done = true;end
   end
   labMaxCommandHandshake(labMax, 'ABOR');
-  
+
   %read the data from the meter (the slow step)
   data8 = cell(1,nrecs);
   fprintf(labMax,'FETC:ALL?')
   for i = 1:nrecs
-    data8{i} = fscanf(labMax, '%s');
+    data8{i} = fgets(labMax);
   end
   handshake(labMax,true);
-  
+ 
   %convert the strings to numeric
   val = zeros(1,params.shots);
   for i = 1:params.shots
