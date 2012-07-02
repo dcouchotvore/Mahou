@@ -1,0 +1,15 @@
+EXPORTS
+    GetDeviceName @1
+    GetParameter @2
+    GetParameterCount @3
+    GetParameterData @4
+    Initialize @5
+    SetParameter @6
+    _Z4GoTod @7
+    _Z4Pollv @8
+    _Z6IoCtrliPv @9
+    _Z7GetDataPd @10
+    _Z7RecvMsgPcj @11
+    _Z7SendMsgPKcj @12
+    _Z7SetDataPKd @13
+    _Z9Terminatev @14

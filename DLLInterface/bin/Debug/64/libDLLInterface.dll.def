@@ -1,0 +1,18 @@
+EXPORTS
+    AddLibraryPath @1
+    GetData @2
+    GetDeviceName @3
+    GetLibraryCount @4
+    GetLibraryName @5
+    GetParameter @6
+    GetParameterCount @7
+    GetParameterData @8
+    GoTo @9
+    Initialize @10
+    IoCtrl @11
+    LoadLibraries @12
+    Poll @13
+    RecvMsg @14
+    SendMsg @15
+    SetData @16
+    SetParameter @17

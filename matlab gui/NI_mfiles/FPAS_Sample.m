@@ -7,22 +7,22 @@ switch PARAMS.dataSource
     case 0
         
         %% start the task
-        DAQmxStartTask(lib,FPAS.hTask);
+        DAQmxStartTask(FPAS.lib, FPAS.hTask);
 
         %% read 
         timeout = 1;
         fillMode = DAQmx_Val_GroupByChannel; % Group by Channel
         %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
-        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(lib,hTask,numchan,sampsPerChan,timeout,fillMode,bufSizeInSamps);
+        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,hTask,numchan,sampsPerChan,timeout,fillMode,bufSizeInSamps);
 
         %portdata
 
         %% stop
-        DAQmxStopTask(lib,hTask);
+        DAQmxStopTask(FPAS.lib,hTask);
 
         %% clear
-        DAQmxClearTask(lib,hTask);
+        DAQmxClearTask(FPAS.lib,hTask);
 
         %% swizzle data (could be optimized for memory and speed)
         nPerBoard = 32; %has to do with the number of channels on the boards going to the FIFO

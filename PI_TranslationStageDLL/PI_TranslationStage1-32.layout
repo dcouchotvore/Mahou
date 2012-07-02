@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="..\Hardware\ComSerial.cpp" open="0" top="0" tabpos="6">
+		<Cursor position="2047" topLine="22" />
+	</File>
+	<File name="..\Hardware\DeviceContainer.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="431" topLine="0" />
+	</File>
+	<File name="..\Hardware\DeviceContainer.h" open="1" top="0" tabpos="3">
+		<Cursor position="2091" topLine="38" />
+	</File>
+	<File name="..\Hardware\Exceptions.cpp" open="0" top="0" tabpos="11">
+		<Cursor position="931" topLine="9" />
+	</File>
+	<File name="..\Hardware\Exceptions.h" open="0" top="0" tabpos="9">
+		<Cursor position="883" topLine="30" />
+	</File>
+	<File name="..\Hardware\HardwareDLL.h" open="1" top="0" tabpos="1">
+		<Cursor position="5114" topLine="166" />
+	</File>
+	<File name="..\Hardware\NamedParameterList.h" open="1" top="0" tabpos="6">
+		<Cursor position="4150" topLine="102" />
+	</File>
+	<File name="..\Hardware\PI_TranslationStage.cpp" open="1" top="1" tabpos="4">
+		<Cursor position="4933" topLine="157" />
+	</File>
+	<File name="..\Hardware\PI_TranslationStage.h" open="1" top="0" tabpos="8">
+		<Cursor position="1351" topLine="26" />
+	</File>
+	<File name="..\Hardware\constants.h" open="1" top="0" tabpos="9">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="main.h" open="1" top="0" tabpos="7">
+		<Cursor position="1450" topLine="18" />
+	</File>
+	<File name="main1.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="1425" topLine="41" />
+	</File>
+</CodeBlocks_layout_file>

@@ -1,0 +1,68 @@
+# depslib dependency file v1.0
+1198436942 source:c:\development\mahou shoujo\labmax\main.cpp
+	"main.h"
+
+1198436942 c:\development\mahou shoujo\labmax\main.h
+	<windows.h>
+
+1332286961 source:c:\development\mahou shoujo\hardware\exceptions.cpp
+	"Exceptions.h"
+	<windows.h>
+
+1339186769 c:\development\mahou shoujo\hardware\exceptions.h
+	<string>
+	<vector>
+	<exception>
+
+1339080740 source:c:\development\mahou shoujo\hardware\hardwaredll.cpp
+	"HardwareDLL.h"
+	"DeviceContainer.h"
+
+1339080740 c:\development\mahou shoujo\hardware\hardwaredll.h
+	"NamedParameterList.h"
+
+1339095499 c:\development\mahou shoujo\hardware\namedparameterlist.h
+	"Exceptions.h"
+	<map>
+	<vector>
+	<string.h>
+	<iostream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+
+1339426378 c:\development\mahou shoujo\hardware\devicecontainer.h
+	"NamedParameterList.h"
+	<windows.h>
+	"../System/Tools.h"
+	"../System/XYDispDriver.h"
+
+1339188038 c:\development\mahou shoujo\system\tools.h
+	<string>
+
+1339427641 source:c:\development\mahou shoujo\hardware\labmax.cpp
+	"LabMax.h"
+
+1339528360 c:\development\mahou shoujo\hardware\labmax.h
+	"DeviceContainer.h"
+	<string>
+
+1339186790 source:c:\development\mahou shoujo\hardware\devicecontainer.cpp
+	"DeviceContainer.h"
+
+1339426408 source:c:\development\mahou shoujo\hardware\ocxchannel.cpp
+	"DeviceContainer.h"
+
+1339187858 c:\development\mahou shoujo\system\xydispdriver.h
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<oaidl.h>
+	<ocidl.h>
+	<objbase.h>
+	"Tools.h"
+
+1339188017 source:c:\development\mahou shoujo\system\xydispdriver.cpp
+	"XYDispDriver.h"
+	"Tools.h"
+
