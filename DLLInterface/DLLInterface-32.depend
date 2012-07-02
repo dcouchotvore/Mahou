@@ -1,0 +1,55 @@
+# depslib dependency file v1.0
+1339677332 source:c:\development\mahou shoujo\dllinterface\dllinterface.cpp
+	"DLLInterface.h"
+	"Hardware/Exceptions.h"
+	<strings.h>
+	"DBInterface.h"
+	<stdio.h>
+
+1339621342 c:\development\mahou shoujo\dllinterface\dllinterface.h
+	"DLLWrapper.h"
+	<vector>
+	<map>
+	<string>
+
+1339596018 c:\development\mahou shoujo\dllinterface\dllwrapper.h
+	<windows.h>
+
+1339186769 c:\development\mahou shoujo\\hardware\exceptions.h
+	<string>
+	<vector>
+	<exception>
+
+1338824118 c:\development\mahou shoujo\dllinterface\dbinterface.h
+	"DLLWrapper.h"
+	<string>
+	<vector>
+
+1339677332 source:c:\development\mahou shoujo\dllinterface\dllwrapper.cpp
+	"DLLWrapper.h"
+	"Hardware/Exceptions.h"
+
+1339621342 source:c:\development\mahou shoujo\dllinterface\main.cpp
+	"main.h"
+	"DLLInterface.h"
+
+1339621121 c:\development\mahou shoujo\dllinterface\main.h
+	<windows.h>
+
+1332286961 source:c:\development\mahou shoujo\hardware\exceptions.cpp
+	"Exceptions.h"
+	<windows.h>
+
+1339186769 c:\development\mahou shoujo\hardware\exceptions.h
+	<string>
+	<vector>
+	<exception>
+
+1339095601 source:c:\development\mahou shoujo\dllinterface\dbinterface.cpp
+	"DBInterface.h"
+	"../Hardware/Exceptions.h"
+	<windows.h>
+	<string.h>
+	<stdio.h>
+	<tchar.h>
+

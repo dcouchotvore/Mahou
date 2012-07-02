@@ -84,12 +84,6 @@ set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise./1000
 hold(handles.axesRawData, 'off');
 set(handles.axesRawData, 'XLim', [1, 32]);
 
-% This sets up the initial plot - only do when we are invisible
-% so window can get raised using Spectrometer.
-%if strcmp(get(hObject,'Visible'),'off')
-%    refreshPl
-%end
-
 % UIWAIT makes Spectrometer wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
@@ -137,7 +131,7 @@ try
     end
 catch E
     set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
-    rethrow E;
+    rethrow(E);
 end
 set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
 

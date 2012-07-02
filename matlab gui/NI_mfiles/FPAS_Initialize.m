@@ -10,14 +10,14 @@ FPAS.nMaxChan = 256; %the number of channels written to the FIFO buffer in the F
 FPAS.nSampsPerChan = FPAS.nMaxChan/2*PARAMS.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
 
 %% load library
-lib = 'myni';	% library alias
-if ~libisloaded(lib)
+FPAS.lib = 'myni';	% library alias
+if ~libisloaded(FPAS.lib)
     disp('Matlab: Load nicaiu.dll')
-    funclist = loadlibrary('nicaiu.dll','C:\Program Files (x86)\National Instruments\NI-DAQ\DAQmx ANSI C Dev\include\nidaqmx.h','alias',lib);
+    funclist = loadlibrary('nicaiu.dll','C:\Program Files (x86)\National Instruments\NI-DAQ\DAQmx ANSI C Dev\include\nidaqmx.h','alias',FPAS.lib);
     %if you do NOT have nicaiu.dll and nidaqmx.h
     %in your Matlab path,add full pathnames or copy the files.
-    %libfunctions(lib,'-full') % use this to show the... 
-    %libfunctionsview(lib)     % included function
+    %libfunctions(FPAS.lib,'-full') % use this to show the... 
+    %libfunctionsview(FPAS.lib)     % included function
 end
 disp('Matlab: dll loaded')
 
@@ -29,7 +29,7 @@ disp('done')
 
 %% reset device
 devName = 'Dev1'; %as defined in NI MAX program
-DAQmxResetDevice(lib,'Dev1');
+DAQmxResetDevice(FPAS.lib,'Dev1');
 
 %% create task
 
@@ -42,7 +42,7 @@ taskName = '';	% ?
 chanName = {''};	% recommended to avoid problems
 lineGrouping = DAQmx_Val_ChanForAllLines; % One Channel For All Lines
 
-[FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(lib,lines,lineGrouping,taskName,chanName);
+[FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(FPAS.lib,lines,lineGrouping,taskName,chanName);
 %here numchan is the number of digital input channels, i.e. just 1
 
 %% configure timing
@@ -54,7 +54,7 @@ sampleClkPulsePolarity = DAQmx_Val_ActiveHigh;
 pauseWhen = DAQmx_Val_High;
 readyEventActiveLevel = DAQmx_Val_ActiveHigh;
 
-DAQmxCfgBurstHandshakingTimingExportClock(lib,hTask,...
+DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,hTask,...
     sampleMode,sampsPerChan,sampleClkRate,sampleClkOutputTerm,...
     sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
 

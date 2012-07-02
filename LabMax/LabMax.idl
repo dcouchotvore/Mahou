@@ -1,0 +1,65 @@
+//LabMaxLowLevelControl 1.0 Type Library
+//Version: 1.0
+LabMaxLowLevelControl;
+GUID = {5F331069-3778-4225-8DE7-DC3A7D090EF9};
+
+
+//_ILabMaxLowLevCtlEvents Interface
+Dispatch _ILabMaxLowLevCtlEvents;
+GUID = {4408BF92-B376-4788-B880-2B4DE2C63F38};
+  //method MeterAdded
+  function MeterAdded(iMeterIndex: I2); stdcall;
+  //method MeterRemoved
+  function MeterRemoved(iMeterIndex: I2); stdcall;
+  //method AsynchronousNotification
+  function AsynchronousNotification(iMeterIndex: I2); stdcall;
+  //method USBStreamingPacket
+  function USBStreamingPacket(iMeterIndex: I2; iStreamingPacket: Variant); stdcall;
+
+//LabMaxLowLevCtl Class
+CoClass CLabMaxLowLevCtl;
+GUID = {D5D146E2-4398-415B-9773-B48F6620D2B5};
+
+//ILabMaxLowLevCtl Interface
+Dispatch ILabMaxLowLevCtl;
+GUID = {1212BA48-F43B-4640-8122-FBCB52F18CBD};
+  function QueryInterface(riid: ^GUID; out ppvObj: ^^VOID); stdcall;
+  function AddRef: UI4; stdcall;
+  function Release: UI4; stdcall;
+  function GetTypeInfoCount(out pctinfo: ^UINT); stdcall;
+  function GetTypeInfo(itinfo: UINT; lcid: UI4; out pptinfo: ^^VOID); stdcall;
+  function GetIDsOfNames(riid: ^GUID; rgszNames: ^^I1; cNames: UINT; lcid: UI4; out rgdispid: ^I4); stdcall;
+  function Invoke(dispidMember: I4; riid: ^GUID; lcid: UI4; wFlags: UI2; pdispparams: ^DISPPARAMS; out pvarResult: ^Variant; out pexcepinfo: ^EXCEPINFO; out puArgErr: ^UINT); stdcall;
+  //method SendCommandOrQuery
+  function SendCommandOrQuery(iMeterIndex: I2; iCommandOrQuery: BSTR): I2; stdcall;
+  //method GetNextString
+  function GetNextString(iMeterIndex: I2): BSTR; stdcall;
+  //method ConnectToMeter
+  function ConnectToMeter(iMeterIndex: I2): I2; stdcall;
+  //method DisconnectFromMeter
+  function DisconnectFromMeter(iMeterIndex: I2): I2; stdcall;
+  //property CommunicationMode
+  property-get CommunicationMode: LabMaxCommunicationMode; stdcall;
+  //property CommunicationMode
+  property-put CommunicationMode(: LabMaxCommunicationMode); stdcall;
+  //property RS232Settings
+  property-get RS232Settings(iMeterIndex: I2): BSTR; stdcall;
+  //property RS232Settings
+  property-put RS232Settings(iMeterIndex: I2; : BSTR); stdcall;
+  //property SerialNumber
+  property-get SerialNumber(iMeterIndex: I2): BSTR; stdcall;
+  //method Initialize
+  function Initialize: I2; stdcall;
+  //method DeInitialize
+  function DeInitialize: I2; stdcall;
+  //property GPIBSettings
+  property-get GPIBSettings: BSTR; stdcall;
+  //property GPIBSettings
+  property-put GPIBSettings(: BSTR); stdcall;
+
+Enum LabMaxCommunicationMode;
+  COM_MODE_NONE = 0;
+  COM_MODE_USB = 1;
+  COM_MODE_GPIB = 2;
+  COM_MODE_RS232 = 3;
+

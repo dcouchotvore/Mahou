@@ -1,0 +1,144 @@
+# depslib dependency file v1.0
+1337968219 source:c:\development\mahou shoujo\hardware\dbinterface.cpp
+	"DBInterface.h"
+	<windows.h>
+	<string.h>
+	<stdio.h>
+	<tchar.h>
+
+1332775363 c:\development\mahou shoujo\hardware\dbinterface.h
+	"NamedParameterList.h"
+
+1339534285 c:\development\mahou shoujo\hardware\namedparameterlist.h
+	"Exceptions.h"
+	<map>
+	<vector>
+	<string.h>
+	<iostream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+
+1339186769 c:\development\mahou shoujo\hardware\exceptions.h
+	<string>
+	<vector>
+	<exception>
+
+1332286961 source:c:\development\mahou shoujo\hardware\exceptions.cpp
+	"Exceptions.h"
+	<windows.h>
+
+1339537956 source:c:\development\mahou shoujo\hardware\hardwaredll.cpp
+	"HardwareDLL.h"
+	"DeviceContainer.h"
+
+1339538431 c:\development\mahou shoujo\hardware\hardwaredll.h
+	"NamedParameterList.h"
+
+1339426378 c:\development\mahou shoujo\hardware\devicecontainer.h
+	"NamedParameterList.h"
+	<windows.h>
+	"../System/Tools.h"
+	"../System/XYDispDriver.h"
+
+1339539317 source:c:\development\mahou shoujo\hardware\pi_translationstage.cpp
+	"PI_TranslationStage.h"
+	"..\PI\PI_GCS2_DLL.h"
+
+1339533898 c:\development\mahou shoujo\hardware\pi_translationstage.h
+	"DeviceContainer.h"
+	<string>
+
+1300912210 c:\development\mahou shoujo\pi\pi_gcs2_dll.h
+
+1339533477 source:c:\development\mahou shoujo\hardware\comserial.cpp
+	"DeviceContainer.h"
+
+1337880117 source:c:\development\mahou shoujo\pi_translationstagedll\main.cpp
+	"main.h"
+	"Hardware/NamedParameterList.h"
+
+1338922497 c:\development\mahou shoujo\pi_translationstagedll\main.h
+	<windows.h>
+	"Hardware/NamedParameterList.h"
+	"Hardware/PI_TranslationStage.h"
+	"Hardware/HardwareDLL.h"
+
+1338922186 c:\development\mahou shoujo\\hardware\hardwaredll.h
+	"NamedParameterList.h"
+
+1338840896 c:\development\mahou shoujo\\hardware\namedparameterlist.h
+	"Exceptions.h"
+	<map>
+	<vector>
+	<string.h>
+	<iostream>
+	<sstream>
+	<stdlib.h>
+	<stdio.h>
+
+1337979322 c:\development\mahou shoujo\\hardware\exceptions.h
+	<string>
+	<vector>
+	<exception>
+
+1338996008 c:\development\mahou shoujo\\hardware\pi_translationstage.h
+	"DeviceContainer.h"
+	<string>
+
+1338911078 c:\development\mahou shoujo\\hardware\devicecontainer.h
+	"NamedParameterList.h"
+	"windows.h"
+
+1332775363 c:\development\mahou shoujo\\hardware\dbinterface.h
+	"NamedParameterList.h"
+
+1339186790 source:c:\development\mahou shoujo\hardware\devicecontainer.cpp
+	"DeviceContainer.h"
+
+1338299467 source:c:\development\mahou shoujo\hardware\dllwrapper.cpp
+	"DLLWrapper.h"
+	"Exceptions.h"
+
+1338314970 c:\development\mahou shoujo\hardware\dllwrapper.h
+	<windows.h>
+
+1338317087 c:\development\mahou shoujo\\hardware\dllinterface.h
+	"DLLWrapper.h"
+	<vector>
+	<map>
+	<string>
+
+1338314970 c:\development\mahou shoujo\\hardware\dllwrapper.h
+	<windows.h>
+
+1338317070 source:c:\development\mahou shoujo\hardware\dllinterface.cpp
+	"DLLInterface.h"
+	"Exceptions.h"
+
+1338317087 c:\development\mahou shoujo\hardware\dllinterface.h
+	"DLLWrapper.h"
+	<vector>
+	<map>
+	<string>
+
+1338583110 source:c:\development\mahou shoujo\pi_translationstagedll\main1.cpp
+	"main.h"
+	"Hardware/NamedParameterList.h"
+
+1338923736 source:c:\development\mahou shoujo\pi_translationstagedll\main2.cpp
+	"main.h"
+	"Hardware/NamedParameterList.h"
+
+1339188038 c:\development\mahou shoujo\system\tools.h
+	<string>
+
+1339187858 c:\development\mahou shoujo\system\xydispdriver.h
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<oaidl.h>
+	<ocidl.h>
+	<objbase.h>
+	"Tools.h"
+

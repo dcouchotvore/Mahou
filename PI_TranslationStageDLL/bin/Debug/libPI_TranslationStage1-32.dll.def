@@ -1,0 +1,20 @@
+EXPORTS
+    Connect @1
+    Create @2
+    Destroy @3
+    Disconnect @4
+    GetData @5
+    GetDeviceName @6
+    GetParameter @7
+    GetParameterCount @8
+    GetParameterData @9
+    GoTo @10
+    Initialize @11
+    IoCtrl @12
+    Poll @13
+    RecvMsg @14
+    SendMsg @15
+    SetData @16
+    SetParameter @17
+    SetParameterAlways @18
+    Terminate @19
