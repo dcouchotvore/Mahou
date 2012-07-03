@@ -20,8 +20,6 @@ function varargout = Spectrometer(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-global method;
-
 % Edit the above text to modify the response to help Spectrometer
 
 % Last Modified by GUIDE v2.5 03-Jul-2012 14:24:23
@@ -124,8 +122,8 @@ end
 PARAMS.dataSource = get(handles.popupDataSource, 'Value')-1;
 PARAMS.nScans = str2num(get(handles.editNumScans, 'String'));
 PARAMS.nShots = str2num(get(handles.editNumShots, 'String'));
-PARAMS.start  = str2num(get(handles.editStart, 'String'));
-PARAMS.stop   = str2num(get(handles.editStop, 'String'));
+PARAMS.start  = str2double(get(handles.editStart, 'String'));
+PARAMS.stop   = str2double(get(handles.editStop, 'String'));
 
 % FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);

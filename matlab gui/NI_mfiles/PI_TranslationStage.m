@@ -1,6 +1,6 @@
-classdef PI_TranslationStage < handle
+classdef PI_TranslationStage < hgsetget
 
-    properties;
+    properties
         center;
         scale;
         minimum;
@@ -51,8 +51,8 @@ classdef PI_TranslationStage < handle
             obj.sendPIMotorCommand(1, 'VEL 1 0.5', 0);
             obj.sendPIMotorCommand(1, 'FNL 1', 0);
 
-            obj.minimum = str2num(sendPIMotorCommand(1, 'TMN?', 1))/obj.scale;
-            obj.maximum = str2num(sendPIMotorCommand(1, 'TMX?', 1))/obj.scale;
+            obj.minimum = str2double(sendPIMotorCommand(1, 'TMN?', 1))/obj.scale;
+            obj.maximum = str2double(sendPIMotorCommand(1, 'TMX?', 1))/obj.scale;
             
             %Wait until motor gets to limit.
             while 1==1
@@ -66,7 +66,11 @@ classdef PI_TranslationStage < handle
             end
         end
 
-        function new_position = MoveTo(handles, desired_position, speed, move_relative, move_async)
+        function delete(obj)
+            fclose(obj.object);
+        end
+        
+        function new_position = MoveTo(obj, ~, desired_position, speed, move_relative, move_async)
 
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
@@ -74,15 +78,16 @@ classdef PI_TranslationStage < handle
             end
 
             % Check against limits
-            if desired_position<PI_1.minimum
-                desired_position = PI_1.minimum;
-            elseif desired_position>PI_1.maximum
-                desired_position = PI_1.maximum;
+            if desired_position<obj.minimum
+                desired_position = obj.minimum;
+            elseif desired_position>obj.maximum
+                desired_position = obj.maximum;
             end
-
+            new_position = desired_position;
+            
             %% move to an absolute position
-            sendPIMotorCommand(1, sprintf('VEL 1 %f', speed*PI_1.factor), 0);
-            sendPIMotorCommand(1, sprintf('MOV 1 %f', (desired_position+obj.center)*obj.factor), 0);
+            obj.sendPIMotorCommand(1, sprintf('VEL 1 %f', speed*obj.factor), 0);
+            obj.sendPIMotorCommand(1, sprintf('MOV 1 %f', (desired_position+obj.center)*obj.factor), 0);
 
             %% Wait until stage reaches target
             if move_async==0
@@ -105,21 +110,38 @@ classdef PI_TranslationStage < handle
             end
         end
 
-        function position = GetPosition
+        function position = GetPosition(obj)
             result = sendPIMotorCommand(1, 'POS?', 1);
             [nums ~] = sscanf(result, '%i=%f');
-            position = nums(2)/obj.factor+obj.center;
+            position = nums(2)/obj.scale+obj.center;
         end
 
-        function SetCenter
+        function SetCenter(obj)
             result = sendPIMotorCommand(1, 'POS?', 1);
-            [nums count] = sscanf(result, '%i=%f');
-            obj.center = nums(2)/obj.factor;
+            [nums ~] = sscanf(result, '%i=%f');
+            obj.center = nums(2)/obj.scale;
         end
         
-        function Halt
+        function Halt(obj)
             fprintf(obj.object,'HLT 1\n');
         end
+        
+        function result = sendPIMotorCommand(obj, msg, expect_response)
+            message = deblank(msg);
+
+            if expect_response~=0
+                result = query(obj.object, message);
+            else
+                result = '';
+                fprintf(obj.object, message);
+            end
+
+            error_code = query(obj.object, 'ERR?');
+            if error_code(1)~='0'
+                error('Motor error code %s: %s\n', deblank(error_code), message);
+            end
+        end
+        
     end
     
 end
