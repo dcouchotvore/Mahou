@@ -24,7 +24,7 @@ global method;
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 02-Jul-2012 08:32:34
+% Last Modified by GUIDE v2.5 03-Jul-2012 14:24:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -124,6 +124,8 @@ end
 PARAMS.dataSource = get(handles.popupDataSource, 'Value')-1;
 PARAMS.nScans = str2num(get(handles.editNumScans, 'String'));
 PARAMS.nShots = str2num(get(handles.editNumShots, 'String'));
+PARAMS.start  = str2num(get(handles.editStart, 'String'));
+PARAMS.stop   = str2num(get(handles.editStop, 'String'));
 
 % FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
@@ -312,6 +314,51 @@ function popupDataSource_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function editStart_Callback(hObject, eventdata, handles)
+% hObject    handle to editStart (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editStart as text
+%        str2double(get(hObject,'String')) returns contents of editStart as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editStart_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editStart (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editStop_Callback(hObject, eventdata, handles)
+% hObject    handle to editStop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editStop as text
+%        str2double(get(hObject,'String')) returns contents of editStop as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editStop_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editStop (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');

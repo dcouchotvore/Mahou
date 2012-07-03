@@ -66,12 +66,11 @@ classdef PI_TranslationStage < handle
             end
         end
 
-        function new_position = MoveTo(handles, motor_index, desired_position, speed, move_relative, move_async)
+        function new_position = MoveTo(handles, desired_position, speed, move_relative, move_async)
 
             if move_relative
-                pos = getMotorPos(motor_index);
-                desired_position = (pos-PI_1.center)*PI_1.factor+desired_position;
-                desired_position = getMotorPos(1)+desired_position;
+                pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
+                desired_position = pos+desired_position;
             end
 
             % Check against limits
@@ -83,7 +82,7 @@ classdef PI_TranslationStage < handle
 
             %% move to an absolute position
             sendPIMotorCommand(1, sprintf('VEL 1 %f', speed*PI_1.factor), 0);
-            sendPIMotorCommand(1, sprintf('MOV 1 %f', (new_position+obj.center)*obj.factor), 0);
+            sendPIMotorCommand(1, sprintf('MOV 1 %f', (desired_position+obj.center)*obj.factor), 0);
 
             %% Wait until stage reaches target
             if move_async==0
@@ -106,9 +105,9 @@ classdef PI_TranslationStage < handle
             end
         end
 
-        function position = getPosition
+        function position = GetPosition
             result = sendPIMotorCommand(1, 'POS?', 1);
-            [nums count] = sscanf(result, '%i=%f');
+            [nums ~] = sscanf(result, '%i=%f');
             position = nums(2)/obj.factor+obj.center;
         end
 
