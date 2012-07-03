@@ -43,6 +43,7 @@ if nargout
 else
     gui_mainfcn(gui_State, varargin{:});
 end
+
 % End initialization code - DO NOT EDIT
 
 % --- Executes just before Spectrometer is made visible.
@@ -53,13 +54,17 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global scales hRawPlots method;
+global scales hRawPlots method Interferometer_Stage;
 
 % Choose default command line output for Spectrometer
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
+
+% Splash Screen
+splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
+splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color', [0 0 0.6] )
 
 scales.ch32 = [0:31];
 
@@ -71,6 +76,7 @@ global PARAMS;
 PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
+Interferometer_Stage = PI_TranslationStage('COM4', '');
 % FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
@@ -86,6 +92,8 @@ set(handles.axesRawData, 'XLim', [1, 32]);
 
 % UIWAIT makes Spectrometer wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
+pause(5);
+delete(splash);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Spectrometer_OutputFcn(hObject, eventdata, handles)
@@ -141,7 +149,6 @@ function FileMenu_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
 % --------------------------------------------------------------------
 function OpenMenuItem_Callback(hObject, eventdata, handles)
 % hObject    handle to OpenMenuItem (see GCBO)
@@ -171,7 +178,8 @@ if strcmp(selection,'No')
     return;
 end
 
-delete(handles.figure1)
+delete(Interferometer_Stage);
+delete(handles.figure1);
 
 % --- Executes on selection change in popupmenu1.
 function popupmenu1_Callback(hObject, eventdata, handles)
