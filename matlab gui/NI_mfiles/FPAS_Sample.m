@@ -14,33 +14,33 @@ switch PARAMS.dataSource
         fillMode = NICONST.DAQmx_Val_GroupByChannel; % Group by Channel
         %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
-        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,hTask,numchan,sampsPerChan,timeout,fillMode,bufSizeInSamps);
+        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,FPAS.hTask,FPAS.nPixels+FPAS.nExtInputs,FPAS.nSampsPerChan,timeout,fillMode,FPAS.nSampsPerChan*FPAS.nChan);
 
         %portdata
 
         %% stop
-        DAQmxStopTask(FPAS.lib,hTask);
+        DAQmxStopTask(FPAS.lib,FPAS.hTask);
 
         %% clear
-        DAQmxClearTask(FPAS.lib,hTask);
+        DAQmxClearTask(FPAS.lib,FPAS.hTask);
 
         %% swizzle data (could be optimized for memory and speed)
         nPerBoard = 32; %has to do with the number of channels on the boards going to the FIFO
 
         ind = [];
-        for ii = 1:ceil(nChan/nPerBoard)
+        for ii = 1:ceil(FPAS.nChan/nPerBoard)
           ind = [ind,[1:2:15 2:2:16; 17:2:31 18:2:32]+(ii-1)*32];
         end
         ind = ind(:);
 
         %how many channels do you need to keep to unravel all the data correctly
-        maxInd = ceil(nChan/nPerBoard)*nPerBoard; 
+        maxInd = ceil(FPAS.nChan/nPerBoard)*nPerBoard; 
 
         %throw away first point because it is empty
         hm = portdata(2:end);
 
         %throw away as many points as we can without losing information
-        hm = reshape(hm,FPAS.nMaxChan/2,nShots);
+        hm = reshape(hm,FPAS.nMaxChan/2,PARAMS.nShots);
         hm = hm(1:maxInd/2,:);
 
         %flatten again
@@ -48,7 +48,7 @@ switch PARAMS.dataSource
 
         %convert each 32bit number to two 16bit numbers
         hmm = typecast(hm,'uint16');
-        hmm = reshape(hmm,maxInd,nShots);
+        hmm = reshape(hmm,maxInd,PARAMS.nShots);
 
         %use ind to sort the data
         IND = repmat(ind,1,nShots); %this only needs to happen once per scan
