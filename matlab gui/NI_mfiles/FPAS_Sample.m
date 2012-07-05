@@ -1,5 +1,5 @@
 function sample = FPAS_Sample
-global FPAS PARAMS;
+global FPAS PARAMS NICONST;
 
 switch PARAMS.dataSource
     
@@ -11,7 +11,7 @@ switch PARAMS.dataSource
 
         %% read 
         timeout = 1;
-        fillMode = DAQmx_Val_GroupByChannel; % Group by Channel
+        fillMode = NICONST.DAQmx_Val_GroupByChannel; % Group by Channel
         %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
         [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,hTask,numchan,sampsPerChan,timeout,fillMode,bufSizeInSamps);

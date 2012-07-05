@@ -3,6 +3,8 @@ global FPAS PARAMS;
 
 %% Initialilze constants and variables.
 
+LoadNIConstants;
+
 %propteries of the array detector
 FPAS.nPixels = 64;
 FPAS.nExtInputs = 16;
