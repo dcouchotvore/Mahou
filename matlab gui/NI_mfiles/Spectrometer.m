@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 03-Jul-2012 14:24:23
+% Last Modified by GUIDE v2.5 05-Jul-2012 16:39:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,7 @@ PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
 %Interferometer_Stage = PI_TranslationStage('COM4', '');
-FPAS_Initialize;
+%FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
@@ -84,7 +84,7 @@ hold(handles.axesRawData, 'on');
 hRawPlots(2) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'g');
 set(hRawPlots(2),'XDataSource', 'scales.ch32', 'YDataSource','sample.mean.pixels([33:64])');
 hRawPlots(3) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'b');
-set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise*1000');     % @@@ will have to fix this scale factor
+set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise*10^get(handles.sliderNoiseGain, ''Value'')');     % @@@ will have to fix this scale factor
 hold(handles.axesRawData, 'off');
 set(handles.axesRawData, 'XLim', [1, 32]);
 
@@ -131,8 +131,11 @@ method.InitializeData(handles);
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 
 try
-    for ii=1:PARAMS.nScans
+    ii = 1;
+    while ii<=PARAMS.nScans || PARAMS.nScans==-1
+        set(handles.textScanNumber, 'String', sprintf('Scan # %i', ii));
         method.Scan(handles);
+        ii = ii+1;
         if strcmp(get(handles.pbGo, 'String'), 'Go')~=0
             break;
         end
@@ -360,4 +363,26 @@ function editStop_CreateFcn(hObject, eventdata, handles)
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on slider movement.
+function sliderNoiseGain_Callback(hObject, eventdata, handles)
+% hObject    handle to sliderNoiseGain (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function sliderNoiseGain_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to sliderNoiseGain (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
