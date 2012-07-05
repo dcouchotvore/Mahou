@@ -5,6 +5,22 @@ switch PARAMS.dataSource
     
     %% Really go to the hardware
     case 0
+        FPAS.nSampsPerChan = FPAS.nMaxChan/2*PARAMS.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
+        [FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(FPAS.lib,{'Dev1/line0:31'},NICONST.DAQmx_Val_ChanForAllLines,'',{''});
+        %here numchan is the number of digital input channels, i.e. just 1
+
+        %% configure timing
+
+        sampleMode = NICONST.DAQmx_Val_FiniteSamps;
+        sampleClkRate = 10e6;%10 MHz
+        sampleClkOutputTerm = '/Dev1/PFI4'; %note leading front slash. Why needed here???
+        sampleClkPulsePolarity = NICONST.DAQmx_Val_ActiveHigh;
+        pauseWhen = NICONST.DAQmx_Val_High;
+        readyEventActiveLevel = NICONST.DAQmx_Val_ActiveHigh;
+
+        DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,FPAS.hTask,...
+            sampleMode,FPAS.nSampsPerChan,sampleClkRate,sampleClkOutputTerm,...
+            sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
         
         %% start the task
         DAQmxStartTask(FPAS.lib, FPAS.hTask);
@@ -34,7 +50,7 @@ switch PARAMS.dataSource
         ind = ind(:);
 
         %how many channels do you need to keep to unravel all the data correctly
-        maxInd = ceil(FPAS.nChan/nPerBoard)*nPerBoard; 
+        maxInd = ceil((FPAS.nPixels+FPAS.nExtInputs)/nPerBoard)*nPerBoard; 
 
         %throw away first point because it is empty
         hm = portdata(2:end);
@@ -53,7 +69,7 @@ switch PARAMS.dataSource
         %use ind to sort the data
         IND = repmat(ind,1,PARAMS.nShots); %this only needs to happen once per scan
         data = zeros(size(IND)); %initialize size of array (once per scan)
-        data = hmm(IND);
+        data = hmm(ind,1:PARAMS.nShots);
 
         %% extract array part and ext channels part
         sample.data.pixels = double(data(1:FPAS.nPixels,:)); %the first 64 rows
@@ -88,5 +104,5 @@ sample.mean.external = mean(sample.data.external, 2);
 
 sample.mOD = log10(sample.data.pixels([33:64],:)./sample.data.pixels([1:32],:))*1000;
 sample.noise = std(sample.mOD, 1, 2);
-sample.mOD = mean(sample.mOD, 2);
+sample .mOD = mean(sample.mOD, 2);
 

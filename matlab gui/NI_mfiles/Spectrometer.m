@@ -84,7 +84,7 @@ hold(handles.axesRawData, 'on');
 hRawPlots(2) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'g');
 set(hRawPlots(2),'XDataSource', 'scales.ch32', 'YDataSource','sample.mean.pixels([33:64])');
 hRawPlots(3) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'b');
-set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise./1000');     % @@@ will have to fix this scale factor
+set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise*1000');     % @@@ will have to fix this scale factor
 hold(handles.axesRawData, 'off');
 set(handles.axesRawData, 'XLim', [1, 32]);
 

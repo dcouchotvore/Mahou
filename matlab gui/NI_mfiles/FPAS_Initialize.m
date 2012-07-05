@@ -1,5 +1,5 @@
 function FPAS_Initialize
-global FPAS PARAMS;
+global FPAS PARAMS NICONST;
 
 %% Initialilze constants and variables.
 
@@ -24,9 +24,9 @@ end
 disp('Matlab: dll loaded')
 
 % %% load all DAQmx constants
-if ~exist('flag_NIconstants_defined','var') || ~flag_NIconstants_defined
-    NIconstants;    
-end
+% if ~exist('flag_NIconstants_defined','var') || ~flag_NIconstants_defined
+%     NIconstants;    
+% end
 disp('done')
 
 %% reset device
@@ -42,21 +42,21 @@ DAQmxResetDevice(FPAS.lib,'Dev1');
 lines = {'Dev1/line0:31'};
 taskName = '';	% ?
 chanName = {''};	% recommended to avoid problems
-lineGrouping = DAQmx_Val_ChanForAllLines; % One Channel For All Lines
+lineGrouping = NICONST.DAQmx_Val_ChanForAllLines; % One Channel For All Lines
 
-[FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(FPAS.lib,lines,lineGrouping,taskName,chanName);
-%here numchan is the number of digital input channels, i.e. just 1
-
-%% configure timing
-
-sampleMode = DAQmx_Val_FiniteSamps;
-sampleClkRate = 10e6;%10 MHz
-sampleClkOutputTerm = '/Dev1/PFI4'; %note leading front slash. Why needed here???
-sampleClkPulsePolarity = DAQmx_Val_ActiveHigh;
-pauseWhen = DAQmx_Val_High;
-readyEventActiveLevel = DAQmx_Val_ActiveHigh;
-
-DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,FPAS.hTask,...
-    sampleMode,FPAS.nSampsPerChan,sampleClkRate,sampleClkOutputTerm,...
-    sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
+% [FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(FPAS.lib,lines,lineGrouping,taskName,chanName);
+% %here numchan is the number of digital input channels, i.e. just 1
+% 
+% %% configure timing
+% 
+% sampleMode = DAQmx_Val_FiniteSamps;
+% sampleClkRate = 10e6;%10 MHz
+% sampleClkOutputTerm = '/Dev1/PFI4'; %note leading front slash. Why needed here???
+% sampleClkPulsePolarity = DAQmx_Val_ActiveHigh;
+% pauseWhen = DAQmx_Val_High;
+% readyEventActiveLevel = DAQmx_Val_ActiveHigh;
+% 
+% DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,FPAS.hTask,...
+%     sampleMode,FPAS.nSampsPerChan,sampleClkRate,sampleClkOutputTerm,...
+%     sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
 
