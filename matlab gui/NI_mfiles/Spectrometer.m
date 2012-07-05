@@ -74,8 +74,8 @@ global PARAMS;
 PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
-Interferometer_Stage = PI_TranslationStage('COM4', '');
-% FPAS_Initialize;
+%Interferometer_Stage = PI_TranslationStage('COM4', '');
+FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
@@ -178,7 +178,7 @@ if strcmp(selection,'No')
     return;
 end
 
-delete(Interferometer_Stage);
+%delete(Interferometer_Stage);
 delete(handles.figure1);
 
 % --- Executes on selection change in popupmenu1.

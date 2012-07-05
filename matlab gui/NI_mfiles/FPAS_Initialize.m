@@ -1,5 +1,5 @@
 function FPAS_Initialize
-global FPAS;
+global FPAS PARAMS;
 
 %% Initialilze constants and variables.
 
@@ -35,7 +35,7 @@ DAQmxResetDevice(FPAS.lib,'Dev1');
 
 % for later use the total number of channels from the electronics (not the
 % same as the number of digital input/output channels, which is just 1)
-nChan = nPixels + nExtInputs;
+nChan = FPAS.nPixels + FPAS.nExtInputs;
 
 lines = {'Dev1/line0:31'};
 taskName = '';	% ?
@@ -54,7 +54,7 @@ sampleClkPulsePolarity = DAQmx_Val_ActiveHigh;
 pauseWhen = DAQmx_Val_High;
 readyEventActiveLevel = DAQmx_Val_ActiveHigh;
 
-DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,hTask,...
-    sampleMode,sampsPerChan,sampleClkRate,sampleClkOutputTerm,...
+DAQmxCfgBurstHandshakingTimingExportClock(FPAS.lib,FPAS.hTask,...
+    sampleMode,FPAS.nSampsPerChan,sampleClkRate,sampleClkOutputTerm,...
     sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
 
