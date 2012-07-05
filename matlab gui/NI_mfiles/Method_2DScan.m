@@ -16,6 +16,7 @@ classdef Method_2DScan < handle
         function InitializePlot(obj, ~)
             obj.hPlot = contourf(obj.plot_data, 16);
             set(obj.hPlot,'DataSource', 'method.PlotData(1)');
+            colormap(handles.hPlot, 'Jet');
 %            set(handles.axesMain, 'XLim', [1, 32]);
         end
 
