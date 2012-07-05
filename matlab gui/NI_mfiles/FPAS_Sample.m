@@ -14,7 +14,7 @@ switch PARAMS.dataSource
         fillMode = NICONST.DAQmx_Val_GroupByChannel; % Group by Channel
         %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
-        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,FPAS.hTask,FPAS.nPixels+FPAS.nExtInputs,FPAS.nSampsPerChan,timeout,fillMode,FPAS.nSampsPerChan*FPAS.nChan);
+        [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,FPAS.hTask,FPAS.nChan,FPAS.nSampsPerChan,timeout,fillMode,FPAS.nSampsPerChan*FPAS.nChan);
 
         %portdata
 
@@ -28,7 +28,7 @@ switch PARAMS.dataSource
         nPerBoard = 32; %has to do with the number of channels on the boards going to the FIFO
 
         ind = [];
-        for ii = 1:ceil(FPAS.nChan/nPerBoard)
+        for ii = 1:ceil((FPAS.nPixels+FPAS.nExtInputs)/nPerBoard)
           ind = [ind,[1:2:15 2:2:16; 17:2:31 18:2:32]+(ii-1)*32];
         end
         ind = ind(:);
@@ -51,13 +51,13 @@ switch PARAMS.dataSource
         hmm = reshape(hmm,maxInd,PARAMS.nShots);
 
         %use ind to sort the data
-        IND = repmat(ind,1,nShots); %this only needs to happen once per scan
+        IND = repmat(ind,1,PARAMS.nShots); %this only needs to happen once per scan
         data = zeros(size(IND)); %initialize size of array (once per scan)
         data = hmm(IND);
 
         %% extract array part and ext channels part
-        sample.data.pixels = double(data(1:nPixels,:)); %the first 64 rows
-        sample.data.external = double(data((nPixels+1):(nPixels+nExtInputs),:))./13107; %the last 16 rows divided by some magic number I don't understand to make volts?
+        sample.data.pixels = double(data(1:FPAS.nPixels,:)); %the first 64 rows
+        sample.data.external = double(data((FPAS.nPixels+1):(FPAS.nPixels+FPAS.nExtInputs),:))./13107; %the last 16 rows divided by some magic number I don't understand to make volts?
 
     %% Uniform Distribution
     case 1

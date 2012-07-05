@@ -37,7 +37,7 @@ DAQmxResetDevice(FPAS.lib,'Dev1');
 
 % for later use the total number of channels from the electronics (not the
 % same as the number of digital input/output channels, which is just 1)
-nChan = FPAS.nPixels + FPAS.nExtInputs;
+%nChan = FPAS.nPixels + FPAS.nExtInputs;
 
 lines = {'Dev1/line0:31'};
 taskName = '';	% ?
