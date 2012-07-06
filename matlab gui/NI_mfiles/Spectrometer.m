@@ -74,7 +74,7 @@ global PARAMS;
 PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
-Interferometer_Stage = PI_TranslationStage('COM4', 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
 %FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.

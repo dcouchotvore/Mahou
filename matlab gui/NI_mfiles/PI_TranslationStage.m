@@ -16,13 +16,14 @@ classdef PI_TranslationStage < hgsetget
         
     methods
         
-        function obj = PI_TranslationStage(port, gui_object_name)
+        function obj = PI_TranslationStage(port, scale, gui_object_name)
             obj.center = 0;
-            obj.scale = 0.00015;
+            obj.scale = scale;
             obj.comPort = port;
             obj.terminator = {'LF','LF'};
             obj.type = 'serial';
             obj.gui_object = gui_object_name;
+            obj.baud = 38400;
 
             obj.object = instrfind('Type', obj.type, 'Port', obj.comPort, 'Tag', '');
 
@@ -43,20 +44,22 @@ classdef PI_TranslationStage < hgsetget
             set(obj.object, 'Terminator', obj.terminator);
 
             % %%
-            obj.ID = objsendPIMotorCommand(1, '*IDN?', 1);
+            obj.ID = obj.sendPIMotorCommand('*IDN?', 1);
 
-            %% reference move to negative limit
-            obj.sendPIMotorCommand(1, 'RON 1 1', 0);
-            obj.sendPIMotorCommand(1, 'SVO 1 1', 0);
-            obj.sendPIMotorCommand(1, 'VEL 1 0.5', 0);
-            obj.sendPIMotorCommand(1, 'FNL 1', 0);
-
-            obj.minimum = str2double(sendPIMotorCommand(1, 'TMN?', 1))/obj.scale;
-            obj.maximum = str2double(sendPIMotorCommand(1, 'TMX?', 1))/obj.scale;
+            [nums ~] = sscanf(obj.sendPIMotorCommand('TMN?', 1), '%i=%f');
+            obj.minimum = nums(2)/obj.scale;
+            [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
+            obj.maximum = nums(2)/obj.scale;
             
+            %% reference move to negative limit
+            obj.sendPIMotorCommand('RON 1 1', 0);
+            obj.sendPIMotorCommand('SVO 1 1', 0);
+            obj.sendPIMotorCommand('VEL 1 0.5', 0);
+            obj.sendPIMotorCommand('FNL 1', 0);
+
             %Wait until motor gets to limit.
             while 1==1
-                status = sendPIMotorCommand(1, 'SRG? 1 1', 1);
+                status = obj.sendPIMotorCommand('SRG? 1 1', 1);
                 num = uint16(hex2dec(status(7:end-1)));
                 if bitand(num, hex2dec('A000'))==hex2dec('8000')
                     break;
@@ -86,13 +89,13 @@ classdef PI_TranslationStage < hgsetget
             new_position = desired_position;
             
             %% move to an absolute position
-            obj.sendPIMotorCommand(1, sprintf('VEL 1 %f', speed*obj.factor), 0);
-            obj.sendPIMotorCommand(1, sprintf('MOV 1 %f', (desired_position+obj.center)*obj.factor), 0);
+            obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
+            obj.sendPIMotorCommand(sprintf('MOV 1 %f', (desired_position+obj.center)*obj.scale), 0);
 
             %% Wait until stage reaches target
             if move_async==0
                 while 1==1
-                    status = sendPIMotorCommand(1, 'SRG? 1 1', 1);
+                    status = obj.sendPIMotorCommand('SRG? 1 1', 1);
                     num = uint16(hex2dec(status(7:end-1)));
                     if bitand(num, hex2dec('A000'))==hex2dec('8000')
                         break;
@@ -102,22 +105,20 @@ classdef PI_TranslationStage < hgsetget
                 end
             end
 
-            if ~isempty(obj.gui_handle)
-                if ~strcmp(obj.gui_handle, '')
-                    h = eval(sprintf('handles.%s', obj.gui_handle_name));
-                    set(h, 'String', num2str(obj.getPosition));
-                end
+            if ~strcmp(obj.gui_object, '')
+                h = eval(sprintf('handles.%s', obj.gui_object));
+                set(h, 'String', num2str(obj.getPosition));
             end
         end
 
         function position = GetPosition(obj)
-            result = sendPIMotorCommand(1, 'POS?', 1);
+            result = sendPIMotorCommand('POS?', 1);
             [nums ~] = sscanf(result, '%i=%f');
             position = nums(2)/obj.scale+obj.center;
         end
 
         function SetCenter(obj)
-            result = sendPIMotorCommand(1, 'POS?', 1);
+            result = sendPIMotorCommand('POS?', 1);
             [nums ~] = sscanf(result, '%i=%f');
             obj.center = nums(2)/obj.scale;
         end
