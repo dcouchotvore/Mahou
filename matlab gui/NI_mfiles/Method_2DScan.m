@@ -13,10 +13,10 @@ classdef Method_2DScan < handle
             obj.mean_data = zeros(32, 32);
         end
 
-        function InitializePlot(obj, ~)
+        function InitializePlot(obj, handles)
             obj.hPlot = contourf(obj.plot_data, 16);
             set(obj.hPlot,'DataSource', 'method.PlotData(1)');
-            colormap(handles.hPlot, 'Jet');
+            colormap(handles.axesMain, 'Jet');
 %            set(handles.axesMain, 'XLim', [1, 32]);
         end
 

@@ -75,7 +75,7 @@ PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
 Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
-%FPAS_Initialize;
+FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
@@ -224,12 +224,13 @@ function popupMethods_Callback(hObject, eventdata, handles)
 
 global method;
 
-delete(method);
 switch get(handles .popupMethods, 'Value')
     case 1
         newmethod = Method_RawData;
     case 2
         newmethod = Method_Spectrum;
+    case 3
+        newmethod = Method_2DScan;
     otherwise
         error('Nonexistent data acquisition method selected');
 end
