@@ -70,7 +70,7 @@ classdef PI_TranslationStage < hgsetget
             fclose(obj.object);
         end
         
-        function new_position = MoveTo(obj, ~, desired_position, speed, move_relative, move_async)
+        function new_position = MoveTo(obj, handles, desired_position, speed, move_relative, move_async)
 
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
