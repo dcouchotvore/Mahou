@@ -1,8 +1,9 @@
 .DS_Store
 *.m~
 *.asv
-*.dll
 *.a
 *.vcproj
 *.o
 *.exe
+*.dll
+

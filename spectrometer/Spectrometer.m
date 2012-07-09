@@ -74,8 +74,12 @@ global PARAMS;
 PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
 
-Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
-FPAS_Initialize;
+global IO;
+IO = IO_Interface;
+IO.OpenClockGate();
+
+%Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
+%FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
