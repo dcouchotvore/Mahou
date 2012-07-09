@@ -1,4 +1,4 @@
-classdef Method_2DScan < handle
+classdef Method_Basic2DScan < handle
     
     properties
         hPlot;
@@ -36,25 +36,23 @@ classdef Method_2DScan < handle
 
         function Scan(obj, handles)
             global PARAMS Interferometer_Stage;
-            for ii = 1:PARAMS.nScans;
-                step = (PARAMS.stop-PARAMS.start)/31;
-                jj = 1;
-                for lambda = PARAMS.start:step:PARAMS.stop
-                    Interferometer_Stage.MoveTo(handles, lambda, 50, 0, 0);
-                    sample = FPAS_Sample;
-                    obj.plot_data(jj,:) = Log10(sample.mean(33:64)./sample.mean(1:32));
-                    refreshdata(obj.hPlot, 'caller');
-                    RefreshRawData(handles, sample);
-                    drawnow;
-                    jj = jj+1;
-                end
-                obj.plot_data = fft(obj.plot_data);
+            step = (PARAMS.stop-PARAMS.start)/31;
+            jj = 1;
+            for lambda = PARAMS.start:step:PARAMS.stop
+                Interferometer_Stage.MoveTo(handles, lambda, 50, 0, 0);
+                sample = FPAS_Sample;
+                obj.plot_data(jj,:) = Log10(sample.mean(33:64)./sample.mean(1:32));
                 refreshdata(obj.hPlot, 'caller');
+                RefreshRawData(handles, sample);
                 drawnow;
-                Interferometer_Stage.MoveTo(handles, PARAMS.start, 50, 0, 1);
-                pause(1.0);
-                obj.mean_data = ((obj.mean_data*ii)+obj.plot_data)/(ii+1);
+                jj = jj+1;
             end
+            obj.plot_data = fft(obj.plot_data);
+            refreshdata(obj.hPlot, 'caller');
+            drawnow;
+            Interferometer_Stage.MoveTo(handles, PARAMS.start, 50, 0, 1);
+            pause(1.0);
+            
             obj.plot_data = obj.mean_data;
             refreshdata(obj.hPlot, 'caller');
             drawnow;
