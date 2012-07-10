@@ -54,13 +54,15 @@ classdef Method_Basic2DScan < handle
             last_pos = 0.0;
             relative_pos = 0.0;
             fill_ptr = 1;
-            prior_x_negative = sample.external(1)<0;
+            prior_x_negative = sample.data.external(15, 1)<0;
+            sample.data.external(15,:) = sample.data.external(15,:)./sample.mean.external(15);
+            sample.data.external(16,:) = sample.data.external(16,:)./sample.mean.external(16);
             for ii = 2:PARAMS.nShots
                 if sample.external(16, ii)>=0 && prior_x_negative;
-                    if sample.external(15)>=0
-                        relative_pos = relative_pos + 632.816 %HeNe wavelength in air
+                    if sample.external(15, ii)>=0
+                        relative_pos = relative_pos + 632.816; %HeNe wavelength in air
                     else
-                        relative_pos - relative_pos + 632.816 %HeNe wavelength in air
+                        relative_pos = relative_pos + 632.816; %HeNe wavelength in air
                     end
                     n_samples = ii-fill_ptr;
                     if n_samples>1

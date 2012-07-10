@@ -73,22 +73,23 @@ method.InitializePlot(handles);
 global PARAMS;
 PARAMS.nShots = 1000;
 PARAMS.dataSource = 0;
+PARAMS.noiseGain = 1;
 
 global IO;
 IO = IO_Interface;
-IO.OpenClockGate();
+IO.CloseClockGate();
 
 %Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
 %FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
-set(hRawPlots(1),'XDataSource', 'scales.ch32', 'YDataSource','sample.mean.pixels([1:32])');
+set(hRawPlots(1),'XDataSource', 'scales.ch32', 'YDataSource','method.sample.mean.pixels([1:32])');
 hold(handles.axesRawData, 'on');
 hRawPlots(2) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'g');
-set(hRawPlots(2),'XDataSource', 'scales.ch32', 'YDataSource','sample.mean.pixels([33:64])');
+set(hRawPlots(2),'XDataSource', 'scales.ch32', 'YDataSource','method.sample.mean.pixels([33:64])');
 hRawPlots(3) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'b');
-set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','sample.noise*10^get(handles.sliderNoiseGain, ''Value'')');     % @@@ will have to fix this scale factor
+set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','method.Sample.noise*PARAMS.noiseGain');     % @@@ will have to fix this scale factor
 hold(handles.axesRawData, 'off');
 set(handles.axesRawData, 'XLim', [1, 32]);
 
@@ -134,12 +135,16 @@ method.InitializeData(handles);
 
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 
+global scales;
 try
     ii = 1;
     while ii<=PARAMS.nScans || PARAMS.nScans==-1
         set(handles.textScanNumber, 'String', sprintf('Scan # %i', ii));
         method.Scan(handles);
         ii = ii+1;
+        refreshdata(handles.axesMain, 'caller');
+        refreshdata(handles.axesRawData, 'caller');
+        drawnow;
         if strcmp(get(handles.pbGo, 'String'), 'Go')~=0
             break;
         end
@@ -148,6 +153,7 @@ catch E
     set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
     rethrow(E);
 end
+
 set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
 
 % --------------------------------------------------------------------
@@ -379,6 +385,8 @@ function sliderNoiseGain_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 
+global PARAMS;
+PARAMS.noiseGain = 10^get(handles.sliderNoiseGain, 'Value');
 
 % --- Executes during object creation, after setting all properties.
 function sliderNoiseGain_CreateFcn(hObject, eventdata, handles)

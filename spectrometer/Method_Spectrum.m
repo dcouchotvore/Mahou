@@ -34,17 +34,12 @@ classdef Method_Spectrum < handle
             % Note: it is an object-oriented nightmare for this class to
             % know about the global instance, but I can't find a way around
             % it. DAC. 2012/06/28
-            global method scales;
             obj.sample = FPAS_Sample;
-            refreshdata(obj.hPlots, 'caller');
-            RefreshRawData(handles, obj.sample);
-            drawnow;
         end
         
         function Save(obj, filename)
             save(filename, obj.sample);
         end
-        
 
     end
 end
