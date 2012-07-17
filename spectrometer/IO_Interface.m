@@ -1,43 +1,27 @@
 classdef IO_Interface < handle
     
     properties (SetAccess = private)
-        libname;
-        lib;
-        lpt1_port;
+        dio;
     end
     
     methods
         
         function obj = IO_Interface
-            obj.libname = 'inpoutx64';
-            if ~libisloaded(obj.libname)
-                obj.lib = loadlibrary(obj.libname);
-                obj.lpt1_port = hex2dec('0378');
-                CloseClockGate(obj);
-            end
+            obj.dio = digitalio('nidaq', 'Dev2');
+            addline(obj.dio, 7, 1, 'out');      % Port 1 bit 7
         end
         
         function delete(obj)
-            if libisloaded(obj.libname)
-                CloseClockGate(obj);
-                unloadlibrary(obj.lib);
-            end
+            CloseClockGate(obj);
+            close(obj.dio);
         end
 
         function OpenClockGate(obj)
-            obj.outputByte(obj.lpt1_port+2, bin2dec('00000110'));
+            putvalue(obj.dio.Lines(1), 1);
         end
         
         function CloseClockGate(obj)
-            obj.outputByte(obj.lpt1_port+2, bin2dec('00000111'));
-        end
-        
-    end
-
-    methods (Access = private)
-        
-        function outputByte(obj, port, data)
-            calllib(obj.libname, 'DlPortWritePortUchar', port, data);
+            putvalue(obj.dio.Lines(1), 0);
         end
         
     end
