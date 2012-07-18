@@ -79,7 +79,7 @@ global IO;
 IO = IO_Interface;
 IO.CloseClockGate();
 
-%Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
 FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
@@ -125,8 +125,8 @@ end
 % Get parameters
 
 PARAMS.dataSource = get(handles.popupDataSource, 'Value')-1;
-PARAMS.nScans = str2num(get(handles.editNumScans, 'String'));
-PARAMS.nShots = str2num(get(handles.editNumShots, 'String'));
+PARAMS.nScans = str2double(get(handles.editNumScans, 'String'));
+PARAMS.nShots = str2double(get(handles.editNumShots, 'String'));
 PARAMS.start  = str2double(get(handles.editStart, 'String'));
 PARAMS.stop   = str2double(get(handles.editStop, 'String'));
 
@@ -135,7 +135,6 @@ method.InitializeData(handles);
 
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 
-global scales;
 try
     ii = 1;
     while ii<=PARAMS.nScans || PARAMS.nScans==-1
