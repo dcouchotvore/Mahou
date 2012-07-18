@@ -14,7 +14,7 @@ classdef Method_2DScan_SoftPhasing < handle
         end
 
         function InitializePlot(obj, handles)
-            obj.hPlot = contourf(obj.plot_data, 16);
+            obj.hPlot = contourf(handles.axesMain, obj.plot_data);
             set(obj.hPlot,'DataSource', 'method.PlotData(1)');
             colormap(handles.axesMain, 'Jet');
         end
