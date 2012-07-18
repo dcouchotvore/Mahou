@@ -51,7 +51,7 @@ classdef PI_TranslationStage < hgsetget
             [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
             obj.maximum = nums(2)/obj.scale;
             
-            %% reference move to negative limit
+            % reference move to negative limit
             obj.sendPIMotorCommand('RON 1 1', 0);
             obj.sendPIMotorCommand('SVO 1 1', 0);
             obj.sendPIMotorCommand('VEL 1 0.5', 0);
@@ -69,6 +69,7 @@ classdef PI_TranslationStage < hgsetget
             end
         end
 
+        %%
         function delete(obj)
             fclose(obj.object);
         end
@@ -107,12 +108,12 @@ classdef PI_TranslationStage < hgsetget
 
             if ~strcmp(obj.gui_object, '')
                 h = eval(sprintf('handles.%s', obj.gui_object));
-                set(h, 'String', num2str(obj.getPosition));
+                set(h, 'String', num2str(obj.GetPosition));
             end
         end
 
         function position = GetPosition(obj)
-            result = sendPIMotorCommand('POS?', 1);
+            result = obj.sendPIMotorCommand('POS?', 1);
             [nums ~] = sscanf(result, '%i=%f');
             position = nums(2)/obj.scale+obj.center;
         end

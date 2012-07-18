@@ -79,7 +79,7 @@ global IO;
 IO = IO_Interface;
 IO.CloseClockGate();
 
-Interferometer_Stage = PI_TranslationStage('COM4', 0.00015, 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
 FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
@@ -114,7 +114,7 @@ function pbGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global method PARAMS;
+global method PARAMS IO;
 
 % Called recursively if scan is running
 if ~strcmp(get(handles.pbGo, 'String'), 'Go')
@@ -149,6 +149,7 @@ try
         end
     end
 catch E
+    IO.CloseClockGate();
     set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
     rethrow(E);
 end
