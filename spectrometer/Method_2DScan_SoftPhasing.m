@@ -1,4 +1,4 @@
-classdef Method_Basic2DScan < handle
+classdef Method_2DScan_SoftPhasing < handle
     
     properties
         hPlot;

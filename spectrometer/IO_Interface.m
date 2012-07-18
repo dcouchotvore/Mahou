@@ -17,11 +17,11 @@ classdef IO_Interface < handle
         end
 
         function OpenClockGate(obj)
-            putvalue(obj.dio.Lines(1), 1);
+            putvalue(obj.dio.Line(1), 1);
         end
         
         function CloseClockGate(obj)
-            putvalue(obj.dio.Lines(1), 0);
+            putvalue(obj.dio.Line(1), 0);
         end
         
     end

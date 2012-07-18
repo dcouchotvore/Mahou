@@ -130,7 +130,7 @@ PARAMS.nShots = str2num(get(handles.editNumShots, 'String'));
 PARAMS.start  = str2double(get(handles.editStart, 'String'));
 PARAMS.stop   = str2double(get(handles.editStop, 'String'));
 
-% FPAS_Initialize;          % FPAS Setup uses number of shots
+FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
 
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
@@ -240,7 +240,7 @@ switch get(handles .popupMethods, 'Value')
     case 2
         newmethod = Method_Spectrum;
     case 3
-        newmethod = Method_2DScan;
+        newmethod = Method_2DScan_SoftPhasing;
     otherwise
         error('Nonexistent data acquisition method selected');
 end
