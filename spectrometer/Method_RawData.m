@@ -53,7 +53,8 @@ classdef Method_RawData < handle
             % know about the global instance, but I can't find a way around
             % it. DAC. 2012/06/28
             global method scales;
-            obj.sample = FPAS_Sample;
+            FPAS_Sample(0);
+            obj.sample = FPAS_Sample(1);
         end
         
         function Save(obj, filename)

@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 06-Jul-2012 10:10:21
+% Last Modified by GUIDE v2.5 19-Jul-2012 14:08:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -89,13 +89,22 @@ hold(handles.axesRawData, 'on');
 hRawPlots(2) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'g');
 set(hRawPlots(2),'XDataSource', 'scales.ch32', 'YDataSource','method.sample.mean.pixels([33:64])');
 hRawPlots(3) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'b');
-set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','method.Sample.noise*PARAMS.noiseGain');     % @@@ will have to fix this scale factor
+set(hRawPlots(3),'XDataSource', 'scales.ch32', 'YDataSource','method.sample.noise*PARAMS.noiseGain');     % @@@ will have to fix this scale factor
 hold(handles.axesRawData, 'off');
 set(handles.axesRawData, 'XLim', [1, 32]);
 
+%Initialize matrix that determines what parameters are enabled for what
+% method.  Rows are methods in the same order as in drop-down, columns
+% are parameters in same order as on GUI.
+
+global PARAMETER_MAP;
+PARAMETER_MAP = { 'on',  'on',  'on', 'off', 'off', 'off', 'off'; ...
+                  'on',  'on',  'on', 'off', 'off', 'off', 'off'; ...
+                  'on',  'on', 'off',  'on',  'on',  'on',  'on'; };
+EnableParameters(handles);
+
 % UIWAIT makes Spectrometer wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-pause(5);
 delete(splash);
 
 % --- Outputs from this function are returned to the command line.
@@ -114,7 +123,7 @@ function pbGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global method PARAMS IO;
+global method PARAMS IO scales;
 
 % Called recursively if scan is running
 if ~strcmp(get(handles.pbGo, 'String'), 'Go')
@@ -129,6 +138,7 @@ PARAMS.nScans = str2double(get(handles.editNumScans, 'String'));
 PARAMS.nShots = str2double(get(handles.editNumShots, 'String'));
 PARAMS.start  = str2double(get(handles.editStart, 'String'));
 PARAMS.stop   = str2double(get(handles.editStop, 'String'));
+PARAMS.speed  = str2double(get(handles.editSpeed, 'String'));
 
 FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
@@ -248,6 +258,7 @@ end
 % If we get here, we know that a new method has been instantiated
 delete(method);
 method = newmethod;
+EnableParameters(handles);
 method.InitializePlot(handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -461,3 +472,49 @@ function pbMotor1Up_Callback(hObject, eventdata, handles)
 global Interferometer_Stage;
 
 Interferometer_Stage.MoveTo(handles, 10.0, 100, 1, 0);
+
+
+
+function editSpeed_Callback(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editSpeed as text
+%        str2double(get(hObject,'String')) returns contents of editSpeed as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editSpeed_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editSpeed (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function editBinSize_Callback(hObject, eventdata, handles)
+% hObject    handle to editBinSize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editBinSize as text
+%        str2double(get(hObject,'String')) returns contents of editBinSize as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function editBinSize_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editBinSize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

@@ -41,7 +41,8 @@ classdef Method_Basic2DScan < handle
             jj = 1;
             for lambda = PARAMS.start:step:PARAMS.stop
                 Interferometer_Stage.MoveTo(handles, lambda, 50, 0, 0);
-                obj.measurement_sample = FPAS_Sample;
+                FPAS_Sample(0);
+                obj.measurement_sample = FPAS_Sample(1);
                 obj.plot_data(jj,:) = Log10(measurement_sample.mean(33:64)./measurement_sample.mean(1:32));
                 refreshdata(obj.hPlot, 'caller');
                 RefreshRawData(handles);
