@@ -126,10 +126,11 @@ end
 
 %% Final processing for this sample
 if phase==1
-    sample.mean.pixels = mean(sample.data.pixels, 2);
+    sample .mean.pixels = mean(sample.data.pixels, 2);
     sample.mean.external = mean(sample.data.external, 2);
 
     sample.mOD = log10(sample.data.pixels([33:64],:)./sample.data.pixels([1:32],:))*1000;
     sample.noise = std(sample.mOD, 1, 2);
-    sample .mOD = mean(sample.mOD, 2);
+    sample.mOD = mean(sample.mOD, 2);
+    sample.abs_noise = (std(sample.data.pixels(16,:))+std(sample.data.pixels(17,:)))/2;
 end

@@ -153,6 +153,7 @@ try
         ii = ii+1;
         refreshdata(handles.axesMain, 'caller');
         refreshdata(handles.axesRawData, 'caller');
+        set(handles.textNoise, 'String', num2str(method.GetNoise, '%.3f'));
         drawnow;
         if strcmp(get(handles.pbGo, 'String'), 'Go')~=0
             break;

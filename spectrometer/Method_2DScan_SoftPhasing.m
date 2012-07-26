@@ -84,28 +84,32 @@
             drawnow;
         end
 
+        function noise = GetNoise(obj)
+            noise = obj.sample.abs_noise;
+        end
+        
         function Save(obj, filename)
             save(filename, obj.plot_data);
         end
 
     end
-    
+
     methods (Access = private)
-        
+
         function processPosition(obj)
-            
+
             % Determine relative position of each sample in nm
             % Assuming channel 15 is phase-x and 16 is phase-y
             obj.sample.position = zeros(PARAMS.nShots);
             obj.sample.data.external(15,:) = obj.sample.data.external(15,:)./obj.sample.mean.external(15);
             obj.sample.data.external(16,:) = obj.sample.data.external(16,:)./obj.sample.mean.external(16);
-            
+
             last_x = -1;
             last_y =  1;
             for ii = 1:PARAMS.nShots
                 x = sign(obj.sample.external(15, ii));
                 y = sign(obj.sample.external(16, ii));
-                
+
                 % consider every axis
                 if x>0 && last_x<0 && y>0
                     t_theta = 0;
@@ -156,7 +160,7 @@
                 end
             end
         end
-            
+
         function processData(obj)
             global PARAMS;
             

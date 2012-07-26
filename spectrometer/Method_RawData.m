@@ -57,6 +57,10 @@ classdef Method_RawData < handle
             obj.sample = FPAS_Sample(1);
         end
         
+        function noise = GetNoise(obj)
+            noise = obj.sample.abs_noise;
+        end
+        
         function Save(obj, filename)
             save(filename, obj.sample);
         end
