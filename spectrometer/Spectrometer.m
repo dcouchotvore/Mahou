@@ -76,11 +76,21 @@ PARAMS.dataSource = 0;
 PARAMS.noiseGain = 1;
 
 global IO;
-IO = IO_Interface;
-IO.CloseClockGate();
+try
+  IO = IO_Interface;
+  IO.CloseClockGate();
+catch
+  warning('IO not enabled');
+end
 
-Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
+try
+  Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
+catch
+  warning('PI stage not enabled');
+end
+
 FPAS_Initialize;
+
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
@@ -142,6 +152,7 @@ PARAMS.speed  = str2double(get(handles.editSpeed, 'String'));
 
 FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
+method.InitializeHardware;
 
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 
@@ -519,3 +530,8 @@ function editBinSize_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+function EnableParameters(handles)
+%I can't find this function anywhere. This is a dummy so I can run the
+%program...
+return
