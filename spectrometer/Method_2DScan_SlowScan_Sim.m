@@ -43,7 +43,11 @@
             PARAMS.binCount = ceil(PARAMS.stop-PARAMS.start)/PARAMS.binSize;
             obj.bin = zeros(32, PARAMS.binCount)+2*obj.telemere;
         end
-
+        
+        function InitializeHardware(obj)
+          FPAS_Sample(0);
+        end
+        
         function Scan(obj, handles)
             global PARAMS Interferometer_Stage;
             Interferometer_Stage.MoveTo(handles, PARAMS.start, 100, 0, 0);
