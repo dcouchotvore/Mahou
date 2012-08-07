@@ -11,6 +11,7 @@ classdef Sampler_FPAS < handle
         bufSizeInSamps;
         taskName;
         chanName;
+        nDIChans;
         deviceName;
         lines;
         lib;
@@ -30,7 +31,7 @@ classdef Sampler_FPAS < handle
             LoadNIConstants;
         end
         
-        function Intialize(obj)
+        function Initialize(obj)
             
             %propteries of the array detector
             obj.nPixels = 64;
@@ -88,8 +89,8 @@ classdef Sampler_FPAS < handle
           if obj.initialized
             obj.nShots = PARAMS.nShots;
             obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
-            [obj.hTask,numchan] = DAQmxCreateDIChan(obj.lib,obj.lines,NICONST.DAQmx_Val_ChanForAllLines,'',{''});
-            %here numchan is the number of digital input channels, i.e. just 1
+            [obj.hTask,obj.nDIChans] = DAQmxCreateDIChan(obj.lib,obj.lines,NICONST.DAQmx_Val_ChanForAllLines,'',{''});
+            %here obj.nDIChans is the number of digital input channels, i.e. just 1
             
             %% configure timing
             
@@ -106,7 +107,7 @@ classdef Sampler_FPAS < handle
             
             
             %% set input buffer size
-            obj.bufSizeInSamps = obj.nSampsPerChan*numchan;
+            obj.bufSizeInSamps = obj.nSampsPerChan*obj.nDIChans;
             DAQmxCfgInputBuffer(obj.lib,obj.hTask,obj.bufSizeInSamps);
 
             %% set DMA transfer
@@ -139,7 +140,7 @@ classdef Sampler_FPAS < handle
                 %fillMode = NICONST.DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
           
-                [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(obj.lib,obj.hTask,obj.nChan,obj.nSampsPerChan,obj.timeout,fillMode,obj.bufSizeInSamps);
+                [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(obj.lib,obj.hTask,obj.nDIChans,obj.nSampsPerChan,obj.timeout,fillMode,obj.bufSizeInSamps);
 
                 %do any error checking on sampsPerChanRead here?
                 if sampsPerChanRead ~= obj.nSampsPerChan
@@ -167,6 +168,7 @@ classdef Sampler_FPAS < handle
 
                 %use ind to sort the data
                 result = double(hmm(obj.ind,1:obj.nShots));
+               result = result(1:obj.nChan,:); 
 
             end
         end
