@@ -89,7 +89,7 @@ catch
   warning('PI stage not enabled');
 end
 
-FPAS_Initialize;
+%@@@FPAS_Initialize;
 
 
 % The Raw Data plot is the same for every method.
@@ -150,7 +150,7 @@ PARAMS.start  = str2double(get(handles.editStart, 'String'));
 PARAMS.stop   = str2double(get(handles.editStop, 'String'));
 PARAMS.speed  = str2double(get(handles.editSpeed, 'String'));
 
-FPAS_Initialize;          % FPAS Setup uses number of shots
+%@@@FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
 method.InitializeHardware;
 

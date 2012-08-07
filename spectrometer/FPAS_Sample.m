@@ -84,35 +84,75 @@ switch PARAMS.dataSource
           
           sample = hmm(ind,1:PARAMS.nShots);
 
-%           %use ind to sort the data
-%           %IND = repmat(ind,1,PARAMS.nShots); %this only needs to happen once per scan
-%           data = zeros(FPAS.nPixels+FPAS.nExtInputs,PARAMS.nShots); %initialize size of array (once per scan)
-%           data = hmm(ind,1:PARAMS.nShots);
-%           
-%           
-%           %% extract array part and ext channels part
-%           sample.data.pixels = double(data(1:FPAS.nPixels,:)); %the first 64 rows
-%           sample.data.external = double(data((FPAS.nPixels+1):(FPAS.nPixels+FPAS.nExtInputs),:))./13107; %the last 16 rows divided by some magic number I don't understand to make volts?
-          
-          % If in simulation mode, duplicate method 2
-        else
-          %TODO make sample the block of 80 x nShots data
-          for ii=1:32
-            sample.data.pixels(ii, :)   = abs(sech((ii-14)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
-            sample.data.pixels(ii+32,:) = abs(sech((ii-18)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
-          end
-          sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
-        end
-        
-      % clear task (clean up)
-      case 3
-        if FPAS.initialized
-          %% clear
-          DAQmxClearTask(FPAS.lib,FPAS.hTask);
-        end
-        
-    end
-    
+                    %% start the task
+                    DAQmxStartTask(FPAS.lib, FPAS.hTask);
+                end
+                
+            % Finish up and collect data
+            case 1
+                if FPAS.initialized
+                    %% read 
+                    timeout = 1;
+                    fillMode = NICONST.DAQmx_Val_GroupByChannel; % Group by Channel
+                    %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
+
+                    IO.OpenClockGate;
+                    [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(FPAS.lib,FPAS.hTask,FPAS.nChan,FPAS.nSampsPerChan,timeout,fillMode,FPAS.nSampsPerChan*FPAS.nChan);
+                    IO.CloseClockGate;
+
+                    %portdata
+
+                    %% stop
+                    DAQmxStopTask(FPAS.lib,FPAS.hTask);
+
+                    %% clear
+                    DAQmxClearTask(FPAS.lib,FPAS.hTask);
+
+                    %% swizzle data (could be optimized for memory and speed)
+                    nPerBoard = 32; %has to do with the number of channels on the boards going to the FIFO
+
+                    ind = [];
+                    for ii = 1:ceil((FPAS.nPixels+FPAS.nExtInputs)/nPerBoard)
+                      ind = [ind,[1:2:15 2:2:16; 17:2:31 18:2:32]+(ii-1)*32];
+                    end
+                    ind = ind(:);
+
+                    %how many channels do you need to keep to unravel all the data correctly
+                    maxInd = ceil((FPAS.nPixels+FPAS.nExtInputs)/nPerBoard)*nPerBoard; 
+
+                    %throw away first point because it is empty
+                    hm = portdata(2:end);
+
+                    %throw away as many points as we can without losing information
+                    hm = reshape(hm,FPAS.nMaxChan/2,PARAMS.nShots);
+                    hm = hm(1:maxInd/2,:);
+
+                    %flatten again
+                    hm = hm(:); 
+
+                    %convert each 32bit number to two 16bit numbers
+                    hmm = typecast(hm,'uint16');
+                    hmm = reshape(hmm,maxInd,PARAMS.nShots);
+
+                    %use ind to sort the data
+                    IND = repmat(ind,1,PARAMS.nShots); %this only needs to happen once per scan
+                    data = zeros(size(IND)); %initialize size of array (once per scan)
+                    data = hmm(ind,1:PARAMS.nShots);
+
+                    %% extract array part and ext channels part
+                    sample.data.pixels = double(data(1:FPAS.nPixels,:)); %the first 64 rows
+                    sample.data.external = double(data((FPAS.nPixels+1):(FPAS.nPixels+FPAS.nExtInputs),:))./13107; %the last 16 rows divided by some magic number I don't understand to make volts?
+
+                % If in simulation mode, duplicate method 2
+                else
+                    for ii=1:32
+                        sample.data.pixels(ii, :)   = abs(sech((ii-14)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
+                        sample.data.pixels(ii+32,:) = abs(sech((ii-18)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
+                    end
+                    sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
+                end
+         end
+
     %% Uniform Distribution
   case 1
           %TODO make sample the block of 80 x nShots data
@@ -122,53 +162,30 @@ switch PARAMS.dataSource
     end
     
     %% Simulate offset sech^2 peaks with Gaussian noise
-  case 2
-          %TODO make sample the block of 80 x nShots data
-    if phase==1
-      for ii=1:32
-        sample.data.pixels(ii, :)   = abs(sech((ii-14)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
-        sample.data.pixels(ii+32,:) = abs(sech((ii-18)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
-      end
-      sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
-    end
-    
-    %% Simulate matching sech^2 peaks with Gaussian noise on sample to test noise calculations
-  case 3
-          %TODO make sample the block of 80 x nShots data
-    if phase==1
-      for ii=1:32
-        sample.data.pixels(ii+32,:) = repmat(sech((ii-16)/12)^2 + 0.1, 1, PARAMS.nShots);
-        sample.data.pixels(ii,:)    = sample.data.pixels(ii+32,:).*(1+random('Normal', 0.0, 0.00001, 1, PARAMS.nShots));
-      end
-      sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
-    end
-    
-    % Simulate spectrum, HeNe interference, and IR interferogram
-  case 4
-    switch phase
-      case 0
-        %initialization
-        
-        options.inputfile_name = 'igram_inputfile';
-        options.IR_voltage = 2; %volts on the detector
-        options.IR_fwhm = 250; %in cm-1
-        options.HeNe_modulation = 0.1; %+/- volts caused by interference
-        options.HeNe_offset = 3; %offset voltage
-        options.HeNe_phase = 0; %degrees (I am not sure this is correct yet)
-        options.n_scans = 1;
-        options.t_start = -500;%fs
-        options.t_end = 1000; %fs
-        options.fringes_per_shot = 0.15;
-        options.laser_rep_rate = 5000;
-        options.acceleration = 1;
-        options.spectrometer_n_pixels = 32;
-        options.spectrometer_resolution = 30; %wavenumbers
-        options.bin_zero = 4000; %define this before min and max for the lines below to work
-        options.bin_min = timeFsToBin(options.t_start,options)+1;
-        options.bin_max = timeFsToBin(options.t_end,options)-1;
-        options.timing_error = 100; %fs 
+    case 2
+        if phase==1
+            for ii=1:32
+                sample.data.pixels(ii, :)   = abs(sech((ii-14)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
+                sample.data.pixels(ii+32,:) = abs(sech((ii-18)/6)^2 + random('Normal', 0, .2, 1, PARAMS.nShots));
+            end
+            sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
+        end
 
-        sim_fxns = initializeSimulation(options);
+    %% Simulate matching sech^2 peaks with Gaussian noise on sample to test noise calculations
+    case 3
+        if phase==1
+            for ii=1:32
+                sample.data.pixels(ii+32,:) = repmat(sech((ii-16)/12)^2 + 0.1, 1, PARAMS.nShots);
+                sample.data.pixels(ii,:)    = sample.data.pixels(ii+32,:).*(1+random('Normal', 0.0, 0.00001, 1, PARAMS.nShots));
+            end
+            sample.data.external = random('uniform', 0.0, 5.0, 16, PARAMS.nShots);
+        end
+end       
+
+%% Final processing for this sample
+if phase==1
+    sample.mean.pixels = mean(sample.data.pixels, 2);
+    sample.mean.external = mean(sample.data.external, 2);
 
         sample.n_bins = options.bin_max - options.bin_min + 1;
         sample.bin_data = zeros(64,n_bins); %could try these as sparse matrices
