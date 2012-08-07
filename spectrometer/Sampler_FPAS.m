@@ -168,7 +168,7 @@ classdef Sampler_FPAS < handle
 
                 %use ind to sort the data
                 result = double(hmm(obj.ind,1:obj.nShots));
-               result = result(1:obj.nChan,:); 
+                result = result(1:obj.nChan,:);
 
             end
         end

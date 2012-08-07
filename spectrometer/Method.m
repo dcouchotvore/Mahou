@@ -20,6 +20,7 @@ classdef Method < handle
     %IR_intererogram, HeNe x, HeNe y, etc) but still one value per laser
     %shot. This will be different for every method.
     signal; 
+    nSignals;
         
     %the background which is subtracted from each signal after sorting. The
     %background must match the structure of the data in <signal>. 
@@ -116,17 +117,17 @@ classdef Method < handle
   methods (Access = protected)
     
     %untested -- probably screwed up
-    function hRawPlots = InitializeRawDataPlot(obj,hAxesRawData,scale,Raw_data,Noise)
+    function hRawPlots = InitializeRawDataPlot(obj,hAxesRawData)
       % The Raw Data plot is the same for every method.
-      hRawPlots(1) = plot(hAxesRawData, scale, Raw_data(1,:), 'r');
-      set(hRawPlots(1),'XDataSource', 'scale', 'YDataSource','obj.Raw_data(1,:)');
+      hRawPlots(1) = plot(hAxesRawData, obj.freqAxis, obj.Raw_data(1,:), 'r');
+      set(hRawPlots(1),'XDataSource', 'obj.freqAxis', 'YDataSource','obj.Raw_data(1,:)');
       hold(handles.axesRawData, 'on');
-      hRawPlots(2) = plot(hAxesRawData, scale, Raw_data(2,:), 'g');
-      set(hRawPlots(2),'XDataSource', 'scale', 'YDataSource','obj.Raw_data(2,:)');
-      hRawPlots(3) = plot(hAxesRawData, scale, Noise(1, :), 'b');
-      set(hRawPlots(3),'XDataSource', 'scale', 'YDataSource','obj.Noise');
-      hold(handles.axesRawData, 'off');
-      set(handles.axesRawData, 'XLim', [1, length(Raw_data)]);
+      hRawPlots(2) = plot(hAxesRawData, obj.freqAxis, obj.Raw_data(2,:), 'g');
+      set(hRawPlots(2),'XDataSource', 'obj.freqAxis', 'YDataSource','obj.Raw_data(2,:)');
+      hRawPlots(3) = plot(hAxesRawData, obj.freqAxis, obj.Noise(1, :), 'b');
+      set(hRawPlots(3),'XDataSource', 'obj.freqAxis', 'YDataSource','obj.Noise');
+      hold(hAxesRawData, 'off');
+      set(hAxesRawData, 'XLim', [obj.freqAxis(1) obj.freqAxis(end)]);
     end
     
     %untested

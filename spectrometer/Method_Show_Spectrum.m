@@ -18,6 +18,10 @@ properties (Access = protected)
   background;
   PARAMS;
   source;
+  
+  nSignals = 2;
+  nArrays = 2;
+  nPixelsPerArray = 32;
 end
 
 %
@@ -27,9 +31,12 @@ methods
   function obj = Method_Show_Spectrum(FPAS,IO)
     %constructor
     
-    obj.source.FPAS = FPAS; %is there a better way?
-    obj.source.IO = IO;
+    obj.source.source = FPAS; %is there a better way?
+    obj.source.gate = IO;
     
+    
+    
+    obj.signal = zeros(nPixelsPerArray,nSignals);
     
   end
   
@@ -57,15 +64,16 @@ methods (Access = protected)
   %set up the plot for the main output. Called by the class constructor.
   function InitializeMainPlot(obj,hAxesMain)
     %attach signal(1,:) and signal(2,:) to the main plot
+    
   end
   
   %set up the ADC task(s)
   function InitializeTask(obj)
     %close gate
-    obj.source.IO.CloseClockGate();
+    obj.source.gate.CloseClockGate;
     
     %configure task
-    obj.source.FPAS_Sample(0,obj.PARAMS); 
+    obj.source.sampler.ConfigureTask(obj.PARAMS); 
   end
   
   %initialize the data acquisition event and move motors to their
@@ -78,8 +86,8 @@ methods (Access = protected)
   %start first sample. This code is executed before the scan loop starts
   function ScanFirst(obj,handles)
     %start the data acquisition task
-    obj.source.FPAS_Sample(1,obj.PARAMS);
-    obj.source.IO.OpenClockGate();
+    obj.source.sampler.Start;
+    obj.source.gate.OpenClockGate;
   end
   
   %This code is executed inside the scan loop. This is different from
@@ -88,15 +96,15 @@ methods (Access = protected)
   %process the first while the second is acquiring. It is also the place
   %to put code to save temporary files
   function ScanMiddle(obj,handles)
-    obj.sample = obj.source.FPAS_Sample(2,obj.PARAMS); %this will wait until the required points have been transferred (ie it will finish)
-    obj.source.IO.CloseClockGate();
+    obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
+    obj.source.gate.CloseClockGate;
     %any other reading can happen next
     
     %no need to move motors
     
     %start the data acquisition task
-    obj.source.FPAS_Sample(1,obj.PARAMS);
-    obj.source.IO.OpenClockGate();
+    obj.source.sampler.Start;
+    obj.source.gate.OpenClockGate;
 
     %process the previous results
     ProcessSample(obj);
@@ -114,8 +122,8 @@ methods (Access = protected)
   %This code executes after the scan loop. It should read but not start a
   %new scan. It should usually save the final results.
   function ScanLast(obj,handles)
-    obj.sample = obj.source.FPAS_Sample(2,obj.PARAMS); %this will wait until the required points have been transferred (ie it will finish)
-    source.IO.CloseClockGate();
+    obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
+    obj.source.gate.CloseClockGate;
     %any other reading can happen next
     
     %no need to move motors
@@ -136,6 +144,7 @@ methods (Access = protected)
   
   %move the motors back to their zero positions. Clear the ADC tasks.
   function ScanCleanup(obj,handles)
+    obj.source.gate.CloseClockGate;
     
   end
   
@@ -145,17 +154,25 @@ methods (Access = protected)
   end
   
   %save the current result to a MAT file for storage.
-  function SaveResult(result)
+  function SaveResult(obj)
     
   end
   
   %save intermediate results to a temp folder
-  function SaveTmpResult(result)
+  function SaveTmpResult(obj)
     
   end
  
+  function ProcessSample(obj)
+    
+  end
 end
 
+methods
+  function out = get.Raw_data(obj)
+    out = obj.signals;
+  end
+end
 %
 % other inherited methods
 %
