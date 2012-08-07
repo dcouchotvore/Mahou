@@ -24,11 +24,12 @@ end
 % public methods
 %
 methods
-  function obj = Method_Show_Spectrum
+  function obj = Method_Show_Spectrum(FPAS,IO)
     %constructor
     
-    source.FPAS_Sample = @FPAS_Sample; %is there a better way?
-    source.IO = IO_Interface;
+    obj.source.FPAS = FPAS; %is there a better way?
+    obj.source.IO = IO;
+    
     
   end
   
@@ -64,7 +65,7 @@ methods (Access = protected)
     obj.source.IO.CloseClockGate();
     
     %configure task
-    obj.source.FPAS_Sample(0,PARAMS); 
+    obj.source.FPAS_Sample(0,obj.PARAMS); 
   end
   
   %initialize the data acquisition event and move motors to their
@@ -77,7 +78,7 @@ methods (Access = protected)
   %start first sample. This code is executed before the scan loop starts
   function ScanFirst(obj,handles)
     %start the data acquisition task
-    obj.source.FPAS_Sample(1,PARAMS);
+    obj.source.FPAS_Sample(1,obj.PARAMS);
     obj.source.IO.OpenClockGate();
   end
   
@@ -87,25 +88,25 @@ methods (Access = protected)
   %process the first while the second is acquiring. It is also the place
   %to put code to save temporary files
   function ScanMiddle(obj,handles)
-    obj.sample = obj.source.FPAS_Sample(2,PARAMS); %this will wait until the required points have been transferred (ie it will finish)
-    source.IO.CloseClockGate();
+    obj.sample = obj.source.FPAS_Sample(2,obj.PARAMS); %this will wait until the required points have been transferred (ie it will finish)
+    obj.source.IO.CloseClockGate();
     %any other reading can happen next
     
     %no need to move motors
     
     %start the data acquisition task
-    obj.source.FPAS_Sample(1,PARAMS);
+    obj.source.FPAS_Sample(1,obj.PARAMS);
     obj.source.IO.OpenClockGate();
 
     %process the previous results
-    obj.ProcessSample(obj);
+    ProcessSample(obj);
     
     %no averaging
     %obj.AverageSample(obj);
     
     %plot results
-    obj.RefreshPlots(handles.axesMain)
-    obj.RefreshPlots(handles.axesRawData)
+    RefreshPlots(handles.axesMain)
+    RefreshPlots(handles.axesRawData)
     
     %no saving
   end
@@ -113,21 +114,21 @@ methods (Access = protected)
   %This code executes after the scan loop. It should read but not start a
   %new scan. It should usually save the final results.
   function ScanLast(obj,handles)
-    obj.sample = obj.source.FPAS_Sample(2,PARAMS); %this will wait until the required points have been transferred (ie it will finish)
+    obj.sample = obj.source.FPAS_Sample(2,obj.PARAMS); %this will wait until the required points have been transferred (ie it will finish)
     source.IO.CloseClockGate();
     %any other reading can happen next
     
     %no need to move motors
     
     %process the previous results
-    obj.ProcessSample(obj);
+    ProcessSample(obj);
     
     %no averaging
     %obj.AverageSample(obj);
     
     %plot results
-    obj.RefreshPlots(handles.axesMain)
-    obj.RefreshPlots(handles.axesRawData)
+    RefreshPlots(handles.axesMain)
+    RefreshPlots(handles.axesRawData)
     
     %no saving
     

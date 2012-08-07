@@ -12,15 +12,17 @@ classdef Method < handle
   
   %the properties not visible outside the class or subclass
   properties (Abstract, Access = protected)
-    %the raw data block(s) straight from ADC(s) as a cell array
+    %the raw data block(s) straight from ADC(s) (the FPAS for example).
+    %This will probably be the same for most methods. 
     sample; 
     
     %the sorted data assigned to roles (signal, ref, pumped, unpumped,
-    %IR_intererogram, HeNe x, HeNe y, etc) but still one value per stage
-    %position
+    %IR_intererogram, HeNe x, HeNe y, etc) but still one value per laser
+    %shot. This will be different for every method.
     signal; 
         
-    %the background which is subtracted from each signal after sorting
+    %the background which is subtracted from each signal after sorting. The
+    %background must match the structure of the data in <signal>. 
     background; 
     
     %a struct of all the parameters describing the data acquisition event
@@ -161,19 +163,19 @@ classdef Method < handle
       
       obj.ScanIsRunning = true;
 
-      ScanInitialize(obj);
+      obj.ScanInitialize(obj);
       
-      ScanFirst(obj);
+      obj.ScanFirst(obj);
       
       while i_scan ~= obj.PARAMS.n_scans && obj.ScanIsStopping == false
 
-        ScanMiddle(obj);
+        obj.ScanMiddle(obj);
       
       end
       
-      ScanLast(obj);
+      obj.ScanLast(obj);
 
-      ScanCleanup(obj);
+      obj.ScanCleanup(obj);
 
       obj.ScanIsRunning = false;
 
