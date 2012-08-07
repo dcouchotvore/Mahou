@@ -74,6 +74,16 @@ classdef Sampler_FPAS < handle
                     sampleMode,obj.nSampsPerChan,sampleClkRate,sampleClkOutputTerm,...
                     sampleClkPulsePolarity,pauseWhen,readyEventActiveLevel);
 
+                %% set input buffer size
+                bufSizeInSamps = sampsPerChan*numchan;
+                DAQmxCfgInputBuffer(lib,hTask,bufSizeInSamps);
+
+                %% set DMA transfer
+                DAQmxSetDIDataXferMech(lib,hTask,chanName,DAQmx_Val_DMA);
+
+                %% commit (make everything as ready to go as it can be)
+                DAQmxTaskControl(lib,hTask,DAQmx_Val_Task_Commit);
+                
                 %% start the task
                 DAQmxStartTask(obj.lib, obj.hTask);
             end

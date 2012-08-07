@@ -79,7 +79,7 @@ global IO;
 IO = IO_Interface;
 IO.CloseClockGate();
 
-Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM3', 0.4739, 'editMotor1');
 %@@@FPAS_Initialize;
 
 % The Raw Data plot is the same for every method.
@@ -139,6 +139,7 @@ PARAMS.nShots = str2double(get(handles.editNumShots, 'String'));
 PARAMS.start  = str2double(get(handles.editStart, 'String'));
 PARAMS.stop   = str2double(get(handles.editStop, 'String'));
 PARAMS.speed  = str2double(get(handles.editSpeed, 'String'));
+PARAMS.binSize = str2double(get(handles.editBinSize, 'String'));
 
 %@@@FPAS_Initialize;          % FPAS Setup uses number of shots
 method.InitializeData(handles);
