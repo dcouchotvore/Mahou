@@ -1,0 +1,4 @@
+This directory contains .m files to test the data processing in the gui. The file test_phasing.m runs through the process. It simulates spectra using the response function formalism using the cumulant expansion. Then it back fourier transforms to generate an absorptive spectrum in the mixed time and frequency domain. Then the effect of scanning are simulated by generating a motor trajectory and pulling values of the spectrum using a table lookup method. Similarly, experimental input of the HeNe interferometer and the IR pump pulse interferometer are simulated for the same trajectory. 
+
+This spectrum and other data is packaged into a data format very similar to what the FPAS system generates. Then all the steps of data processing -- converting HeNe x- and y- values to a count, calculating the phase of a spectrum, and then calculating and phasing the 2D spectrum are tested.
+

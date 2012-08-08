@@ -54,6 +54,14 @@ classdef PI_TranslationStage < hgsetget
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
                 obj.maximum = nums(2)/obj.scale;
 
+                %define 2-step macro
+%                 obj.sendPIMotorCommand('MAC BEG TWOSTEP', 0);
+%                 obj.sendPIMotorCommand('MOV 1 $1', 0);
+%                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
+%                 obj.sendPIMotorCommand('MOV 1 $2', 0);
+%                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
+%                 obj.sendPIMotorCommand('MAC END', 0);
+                
                 % reference move to negative limit
                 obj.sendPIMotorCommand('RON 1 1', 0);
                 obj.sendPIMotorCommand('SVO 1 1', 0);
@@ -81,7 +89,7 @@ classdef PI_TranslationStage < hgsetget
             fclose(obj.object);
         end
         
-        function new_position = MoveTo(obj, handles, desired_position, speed, move_relative, move_async)
+        function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
 
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
@@ -119,6 +127,13 @@ classdef PI_TranslationStage < hgsetget
             end
         end
 
+        function MoveTwoStep(obj, pos1, pos2, speed)
+            obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
+            obj.sendPIMotorCommand(sprintf('MAC TWOSTEP %f %f', pos1, pos2), 0);
+            err=obj.sendPIMotorCommand('MAC ERR?', 1);
+            
+        end
+            
         function position = GetPosition(obj)
             if obj.initialized
                 result = obj.sendPIMotorCommand('POS?', 1);
