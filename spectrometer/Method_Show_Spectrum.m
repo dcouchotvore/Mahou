@@ -22,6 +22,11 @@ properties (Access = protected)
   nSignals = 2;
   nArrays = 2;
   nPixelsPerArray = 32;
+  nPixels = 64;
+  nExtInputs = 16;
+  nChan = 80;
+  nShotsSorted;
+
 end
 
 %
@@ -33,10 +38,6 @@ methods
     
     obj.source.source = FPAS; %is there a better way?
     obj.source.gate = IO;
-    
-    
-    
-    obj.signal = zeros(nPixelsPerArray,nSignals);
     
   end
   
@@ -55,10 +56,17 @@ methods (Access = protected)
     
   end
   
-  %initialize sample, signal, background, and result. Called by the class
-  %constructor.
+  %initialize sample, signal, background, and result. Called at the 
+  %beginning of a scan
   function InitializeData(obj)
     
+    obj.sample = zeros(obj.nChan,obj.nShots);
+    obj.nShotsSorted = obj.nArrays*obj.nShots/obj.nSignals;
+    obj.sorted = zeros(obj.nPixelsPerArray,nShotsSorted,nSignals);
+    obj.signal = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.background = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.result = zeros(1,obj.nPixelsPerArray);
+
   end
     
   %set up the plot for the main output. Called by the class constructor.
@@ -79,8 +87,9 @@ methods (Access = protected)
   %initialize the data acquisition event and move motors to their
   %starting positions
   function ScanInitialize(obj,handles)
-    %nothing required. Just leave motors where they are
-    return
+    InitializeData;
+
+    %just leave motors where they are
   end
   
   %start first sample. This code is executed before the scan loop starts
@@ -164,13 +173,32 @@ methods (Access = protected)
   end
  
   function ProcessSample(obj)
-    
+    %sort data
+    ProcessSampleSort;
+
+    %avg signals
+    ProcessSampleAvg;
+
+    %calc result
+    ProcessSampleResult;
   end
 end
 
 methods
   function out = get.Raw_data(obj)
     out = obj.signals;
+  end
+
+  function ProcessSampleSort(obj);
+    chop = 0; %this is a vector nSignals/2 in length 
+    ind1 = 1:obj.nPixelsPerArray;
+    ind2 = ind1+obj.nPixelsPerArray;
+    count = 0;
+    for ii = 1:2:obj.nSignals/2;
+      count = count+1;
+      obj.sorted(:,:,ii) = obj.sample(ind1+chop(count),obj.nShotsSorted);
+      obj.sorted(:,:,ii+1) = obj.sample(obj.nPixelsPerArray+1:2*obj.nPixelsPerArray,obj.nShotsSorted);
+    end 
   end
 end
 %
