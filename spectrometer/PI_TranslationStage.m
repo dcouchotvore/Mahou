@@ -56,9 +56,9 @@ classdef PI_TranslationStage < hgsetget
 
                 %define 2-step macro
                 obj.sendPIMotorCommand('MAC BEG TWOSTEP', 0);
-                obj.sendPIMotorCommand('MOV 1 VAR? 1', 0);
+                obj.sendPIMotorCommand('MOV 1 $1', 0);
                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
-                obj.sendPIMotorCommand('MOV 1 VAR? 2', 0);
+                obj.sendPIMotorCommand('MOV 1 $2', 0);
                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
                 obj.sendPIMotorCommand('MAC END', 0);
                 
@@ -129,7 +129,7 @@ classdef PI_TranslationStage < hgsetget
 
         function MoveTwoStep(obj, pos1, pos2, speed)
             obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-            obj.sendPIMotorCommand(sprintf('MAC TWOSTEP 1 %f %f', pos1, pos2), 0);
+            obj.sendPIMotorCommand(sprintf('MAC TWOSTEP %f %f', pos1, pos2), 0);
         end
             
         function position = GetPosition(obj)
