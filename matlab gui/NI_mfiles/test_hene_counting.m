@@ -16,7 +16,7 @@ fig1=figure;
 h = uicontrol('Parent',fig1,'Tag','editMotor1','Style','edit');
 handles.editMotor1 = h;
 
-Interferometer_Stage = PI_TranslationStage('COM3', 0.4537, 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM3', 0.00016667, 'editMotor1');
 
 %load library
 lib = 'myni';	% library alias

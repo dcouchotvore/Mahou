@@ -47,6 +47,7 @@ classdef PI_TranslationStage < hgsetget
 
             try
                 % %%
+               
                 obj.ID = obj.sendPIMotorCommand('*IDN?', 1);
 
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMN?', 1), '%i=%f');
@@ -129,7 +130,7 @@ classdef PI_TranslationStage < hgsetget
 
         function MoveTwoStep(obj, pos1, pos2, speed)
             obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-            obj.sendPIMotorCommand(sprintf('MAC TWOSTEP %f %f', pos1, pos2), 0);
+            obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', pos1*obj.scale, pos2*obj.scale), 0);
             err=obj.sendPIMotorCommand('MAC ERR?', 1);
             
         end
