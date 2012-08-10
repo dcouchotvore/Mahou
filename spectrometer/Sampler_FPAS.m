@@ -1,5 +1,8 @@
-classdef Sampler_FPAS < handle
-    
+classdef (Sealed) Sampler_FPAS < handle
+%this class is implemented so there can be only one instance at a time. See 
+%http://www.mathworks.com/help/techdoc/matlab_oop/bru6n2g.html for details.
+%Note that the way to call the class is to call FPAS =
+%Sampler_FPAS.getInstance, (instead of FPAS = Sampler_FPAS).
     properties (SetAccess = private)
         nPixels;
         nExtInputs;
@@ -21,15 +24,30 @@ classdef Sampler_FPAS < handle
         hTask;
         timeout;
     end
+    
+    %make the constructor private
+    methods (Access = private)
 
-    properties (Dependent)
+      function obj = Sampler_FPAS
+
+        LoadNIConstants;
+
+      end
+      
+    end
+     
+    %hold the instance as a persistent variable
+    methods (Static)
+      function singleObj = getInstance
+        persistent localObj
+        if isempty(localObj) || ~isvalid(localObj)
+          localObj = Sampler_FPAS;
+        end
+        singleObj = localObj;
+      end
     end
     
     methods
-        
-        function obj = Sampler_FPAS
-            LoadNIConstants;
-        end
         
         function Initialize(obj)
             
@@ -179,7 +197,6 @@ classdef Sampler_FPAS < handle
           
         end
 
-        
     end
     
 end
