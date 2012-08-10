@@ -6,4 +6,5 @@
 *.o
 *.exe
 *.dll
+*.orig
 
