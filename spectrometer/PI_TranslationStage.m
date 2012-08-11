@@ -116,6 +116,7 @@ classdef PI_TranslationStage < hgsetget
                     if bitand(num, hex2dec('A000'))==hex2dec('8000')
                         break;
                     else
+						drawnow;
                         pause(0.1);
                     end
                 end
