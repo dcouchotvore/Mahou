@@ -474,7 +474,7 @@ set(handles.checkboxMainAutoY,'Value',0);
 ylim = get(handles.axesMain,'YLim');
 val = str2double(get(hObject,'String'));
 if ~isnan(val)
-  ylim(ind) = val
+  ylim(ind) = val;
 end
 set(handles.axesMain,'YLim',ylim);
 
