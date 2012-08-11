@@ -243,7 +243,7 @@ classdef Method < handle
       
       i_scan = 1;
       
-      set(obj.handles.textScanNumber,'String',num2str(i_scan));
+      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
       
       drawnow;
 
@@ -253,7 +253,7 @@ classdef Method < handle
 
         i_scan = i_scan + 1;
         
-        set(obj.handles.textScanNumber,'String',num2str(i_scan));
+        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
         
         drawnow;
 
@@ -261,7 +261,7 @@ classdef Method < handle
 
       end
       
-      set(obj.handles.textScanNumber,'String',num2str(i_scan));
+      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
       
       drawnow;
       
