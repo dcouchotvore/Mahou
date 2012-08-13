@@ -50,19 +50,63 @@ classdef PI_TranslationStage < hgsetget
                
                 obj.ID = obj.sendPIMotorCommand('*IDN?', 1);
 
+                %minimum commandable position 
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMN?', 1), '%i=%f');
                 obj.minimum = nums(2)/obj.scale;
+                %maximum commandable position
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
                 obj.maximum = nums(2)/obj.scale;
 
                 %define 2-step macro
-%                 obj.sendPIMotorCommand('MAC BEG TWOSTEP', 0);
-%                 obj.sendPIMotorCommand('MOV 1 $1', 0);
-%                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
-%                 obj.sendPIMotorCommand('MOV 1 $2', 0);
-%                 obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
+%                 obj.sendPIMotorCommand('MAC BEG TWO', 0);
+%                 pause(1);
+%                  obj.sendPIMotorCommand('MOV 1 $1', 0);
+%                  pause(1);
+%                  obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
+%                  pause(1);
+%                  obj.sendPIMotorCommand('MOV 1 $2', 0);
+%                  pause(1);
+%                  obj.sendPIMotorCommand('WAC ONT? 1=1', 0);
+%                  pause(1);
 %                 obj.sendPIMotorCommand('MAC END', 0);
+%                 pause(1);
                 
+                % check to see if macro is defined. This is tricky because
+                % controller returns lines as separate answers (after a 
+                % terminator) which confuses commands like query. As a
+                % result it may either look like an error is present.
+                %
+                % resolve the problem by using lower level commands fprintf
+                % and fscanf. Print the query string and an error request.
+                % When the error request comes back with 0 we know we have
+                % reached the end of the list
+                fprintf(obj.object,'MAC?');
+                fprintf(obj.object,'ERR?');
+                flag_done = false;
+                list = cell(1);
+                count = 0;
+                while ~flag_done
+                    count = count+1;
+                    ret = fscanf(obj.object,'%s');
+                    if strcmp(ret,'0')
+                        %if we reached the end
+                        flag_done = true;
+                    else
+                        %otherwise add the result to the list
+                        list{count} = ret;
+                    end
+                end
+                if any(strcmpi(list,'TWOSTEP'))
+                    disp('macro TWOSTEP defined');
+                else
+                    beep
+                    fprintf(1,['PI controller macro TWOSTEP is not defined.\n\n'...
+                    'Go To PI MikroMove and define a macro named TWOSTEP as:\n'...
+                    'MOV 1 $1\n',...
+                    'WAC ONT? 1=1\n',...
+                    'MOV 1 $2\n',...
+                    'WAC ONT 1=1\n']);
+                end
                 % reference move to negative limit
                 obj.sendPIMotorCommand('RON 1 1', 0);
                 obj.sendPIMotorCommand('SVO 1 1', 0);
@@ -81,6 +125,7 @@ classdef PI_TranslationStage < hgsetget
                 end
                 obj.initialized = 1;
             catch
+                fclose(obj.object);
                 warning('Spectrometer:Interferometer', 'Cannot find translation stage.  Entering simulation mode.');
             end
         end
@@ -90,7 +135,7 @@ classdef PI_TranslationStage < hgsetget
             fclose(obj.object);
         end
         
-        function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
+        function new_position = MoveTo(obj, handles, desired_position, speed, move_relative, move_async)
 
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
@@ -117,7 +162,8 @@ classdef PI_TranslationStage < hgsetget
                     if bitand(num, hex2dec('A000'))==hex2dec('8000')
                         break;
                     else
-                        pause(0.1);
+                        drawnow
+                        pause(0.1);     % Shortening this makes little difference
                     end
                 end
             end
