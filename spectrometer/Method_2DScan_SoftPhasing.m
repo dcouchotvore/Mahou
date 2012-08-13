@@ -8,6 +8,8 @@
         position;
         theta;
         passes;
+        mean_data;
+        bins;
     end
      
     methods
@@ -42,20 +44,20 @@
             PARAMS.nShots = (PARAMS.stop-PARAMS.start)/PARAMS.speed;
             
             % Bins must be power of 2 for FFT.
-            PARAMS.binCount = 1^ceil(log2(ceil(PARAMS.stop-PARAMS.start)/PARAMS.binSize));
-            obj.bin = zeros(32, PARAMS.binCount)+2*obj.telemere;
+            PARAMS.binCount = 2^ceil(log2(ceil(PARAMS.stop-PARAMS.start)/PARAMS.binSize));
+            obj.bins = zeros(32, PARAMS.binCount+2*obj.telomere);
         end
 
         function Scan(obj, handles)
             global PARAMS Interferometer_Stage;
-            Interferometer_Stage.MoveTo(handles, PARAMS.start, 100, 0, 0);
+            Interferometer_Stage.MoveTo(PARAMS.start, 100, 0, 0);
             obj.position = 0;
             
             % We're counting a scan as being once in each direction.
             
             % Outbound
             FPAS_Sample(0);
-            Interferometer_Stage.MoveTo(handles, PARAMS.stop, PARAMS.speed, 0, 0);
+            Interferometer_Stage.MoveTo(PARAMS.stop, PARAMS.speed, 0, 0);
             obj.sample = FPAS_Sample(1);
             obj.plot_data = Log10(obj.sample.mean(33:64)./obj.sample.mean(1:32));    %%@@@ ???
             processPosition;
@@ -63,7 +65,7 @@
             
             % Inbound
             FPAS_Sample(0);
-            Interferometer_Stage.MoveTo(handles, PARAMS.start, PARAMS.speed, 0, 0);
+            Interferometer_Stage.MoveTo(PARAMS.start, PARAMS.speed, 0, 0);
             obj.sample = FPAS_Sample(1);
             obj.plot_data = Log10(obj.sample.mean(33:64)./obj.sample.mean(1:32));
             obj.processPosition;
