@@ -230,12 +230,11 @@ sampler = feval([str_sampler '.getInstance']);
 
 %method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.uipanelParameters,...
 %  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
-
-method = feval(str,sampler,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
+method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
   handles.axesMain,handles.axesRawData,handles.uipanelNoise);
 
 % switch get(handles .popupMethods, 'Value')
-%     case 1
+%     case 1    
 %         method = Method_RawData;
 %     case 2
 %         method = Method_Spectrum;

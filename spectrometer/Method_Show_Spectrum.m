@@ -166,6 +166,21 @@ methods (Access = protected)
 
   end
   
+  function DeleteParameters(obj)
+    %get a cell array of the names of the parameters
+    names = fieldnames(obj.PARAMS);
+    %how many parameters are there
+    n_params = length(names);
+
+    for i = 1:n_params
+        h = findobj(obj.hParamsPanel,'tag',['text' names{i}]);
+        delete(h);
+    end
+    for i = 1:n_params
+        h = findobj(obj.hParamsPanel,'tag',['edit' names{i}]);
+        delete(h);
+    end
+  end
   %initialize sample, signal, background, and result. Called at the 
   %beginning of a scan
   function InitializeData(obj)
@@ -362,10 +377,16 @@ methods %public methods
   function out = get.Raw_data(obj)
     out = obj.signal.data;
   end
-  function out = get.Noise(obj);
+  function out = get.Noise(obj)
     out = obj.result.noise;
   end
+  
+    function delete(obj)
+        DeleteParameters(obj);
+    end
 end
+
+        
 %
 % other inherited methods
 %
@@ -376,3 +397,5 @@ end
 % RefreshPlots(hAxes)
 
 end
+
+
