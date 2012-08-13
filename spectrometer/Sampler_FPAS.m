@@ -31,7 +31,7 @@ classdef (Sealed) Sampler_FPAS < handle
       function obj = Sampler_FPAS
 
         LoadNIConstants;
-
+        Initialize(obj);
       end
       
     end
