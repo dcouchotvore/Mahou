@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 10-Aug-2012 16:56:37
+% Last Modified by GUIDE v2.5 15-Aug-2012 11:07:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -520,3 +520,32 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 set(hObject,'String','0');
+
+
+% --- Executes on button press in pbBackground.
+function pbBackground_Callback(hObject, eventdata, handles)
+% hObject    handle to pbBackground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global method
+
+% Called recursively if scan is running
+if method.ScanIsRunning == true
+    beep
+    return
+end
+
+
+set(hObject, 'String', 'Background running...', 'BackgroundColor', [1.0 0.0 0.0]);
+
+try
+  method.BackgroundAcquire;
+catch E
+  
+  set(handles.pbBackground, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
+  cleanup('','');
+  rethrow(E);
+end
+
+set(handles.pbGo, 'String', 'Go', 'BackgroundColor', [0.8 0.8 0.8]);
+
