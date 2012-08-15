@@ -78,7 +78,12 @@ classdef Method < handle
   %     here are the methods that every data acq method must define
   %
   methods (Abstract) %public
+
+    %acquire a background (might need to be public)
+    BackgroundAcquire(obj);
   
+    %zero the background 
+    BackgroundReset(obj);
   end
   
   methods (Abstract, Access = protected)
@@ -123,9 +128,6 @@ classdef Method < handle
     
     %move the motors back to their zero positions. Clear the ADC tasks. 
     ScanCleanup(obj);
-    
-    %acquire a background (might need to be public)
-    BackgroundAcquire(obj);
     
     %save the current result to a MAT file for storage.
     SaveResult(result);

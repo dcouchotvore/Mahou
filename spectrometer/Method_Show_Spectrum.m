@@ -308,11 +308,6 @@ methods (Access = protected)
     %no need to move motors back to zero
   end
   
-  %acquire a background (might need to be public)
-  function BackgroundAcquire(obj)
-    
-  end
-  
   %save the current result to a MAT file for storage.
   function SaveResult(obj)
     
@@ -353,6 +348,12 @@ methods (Access = protected)
     obj.signal.std = squeeze(std(obj.sorted,0,2))';
   end
   
+  function ProcessSampleBackAvg(obj,i_scan)
+    obj.background.data = (obj.background.data.*(i_scan-1) + obj.signal.data)./i_scan;
+    %check this might not be right
+    obj.background.std = sqrt((obj.background.std.^2.*(i_scan-1) + obj.signal.std.^2)./i_scan);
+  end
+  
   function ProcessSampleSubtBack(obj)
     obj.signal.data = obj.signal.data - obj.background.data;
     obj.signal.std = sqrt(obj.signal.std.^2 + obj.background.std.^2);
@@ -384,6 +385,38 @@ methods %public methods
     function delete(obj)
         DeleteParameters(obj);
     end
+    
+    function BackgroundReset(obj)
+        obj.background.data = zeros(size(obj.background.data));
+        obj.background.std = zeros(size(obj.background.std));
+    end
+    
+  %acquire a background (might need to be public)
+  function BackgroundAcquire(obj)
+      obj.ScanIsRunning = true;
+      obj.ScanIsStopping = false;
+      obj.BackgroundReset;
+    obj.ReadParameters;
+    obj.InitializeTask;
+    
+    for i_scan = 1:10
+        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+        drawnow;
+
+        obj.source.sampler.Start;
+        obj.source.gate.OpenClockGate;
+        obj.sample = obj.source.sampler.Read;
+        obj.source.gate.CloseClockGate;
+
+        obj.ProcessSampleSort;
+        obj.ProcessSampleAvg;
+        obj.ProcessSampleBackAvg(i_scan);
+
+    end
+    obj.source.sampler.ClearTask;
+    obj.ScanIsRunning = false;
+
+  end
 end
 
         

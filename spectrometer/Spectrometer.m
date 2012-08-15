@@ -535,6 +535,8 @@ if method.ScanIsRunning == true
     return
 end
 
+% TODO check event data to see if it was a right click. If so call
+% method.BackgroundReset to zero the background
 
 set(hObject, 'String', 'Background running...', 'BackgroundColor', [1.0 0.0 0.0]);
 
@@ -542,10 +544,10 @@ try
   method.BackgroundAcquire;
 catch E
   
-  set(handles.pbBackground, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
+  set(hObject, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
   cleanup('','');
   rethrow(E);
 end
 
-set(handles.pbGo, 'String', 'Go', 'BackgroundColor', [0.8 0.8 0.8]);
+set(hObject, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
 
