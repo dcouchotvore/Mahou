@@ -143,6 +143,8 @@ classdef Method < handle
     ProcessSampleSubtBack(obj);
     
     ProcessSampleResult(obj);
+    
+    ProcessSampleNoise(obj);
   end
   
   %
@@ -285,14 +287,17 @@ classdef Method < handle
       %sort data
       ProcessSampleSort(obj);
       
-      %avg signals
-      ProcessSampleAvg(obj);
-
       %remove background
       ProcessSampleSubtBack(obj);
+
+      %avg signals
+      ProcessSampleAvg(obj);
     
       %calc result
       ProcessSampleResult(obj);
+      
+      %calc noise (at least an estimate)
+      ProcessSampleNoise(obj);
     end
 
   end

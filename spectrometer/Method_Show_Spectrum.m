@@ -358,14 +358,36 @@ methods (Access = protected)
   end
   
   function ProcessSampleSubtBack(obj)
-    obj.signal.data = obj.signal.data - obj.background.data;
-    obj.signal.std = sqrt(obj.signal.std.^2 + obj.background.std.^2);
+    %obj.signal.data = obj.signal.data - obj.background.data;
+    %obj.signal.std = sqrt(obj.signal.std.^2 + obj.background.std.^2);
+    
+    %here we are going to subtract the background from every shot we have
+    %measured. Note that the backgrounds for different signals may be
+    %different so we must do this after sorting the data. Normally one
+    %would do this with a nested for loop, but that is slow in Matlab, so
+    %we will use the fancy function bsxfun (binary function (ie two
+    %operands) with singleton dimension expansion) to acheive this. We are
+    %subtracting the sorted data (size nPixels, nShots, nSignals) minus the
+    %bg which has size nPixels 1 nSignals). The bsxfun realizes that the
+    %middle dimension 1 needs to match nShots so it expands the size of the
+    %array automatically. 
+    
+    %So we first transpose the background from (nSignals x nPixels) to
+    %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
+    %nSignals).
+    bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
+    
+    %now bsxfun does the subtraction
+    obj.sorted = bsxfun(@minus,obj.sorted,bg);
   end
 
   function ProcessSampleResult(obj)
-    %for show spectrum the two arrays are the direct result
-    obj.result.data = obj.signal.data;
-
+    %calculate the effective delta absorption (though we are plotting the
+    %signals directly)
+    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(1,:));
+  end
+  
+  function ProcessSampleNoise(obj)
     %calculate the signal from each shot for an estimate of the error
     obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2)),0,2)';
 
@@ -373,7 +395,6 @@ methods (Access = protected)
     %haven't worked through that yet. See wikipedia Propagation of
     %Uncertainty
   end
-  
 end
 
 methods %public methods
