@@ -164,7 +164,7 @@ classdef Method < handle
       for i = 1:n_plots
         % The Raw Data plot is the same for every method.
         obj.hPlotRaw(i) = plot(obj.hRawDataAxes, 1:obj.nPixelsPerArray, obj.Raw_data(i,:));
-        set(obj.hPlotRaw(i),'Color',[mod(1-(i-1)*0.2,1) 0 0]);
+        set(obj.hPlotRaw(i),'Color',[mod(1-(i-1)*0.1,1) 0 0]);
         set(obj.hPlotRaw(i),'YDataSource',['obj.Raw_data(',num2str(i),',:)']);
         hold(obj.hRawDataAxes, 'on');
       end        
