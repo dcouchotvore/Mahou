@@ -304,7 +304,7 @@ methods (Access = protected)
   %move the motors back to their zero positions. Clear the ADC tasks.
   function ScanCleanup(obj)
     obj.source.gate.CloseClockGate;
-    
+    obj.source.sampler.ClearTask;
     %no need to move motors back to zero
   end
   
