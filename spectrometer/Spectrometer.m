@@ -52,7 +52,7 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global method IO FPAS Interferometer_Stage JY;
+global method IO FPAS Interferometer_Stage JY fsToMm2Pass;
 
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
@@ -75,7 +75,7 @@ catch
 end
 
 try
-  Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
+  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
 catch
   warning('PI stage not enabled');
 end

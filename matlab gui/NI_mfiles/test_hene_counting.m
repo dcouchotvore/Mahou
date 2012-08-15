@@ -1,13 +1,13 @@
 close all; clear all; startup;
 
-global PARAMS;
+global PARAMS fsToMm2Pass;
 PARAMS.dataSource = 0;
 PARAMS.noiseGain = 1;
-PARAMS.speed = 1200;
-PARAMS.start = 0;
-PARAMS.stop = 250;
+PARAMS.speed = 1200; %fix
+PARAMS.start = 0; %fix
+PARAMS.stop = 250; %fix
 %PARAMS.nShots = 10000;
-PARAMS.nShots = 2*(PARAMS.stop-PARAMS.start)/PARAMS.speed * 4800 +2200;
+PARAMS.nShots = 2*(PARAMS.stop-PARAMS.start)/PARAMS.speed * 4800 +2200; %fix
 
 global IO;
 IO = IO_Interface;
@@ -18,7 +18,7 @@ h = uicontrol('Parent',fig1,'Tag','editMotor1','Style','edit');
 handles.editMotor1 = h;
 
 %% Duane, you forgetful fool, set the scaling factor!!!!
-Interferometer_Stage = PI_TranslationStage('COM3', 0.00016667, 'editMotor1');
+Interferometer_Stage = PI_TranslationStage('COM3',fsToMm2Pass, 'editMotor1');
 
 %load library
 lib = 'myni';	% library alias
