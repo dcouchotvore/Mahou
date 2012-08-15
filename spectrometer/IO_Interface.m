@@ -24,7 +24,7 @@ classdef IO_Interface < handle
         function delete(obj)
             CloseClockGate(obj);
             if obj.active
-                close(obj.dio);
+                delete(obj.dio);
             end
         end
 

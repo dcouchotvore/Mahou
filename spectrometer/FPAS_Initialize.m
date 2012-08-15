@@ -15,7 +15,13 @@ FPAS.nSampsPerChan = FPAS.nMaxChan/2*PARAMS.nShots+1; %nChan/2+1; %total number 
 FPAS.lib = 'myni';	% library alias
 if ~libisloaded(FPAS.lib)
     disp('Matlab: Load nicaiu.dll')
-    loadlibrary('nicaiu.dll','C:\Program Files (x86)\National Instruments\NI-DAQ\DAQmx ANSI C Dev\include\nidaqmx.h','alias',FPAS.lib);
+    try
+      loadlibrary('nicaiu.dll','C:\Program Files (x86)\National Instruments\NI-DAQ\DAQmx ANSI C Dev\include\nidaqmx.h','alias',FPAS.lib);
+    catch
+      warning('Can''t find nicaiu.dll');
+      FPAS.initialized = 0;
+      return
+    end
     %if you do NOT have nicaiu.dll and nidaqmx.h
     %in your Matlab path,add full pathnames or copy the files.
     %libfunctions(FPAS.lib,'-full') % use this to show the... 

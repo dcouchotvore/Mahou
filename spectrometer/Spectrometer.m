@@ -64,6 +64,7 @@ guidata(hObject, handles);
 splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
 splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color', [0 0 0.6] )
 
+Constants;
 scales.ch32 = [0:31];
 
 %Default method on startup.
@@ -76,11 +77,21 @@ PARAMS.dataSource = 0;
 PARAMS.noiseGain = 1;
 
 global IO;
-IO = IO_Interface;
-IO.CloseClockGate();
+try
+  IO = IO_Interface;
+  IO.CloseClockGate();
+catch
+  warning('IO not enabled');
+end
 
-Interferometer_Stage = PI_TranslationStage('COM3', 0.4739, 'editMotor1');
+try
+  Interferometer_Stage = PI_TranslationStage('COM3', 0.00015, 'editMotor1');
+catch
+  warning('PI stage not enabled');
+end
+
 %@@@FPAS_Initialize;
+
 
 % The Raw Data plot is the same for every method.
 hRawPlots(1) = plot(handles.axesRawData, scales.ch32, zeros(1, 32), 'r');
@@ -520,3 +531,8 @@ function editBinSize_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+%function EnableParameters(handles)
+%I can't find this function anywhere. This is a dummy so I can run the
+%program...
+%return
