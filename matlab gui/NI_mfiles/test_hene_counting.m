@@ -1,12 +1,13 @@
 close all; clear all; startup;
 
-global PARAMS;
-PARAMS.nShots = 10000;
+global PARAMS fsToMm2Pass;
 PARAMS.dataSource = 0;
 PARAMS.noiseGain = 1;
-PARAMS.speed = 1200;
-PARAMS.start = 0;
-PARAMS.stop = 1000;
+PARAMS.speed = 1200; %fix
+PARAMS.start = 0; %fix
+PARAMS.stop = 250; %fix
+%PARAMS.nShots = 10000;
+PARAMS.nShots = 2*(PARAMS.stop-PARAMS.start)/PARAMS.speed * 4800 +2200; %fix
 
 global IO;
 IO = IO_Interface;
@@ -16,7 +17,8 @@ fig1=figure;
 h = uicontrol('Parent',fig1,'Tag','editMotor1','Style','edit');
 handles.editMotor1 = h;
 
-Interferometer_Stage = PI_TranslationStage('COM3', 0.4537, 'editMotor1');
+%% Duane, you forgetful fool, set the scaling factor!!!!
+Interferometer_Stage = PI_TranslationStage('COM3',fsToMm2Pass, 'editMotor1');
 
 %load library
 lib = 'myni';	% library alias
@@ -94,7 +96,9 @@ fillMode = DAQmx_Val_GroupByChannel; % Group by Channel
 %fillMode = DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
 IO.OpenClockGate();
-Interferometer_Stage.MoveTwoStep(PARAMS.start, PARAMS.stop, PARAMS.speed)
+Interferometer_Stage.sendPIMotorCommand('ACC 1 02', 0);
+Interferometer_Stage.MoveTo(handles, PARAMS.stop, PARAMS.speed, 0, 0)
+Interferometer_Stage.MoveTo(handles, PARAMS.start, PARAMS.speed, 0, 0)
 obj.position = 0;
 
 disp('stage should be moving');
@@ -179,7 +183,7 @@ plot(henex,heney,'-o')
 
   
 
- range = [1:10000];
+ range = [1:PARAMS.nShots];
  d = double(data(:,range));
  henex = d(79,:);
 heney = d(80,:);
