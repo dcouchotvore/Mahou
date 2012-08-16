@@ -79,11 +79,6 @@ classdef Method < handle
   %
   methods (Abstract) %public
 
-    %acquire a background (might need to be public)
-    BackgroundAcquire(obj);
-  
-    %zero the background 
-    BackgroundReset(obj);
   end
   
   methods (Abstract, Access = protected)
@@ -145,6 +140,8 @@ classdef Method < handle
     ProcessSampleResult(obj);
     
     ProcessSampleNoise(obj);
+    
+    ProcessSampleBackAvg(obj);
   end
   
   %
@@ -278,6 +275,38 @@ classdef Method < handle
       obj.ScanIsStopping = false;
     
     end
+    
+   function BackgroundReset(obj)
+        obj.background.data = zeros(size(obj.background.data));
+        obj.background.std = zeros(size(obj.background.std));
+    end
+    
+  %acquire a background (might need to be public)
+  function BackgroundAcquire(obj)
+      obj.ScanIsRunning = true;
+      obj.ScanIsStopping = false;
+      obj.BackgroundReset;
+    obj.ReadParameters;
+    obj.InitializeTask;
+    
+    for i_scan = 1:10
+        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+        drawnow;
+
+        obj.source.sampler.Start;
+        obj.source.gate.OpenClockGate;
+        obj.sample = obj.source.sampler.Read;
+        obj.source.gate.CloseClockGate;
+
+        obj.ProcessSampleSort;
+        obj.ProcessSampleAvg;
+        obj.ProcessSampleBackAvg(i_scan);
+
+    end
+    obj.source.sampler.ClearTask;
+    obj.ScanIsRunning = false;
+
+  end
   end
   
   %private methods
