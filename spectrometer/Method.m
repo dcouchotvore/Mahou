@@ -79,22 +79,9 @@ classdef Method < handle
   %
   methods (Abstract) %public
 
-    %acquire a background (might need to be public)
-    BackgroundAcquire(obj);
-  
-    %zero the background 
-    BackgroundReset(obj);
   end
   
   methods (Abstract, Access = protected)
-    %populate a pane with the appropriate UI elements and default values
-    %consistent with the PARAMS for this method. Should be called by the
-    %class constructor.
-    InitializeParameters(obj);
-    
-    %read the parameters from the panel into a struct obj.PARAMS
-    ReadParameters(obj);
-    
     %initialize sample, signal, background, and result. Called by the class
     %constructor.
     InitializeData(obj);
@@ -145,6 +132,8 @@ classdef Method < handle
     ProcessSampleResult(obj);
     
     ProcessSampleNoise(obj);
+    
+    ProcessSampleBackAvg(obj);
   end
   
   %
@@ -278,11 +267,117 @@ classdef Method < handle
       obj.ScanIsStopping = false;
     
     end
+    
+   function BackgroundReset(obj)
+        obj.background.data = zeros(size(obj.background.data));
+        obj.background.std = zeros(size(obj.background.std));
+    end
+    
+  %acquire a background (might need to be public)
+  function BackgroundAcquire(obj)
+      obj.ScanIsRunning = true;
+      obj.ScanIsStopping = false;
+      obj.BackgroundReset;
+    obj.ReadParameters;
+    obj.InitializeTask;
+    
+    for i_scan = 1:10
+        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+        drawnow;
+
+        obj.source.sampler.Start;
+        obj.source.gate.OpenClockGate;
+        obj.sample = obj.source.sampler.Read;
+        obj.source.gate.CloseClockGate;
+
+        obj.ProcessSampleSort;
+        obj.ProcessSampleAvg;
+        obj.ProcessSampleBackAvg(i_scan);
+
+    end
+    obj.source.sampler.ClearTask;
+    obj.ScanIsRunning = false;
+
+  end
   end
   
   %private methods
   methods (Access = protected)
+    %populate a pane with the appropriate UI elements and default values
+  %consistent with the PARAMS for this method. Should be called by the
+  %class constructor.
+  function InitializeParameters(obj)
+    disp('init parameter window');
+
+    %get a cell array of the names of the parameters
+    names = fieldnames(obj.PARAMS);
+    %how many parameters are there
+    n_params = length(names);
+    
+    temp = get(obj.hParamsPanel,'Position');
+    y_origin = temp(4); %height of Panel
+    
+    x_pos = 2;
+    y_pos = -2;
+    width = 12; %35;
+    height = 1.83;%25;
+    x_offset = 1;
+    y_offset = 0.25;
+    %loop over parameters setting a text box and an edit box for each
+    for i = 1:n_params
+
+      %make the text box
+      uicontrol('Parent', obj.hParamsPanel,...
+        'Style','text','Tag',['text' names{i}],...
+        'String',names{i},...
+        'Units','Characters',...
+        'Position',[x_pos y_pos+y_origin-i*(y_offset+height) width height])
+
+      %make the edit box
+      uicontrol('Parent', obj.hParamsPanel,...
+        'Style','edit','Tag',['edit' names{i}],...
+        'String',obj.PARAMS.(names{i}),... %this is a dynamic field name structure.(expression) where expression returns a string
+        'Units','Characters',...
+        'Position',[x_pos+x_offset+width y_pos+y_origin-i*(y_offset+height) width height])
+    
+    end
+    
+    %update the handles
+    obj.handles = guihandles(gcf);
+ 
+  end
   
+  function ReadParameters(obj)
+
+    field = fieldnames(obj.PARAMS);
+    n_fields = length(field);
+    for i = 1:n_fields
+      obj.PARAMS.(field{i}) = str2double(get(obj.handles.(['edit' field{i}]), 'String'));
+    end 
+    %obj.PARAMS.nScans = str2double(get(obj.handles.editnScans, 'String'));
+    %obj.PARAMS.nShots = str2double(get(obj.handles.editnShots, 'String'));
+    %obj.PARAMS.start  = str2double(get(obj.handles.editStart, 'String'));
+    %obj.PARAMS.stop   = str2double(get(obj.handles.editStop, 'String'));
+    %obj.PARAMS.speed  = str2double(get(obj.handles.editSpeed, 'String'));
+
+  end
+  
+  function DeleteParameters(obj)
+    %get a cell array of the names of the parameters
+    names = fieldnames(obj.PARAMS);
+    %how many parameters are there
+    n_params = length(names);
+
+    for i = 1:n_params
+        h = findobj(obj.hParamsPanel,'tag',['text' names{i}]);
+        delete(h);
+    end
+    for i = 1:n_params
+        h = findobj(obj.hParamsPanel,'tag',['edit' names{i}]);
+        delete(h);
+    end
+  end
+
     function ProcessSample(obj)
       %sort data
       ProcessSampleSort(obj);

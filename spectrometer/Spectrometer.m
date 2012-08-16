@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 16-Aug-2012 10:12:39
+% Last Modified by GUIDE v2.5 16-Aug-2012 10:24:28
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -547,9 +547,6 @@ if method.ScanIsRunning == true
     return
 end
 
-% TODO check event data to see if it was a right click. If so call
-% method.BackgroundReset to zero the background
-
 set(hObject, 'String', 'Background running...', 'BackgroundColor', [1.0 0.0 0.0]);
 
 try
@@ -573,4 +570,9 @@ if method.ScanIsRunning == true
     beep
     return
 end
-method.BackgroundReset;
+try
+    method.BackgroundReset;
+catch E
+    cleanup('','');
+    rethrow(E);
+end
