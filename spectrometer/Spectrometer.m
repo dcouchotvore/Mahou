@@ -290,7 +290,7 @@ function popupDataSource_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-DEFAULT = 'Sampler_test.m';
+DEFAULT = 'Sampler_FPAS.m';
 name_struct = dir('Sampler_*.m');
 name_cell = {name_struct.name};
 set(hObject,'String',name_cell);
