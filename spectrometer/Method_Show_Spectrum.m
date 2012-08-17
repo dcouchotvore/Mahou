@@ -310,12 +310,12 @@ methods (Access = protected)
   function ProcessSampleResult(obj)
     %calculate the effective delta absorption (though we are plotting the
     %signals directly)
-    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(1,:));
+    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(2,:));
   end
   
   function ProcessSampleNoise(obj)
     %calculate the signal from each shot for an estimate of the error
-    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2)),0,2)';
+    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2)),0,2)'/sqrt(obj.PARAMS.nShots);
 
     %the other option would be a propagation of error calculation but I
     %haven't worked through that yet. See wikipedia Propagation of
