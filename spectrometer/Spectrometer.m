@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 16-Aug-2012 10:24:28
+% Last Modified by GUIDE v2.5 22-Aug-2012 15:28:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -83,7 +83,8 @@ end
 FPAS = Sampler_FPAS.getInstance;
 TEST = Sampler_test.getInstance;
 
-JY = '';
+JY = Monochromator_JY.getInstance;
+JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
 method = Method_Show_Spectrum(TEST,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
