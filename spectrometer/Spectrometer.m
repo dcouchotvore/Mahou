@@ -261,7 +261,13 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 DEFAULT = 'Method_Show_Spectrum.m';
-name_struct = dir('Method_*.m');
+%Here we will populate the popup with all class files called Sampler_* but
+%we have to check the right folder. So we find the name of this mfile
+%(Spectrometer.m) and its path, then extract the path part, and use this to
+%find the classes we want.
+fullNameAndPath = mfilename('fullpath'); %name of this m-file 
+[pathpart,~,~]=fileparts(fullNameAndPath);%we want path
+name_struct = dir([pathpart '\Method_*.m']);
 name_cell = {name_struct.name};
 set(hObject,'String',name_cell);
 val = find(strcmpi(name_cell,DEFAULT));
@@ -292,7 +298,13 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 DEFAULT = 'Sampler_FPAS.m';
-name_struct = dir('Sampler_*.m');
+%Here we will populate the popup with all class files called Sampler_* but
+%we have to check the right folder. So we find the name of this mfile
+%(Spectrometer.m) and its path, then extract the path part, and use this to
+%find the classes we want.
+fullNameAndPath = mfilename('fullpath'); %name of this m-file 
+[pathpart,~,~]=fileparts(fullNameAndPath);%we want path
+name_struct = dir([pathpart '\Sampler_*.m']);
 name_cell = {name_struct.name};
 set(hObject,'String',name_cell);
 val = find(strcmpi(name_cell,DEFAULT));
