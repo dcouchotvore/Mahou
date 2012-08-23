@@ -1,11 +1,5 @@
 classdef Method_Basic2DScan < handle
     
-    properties
-        hPlot;
-        plot_data;
-        sample;
-    end
-     
     methods
         
         function obj = Method_Basic2DScan

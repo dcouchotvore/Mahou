@@ -1,4 +1,4 @@
-function [position,bin] = processPosition(data,options)
+function [position,bin] = processPosition(data,bin_zero)
 global fringeToFs
 flag_debug = false;
 
@@ -83,7 +83,7 @@ obj.sample.position = zeros(1,nShots); %?
 %             end
 %             
 %             position = cumsum(incr)*fringeToFs + obj.position;
-            bin = timeFsToBin(position,options);
+            bin = timeFsToBin(position,bin_zero);
             
             return
             

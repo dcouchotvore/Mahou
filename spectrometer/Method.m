@@ -342,8 +342,9 @@ classdef Method < handle
     
     end
     
-    %update the handles
-    obj.handles = guihandles(gcf);
+    %update the handles  -- @@@ Seems to be returning the wrong handle set
+    %sometimes.
+    obj.handles = guihandles(obj.handles.figure1);
  
   end
   
@@ -393,6 +394,10 @@ classdef Method < handle
       
       %calc noise (at least an estimate)
       ProcessSampleNoise(obj);
+    end
+
+    function result = TimeFsToBin(time, zerobin)
+        result = round(time/fringeToFs)+zerobin;
     end
 
   end

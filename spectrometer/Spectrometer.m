@@ -71,13 +71,9 @@ Constants;
 scales.ch32 = [0:31];
 
 %Default method on startup.
-method = Method_RawData;
-method.InitializePlot(handles);
-
-global PARAMS;
-PARAMS.nShots = 1000;
-PARAMS.dataSource = 0;
-PARAMS.noiseGain = 1;
+%method = Method_RawData;
+method = Method_Test_Phasing;
+%method.InitializePlot(handles); % @@@ rethink this.
 
 global IO;
 try
