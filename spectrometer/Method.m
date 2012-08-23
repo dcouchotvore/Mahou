@@ -44,6 +44,8 @@ classdef Method < handle
     %the frequency axis (eventually comes from the spectrometer)
     freq;
     
+    % Number of current scan
+    i_scan;
   end
 
   %here are the properties that all methods share. 
@@ -234,32 +236,36 @@ classdef Method < handle
 
       ScanInitialize(obj);
       
-      i_scan = 1;
+      obj.i_scan = 1;
       
-      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
       
       drawnow;
 
       ScanFirst(obj);
       
-      while i_scan ~= obj.PARAMS.nScans && obj.ScanIsStopping == false
+      while obj.i_scan ~= obj.PARAMS.nScans && obj.ScanIsStopping == false
 
-        i_scan = i_scan + 1;
+        obj.i_scan = obj.i_scan + 1;
         
-        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
         
         drawnow;
 
         ScanMiddle(obj);
 
+        SaveTmpResult(obj);
+        
       end
       
-      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
+      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
       
       drawnow;
       
       obj.ScanLast;
 
+      SaveResult(obj);
+      
       obj.ScanCleanup;
 
       obj.ScanIsRunning = false;

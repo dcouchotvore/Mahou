@@ -16,12 +16,12 @@ properties (SetAccess = protected)
   sample;
   sorted;
   aux;
-  signal = struct('data',[],'std',[],'freq',[]);  
+  signal = struct('data',[],'std',[],'freq',[],'igram',[]);  
   background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',[],'nScans',500,'start',-500, 'end', 1000, ...
-      'speed', 100, 'bin_zero', 4000, 'bin_min', timeFsToBin(-500, 4000), ...
-      'bin_max', timeFsToBin(1000, 4000));
+      'speed', 1700, 'bin_zero', 4000, 'bin_min', timeFsToBin(-500, 4000)+1, ...
+      'bin_max', timeFsToBin(1000, 4000)-20, 'acceleration', 66713 ); % 66713 = 2*fs equiv of 10mm
   
   source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
   position;
@@ -55,6 +55,7 @@ properties (SetAccess = protected)
   bin_igram;
   b_axis;
   t_axis;
+  i_scan;
 
 end
 
@@ -137,7 +138,7 @@ methods (Access = protected)
       ReadParameters@Method(obj);
       
       %post
-      obj.PARAMS.nShots = 12000;  % @@@ DEBUG!
+      obj.PARAMS.nShots = 9000;  % @@@ DEBUG!
 %      obj.PARAMS.nShots = 2 * (obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed*4800+2200;
       set(obj.handles.editnShots,'String',num2str(obj.PARAMS.nShots));
   end
@@ -153,8 +154,8 @@ methods (Access = protected)
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
     obj.nShotsSorted = obj.n_bins;
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
-    obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
-    obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.signal.data = zeros(obj.nPixelsPerArray,obj.n_bins,obj.nSignals);
+    obj.signal.std = zeros(obj.nPixelsPerArray,obj.n_bins,obj.nSignals);
     if isempty(obj.background.data),
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -169,7 +170,7 @@ methods (Access = protected)
   end
     
   function InitializeFreqAxis(obj)
-    obj.freq = 1:32;
+    obj.freq = ((1:32)-16.5)*30+1600; % TO DO: read from spectrometer                
   end
   
   %set up the plot for the main output. Called by the class constructor.
@@ -243,7 +244,6 @@ methods (Access = protected)
     RefreshPlots(obj,obj.hPlotRaw)
     UpdateDiagnostics(obj);
     drawnow
-    
     %no saving
   end
   
@@ -278,17 +278,20 @@ methods (Access = protected)
   function ScanCleanup(obj)
     obj.source.gate.CloseClockGate;
     obj.source.sampler.ClearTask;
-    obj.sousrce.motors.MoveTo(obj.handles, 0, obj.PARAMS.speed, 0, 0);
+    obj.source.motors.MoveTo(obj.handles, 0, obj.PARAMS.speed, 0, 0);
   end
   
   %save the current result to a MAT file for storage.
   function SaveResult(obj)
-    
+        setappdata(obj.handles.figure1,'result',obj.result);
+    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
+
   end
   
   %save intermediate results to a temp folder
   function SaveTmpResult(obj)
-    
+    setappdata(obj.handles.figure1,'result',obj.result);
+    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
   end
    
   function ProcessSampleSort(obj)
@@ -297,11 +300,11 @@ methods (Access = protected)
 %    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
 %    obj.sorted(:,:,2) = obj.sample(obj.ind_array2,1:obj.nShotsSorted);
 
-    obj.aux.igram = obj.sample(obj.ind_igram);
-    obj.aux.hene_x = obj.sample(obj.ind_hene_x);
-    obj.aux.hene_y = obj.sample(obj.ind_hene_y);
+    obj.aux.igram = obj.sample(obj.ind_igram,:);
+    obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
+    obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
 
-    [obj.position, obj.bin] = processPosition(obj.sample, obj.PARAMS.bin_zero);
+    [obj.position, obj.bin] = processPosition(obj.aux.hene_x,obj.aux.hene_y, obj.PARAMS.bin_zero,obj.PARAMS.start);
 
     for ii=1:obj.PARAMS.nShots
         jj = obj.bin(ii)-obj.PARAMS.bin_min+1;
@@ -312,14 +315,14 @@ methods (Access = protected)
         
 %        obj.bin_igram(jj)  = obj.bin_igram(:,jj) + obj.sorted(65,ii);
     end
+%     for ii=1:obj.nChan
+%         obj.bin_data(ii, 1:obj.n_bins) = obj.bin_data(ii, 1:obj.n_bins)./obj.bin_count(1:obj.n_bins);
+%     end
+%     
     obj.sorted(1:obj.nPixelsPerArray, 1:obj.n_bins, 1) = obj.bin_data(obj.ind_array1, 1:obj.n_bins);
     obj.sorted(1:obj.nPixelsPerArray, 1:obj.n_bins, 2) = obj.bin_data(obj.ind_array2, 1:obj.n_bins);
     obj.bin_igram = obj.bin_data(obj.ind_igram, :);
-        
-    for ii=1:64
-        obj.bin_data(ii, 1:obj.n_bins) = obj.bin_data(ii, 1:obj.n_bins)./obj.bin_count(1:obj.n_bins);
-    end
-    obj.bin_igram(1, 1:obj.n_bins) = obj.bin_igram(1, 1:obj.n_bins)./obj.bin_count(1:obj.n_bins);
+    %obj.bin_igram = obj.bin_igram - mean(obj.bin_igram);
     
     %unfinished:
 %     rowInd1 = obj.ind_array1;
@@ -336,18 +339,21 @@ methods (Access = protected)
 %     end 
   end
 
-  function ProcessSampleAvg(obj)
-    obj.signal.data = squeeze(mean(obj.sorted,2))';
-    obj.signal.std = squeeze(std(obj.sorted,0,2))';
-  end
-  
-  function ProcessSampleBackAvg(obj,i_scan)
-    obj.background.data = (obj.background.data.*(i_scan-1) + obj.signal.data)./i_scan;
+  function ProcessSampleBackAvg(obj)
+    obj.background.data = (obj.background.data.*(obj.i_scan-1) + obj.signal.data)./obj.i_scan;
     %check this might not be right
-    obj.background.std = sqrt((obj.background.std.^2.*(i_scan-1) + obj.signal.std.^2)./i_scan);
+    obj.background.std = sqrt((obj.background.std.^2.*(obj.i_scan-1) + obj.signal.std.^2)./obj.i_scan);
   end
   
-  function ProcessSampleSubtBack(obj)
+   function ProcessSampleAvg(obj)
+       temp = reshape(obj.bin_count,[1 obj.n_bins 1]);
+       obj.signal.data = bsxfun(@rdivide,obj.sorted,temp);
+       obj.signal.igram = obj.bin_igram./obj.bin_count;
+%    obj.signal.data = (obj.signal.data.*(obj.i_scan-1) + obj.sorted)./obj.i_scan;
+%    obj.signal.std = squeeze(std(obj.sorted,0,2))';
+  end
+  
+ function ProcessSampleSubtBack(obj)
     %obj.signal.data = obj.signal.data - obj.background.data;
     %obj.signal.std = sqrt(obj.signal.std.^2 + obj.background.std.^2);
     
@@ -375,14 +381,23 @@ methods (Access = protected)
     %calculate the effective delta absorption (though we are plotting the
     %signals directly)
 %    obj.result.data = obj.bin_data(1:32,:)./obj.bin_data(33:64,:);
-    [phase, t0_bin_shift, analysis] = phasing2dPP(obj.t_axis, obj.bin_igram);
+try
+    [phase, t0_bin_shift, analysis] = phasing2dPP(obj.t_axis, obj.signal.igram);
+catch E
+    warning('phasing failed');
+    t0_bin_shift = 0;
+    phase = 0;
+%    rethrow E;
+end
+    
     obj.result = construct2dPP;
+    obj.result.phase = phase;
     obj.result.freq = obj.freq;
     obj.result.time = obj.t_axis;
     obj.result.bin = obj.b_axis;
     obj.result.zeropad = 1024;
-    obj.result.PP = obj.signal;
-    obj.result.t0_bin = find(obj.result.bin==obj.bin_zero)-t0_bin_shift;
+    obj.result.PP = squeeze(obj.signal.data(:,:,1));
+    obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)-t0_bin_shift;
     obj.result = absorptive2dPP(obj.result);
   end
   
@@ -399,7 +414,7 @@ end
 methods %public methods
   
     function out = get.Raw_data(obj)
-        out = obj.signal.data;
+        out = squeeze(mean(obj.signal.data, 2))';
     end
     
     function out = get.Noise(obj)
@@ -410,72 +425,7 @@ methods %public methods
         DeleteParameters(obj);
     end
     
-    function [position,bin] = processPosition(data,options)
-        global fringeToFs
-        flag_debug = false;
 
-        %mimic the objects
-        nShots = size(data,2);
-        obj.nShots = nShots;
-        obj.sample.data.external = data(65:80,:);
-        obj.sample.mean.external = mean(obj.sample.data.external,2);
-        obj.theta = 0; %zeros(1,nShots); %?®
-        obj.position = -500;%? initial position (fs)
-        obj.sample.position = zeros(1,nShots); %?
-
-        % Determine relative position of each sample in nm
-        % Assuming channel 15 is phase-x and 16 is phase-y
-        obj.sample.position = zeros(obj.PARAMS.nShots);
-        obj.sample.data.external(15,:) = obj.sample.data.external(15,:) - obj.sample.mean.external(15);
-        obj.sample.data.external(16,:) = obj.sample.data.external(16,:) - obj.sample.mean.external(16);
-
-        %show some points if we are debugging
-        if flag_debug
-            figure(1),clf,
-            plot(obj.sample.data.external(15,:),...
-                obj.sample.data.external(16,:),'-o')
-            hold on,
-            plot(obj.sample.data.external(15,1),...
-                obj.sample.data.external(16,1),'o',...
-                'MarkerFaceColor',[0 0 1]);
-            hold off
-            ax = axis;
-            l=line([0 1;0 -1],[-1 0;1 0]);
-            set(l,'Color',[0.2 0.2 0.2])
-            axis square
-            axis(ax);
-            drawnow
-        end
-
-        %this algorithm requires >4 points per cycle. It will fail if
-        %points cross more than 2 axes at a time
-        %try to vectorize
-        x = obj.sample.data.external(15,2:end);
-        y = obj.sample.data.external(16,2:end);
-        last_x = obj.sample.data.external(15,1:end-1);
-        %last_y = obj.sample.data.external(16,1:end-1); %SGR algorithm
-        %doesn't use last_ys
-
-        incr = zeros(1,nShots-1);
-        %Here is my truth table idea. We count up if y>0 AND last_x<0
-        %AND x>=0. Call these a b and c (a AND b AND c). We count down
-        %if y>0 AND last_x>=0 AND x<0 (a AND ~b AND ~c). Use these
-        %rules to make increment plus or minus 1. Note the use of >= to
-        %define x=0 to be in the (+,+) quadrant of the x-y plane. This
-        %makes the NOT conditions exclusive. Probably never will happen
-        %but whatever.
-        a = y>0;
-        b = last_x<0;
-        c = x>=0;
-        incr(a & b & c) = 1;
-        incr(a & ~b & ~c) = -1;
-        position = [0 cumsum(incr)]*fringeToFs + obj.position;
-
-        bin = timeFsToBin(position,options);
-        position = obj.sample.position;
-
-        return
-    end
 %
 % other inherited methods
 %

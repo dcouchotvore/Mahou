@@ -44,6 +44,7 @@ properties (SetAccess = protected)
   ind_hene_y = 16;
   
   nShotsSorted;
+  i_scan;
 
 end
 
