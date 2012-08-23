@@ -22,7 +22,7 @@ hy = feval(out.hene_y_fxn,t_profile);
 n_shots = length(t_profile);
 data = zeros(80,n_shots);
 
-%indecies for other channels
+%indicies for other channels
 i_i = 65;
 i_hx = 79;
 i_hy = 80;
