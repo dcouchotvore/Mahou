@@ -130,7 +130,7 @@ methods (Access = protected)
   end
     
   function InitializeFreqAxis(obj)
-    obj.freq = 1:32;
+    obj.freq = obj.source.mono.wavenumbersAxis;
   end
   
   %set up the plot for the main output. Called by the class constructor.
@@ -161,6 +161,8 @@ methods (Access = protected)
   %starting positions
   function ScanInitialize(obj)
     ReadParameters(obj);
+    
+    InitializeFreqAxis(obj);
     
     InitializeData(obj);
 

@@ -5,10 +5,12 @@ classdef (Sealed) Monochromator_JY < handle
 %Monochromator_JY.getInstance, (instead of JY = Monochromator_JY).
     properties (SetAccess = private)
       mono; %the activexserver for JY
-        initialized=0;
-        hPanel;     %handle to the panel to draw controls in
-        hChildren;
-        handles;
+      initialized=0;
+      hPanel;     %handle to the panel to draw controls in
+      hChildren;
+      handles;
+      nPixelsPerArray = 32;
+      zeroPixel = 16; %which pixel of the detector at lambda = 0
     end
    properties %public properties
    end
@@ -16,8 +18,11 @@ classdef (Sealed) Monochromator_JY < handle
    properties (Dependent)
      wavelength;
      wavenumbers;
+     wavelengthAxis;
+     wavenumbersAxis;
      slit;
      turret;
+     
    end
    
     %make the constructor private
@@ -52,7 +57,7 @@ classdef (Sealed) Monochromator_JY < handle
       end
       
       function delete(obj)
-        obj.mono.CloseCommunications
+        obj.mono.CloseCommunications;
         delete(obj.mono);
         DeleteControls(obj); %remove gui elements
       end
@@ -63,6 +68,25 @@ classdef (Sealed) Monochromator_JY < handle
       
       function out = get.wavenumbers(obj)
         out = 10^7/obj.mono.GetCurrentWavelength;
+      end
+      
+      function out = get.wavelengthAxis(obj)
+        dir = -1; %do increasing pixels go to higher (+1) or lower (-1) wavelength
+        tur = obj.turret;
+        switch tur
+          case 0
+            dispersion = 15.926; %nm/pix
+          case 1
+            dispersion = 10.3; %nm/pix
+          case 2
+            dispersion = 5.15; %nm/pix
+        end
+        out = dir.*((1:obj.nPixelsPerArray)-obj.zeroPixel)*dispersion ...
+          + obj.wavelength;
+      end
+      
+      function out = get.wavenumbersAxis(obj);
+        out = 10^7./obj.wavelengthAxis;
       end
       
       function out = get.slit(obj)
