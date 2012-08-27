@@ -274,31 +274,32 @@ classdef Method < handle
     
     end
     
-   function BackgroundReset(obj)
-        obj.background.data = zeros(size(obj.background.data));
-        obj.background.std = zeros(size(obj.background.std));
-    end
+  function BackgroundReset(obj)
+    obj.background.data = zeros(size(obj.background.data));
+    obj.background.std = zeros(size(obj.background.std));
+  end
     
   %acquire a background (might need to be public)
   function BackgroundAcquire(obj)
-      obj.ScanIsRunning = true;
-      obj.ScanIsStopping = false;
-      obj.BackgroundReset;
+    obj.ScanIsRunning = true;
+    obj.ScanIsStopping = false;
+    obj.BackgroundReset;
     obj.ReadParameters;
     obj.InitializeTask;
     
-    for i_scan = 1:10
-        set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',i_scan));
-        drawnow;
+    for ni_scan = 1:10            % @@@ is there some reason we can't assign obj.i_scan directly?
+      obj.i_scan = ni_scan;
+      set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
+      drawnow;
 
-        obj.source.sampler.Start;
-        obj.source.gate.OpenClockGate;
-        obj.sample = obj.source.sampler.Read;
-        obj.source.gate.CloseClockGate;
+      obj.source.sampler.Start;
+      obj.source.gate.OpenClockGate;
+      obj.sample = obj.source.sampler.Read;
+      obj.source.gate.CloseClockGate;
 
-        obj.ProcessSampleSort;
-        obj.ProcessSampleAvg;
-        obj.ProcessSampleBackAvg(i_scan);
+      obj.ProcessSampleSort;
+      obj.ProcessSampleAvg;
+      obj.ProcessSampleBackAvg;
 
     end
     obj.source.sampler.ClearTask;

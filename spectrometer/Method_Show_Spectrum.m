@@ -278,10 +278,10 @@ methods (Access = protected)
     obj.signal.std = squeeze(std(obj.sorted,0,2))';
   end
   
-  function ProcessSampleBackAvg(obj,i_scan)
-    obj.background.data = (obj.background.data.*(i_scan-1) + obj.signal.data)./i_scan;
+  function ProcessSampleBackAvg(obj)
+    obj.background.data = (obj.background.data.*(obj.i_scan-1) + obj.signal.data)./obj.i_scan;
     %check this might not be right
-    obj.background.std = sqrt((obj.background.std.^2.*(i_scan-1) + obj.signal.std.^2)./i_scan);
+    obj.background.std = sqrt((obj.background.std.^2.*(obj.i_scan-1) + obj.signal.std.^2)./obj.i_scan);
   end
   
   function ProcessSampleSubtBack(obj)

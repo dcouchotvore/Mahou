@@ -3,6 +3,7 @@ classdef (Sealed) Sampler_FPAS < handle
 %http://www.mathworks.com/help/techdoc/matlab_oop/bru6n2g.html for details.
 %Note that the way to call the class is to call FPAS =
 %Sampler_FPAS.getInstance, (instead of FPAS = Sampler_FPAS).
+
     properties (SetAccess = private)
         nPixels;
         nExtInputs;
@@ -104,9 +105,9 @@ classdef (Sealed) Sampler_FPAS < handle
         
         function ConfigureTask(obj,PARAMS)
           global NICONST
+          obj.nShots = PARAMS.nShots;
+          obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
           if obj.initialized
-            obj.nShots = PARAMS.nShots;
-            obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
             [obj.hTask,obj.nDIChans] = DAQmxCreateDIChan(obj.lib,obj.lines,NICONST.DAQmx_Val_ChanForAllLines,'',{''});
             %here obj.nDIChans is the number of digital input channels, i.e. just 1
             
@@ -188,7 +189,10 @@ classdef (Sealed) Sampler_FPAS < handle
                 result = double(hmm(obj.ind,1:obj.nShots));
                 result = result(1:obj.nChan,:);
 
+            else
+              result = zeros(obj.nChan, obj.nShots);
             end
+           
         end
         
         function ClearTask(obj)

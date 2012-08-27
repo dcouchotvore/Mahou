@@ -49,7 +49,7 @@ properties (SetAccess = protected)
   
   nShotsSorted;
 
-  n_bins;
+  nBins;
   bin_data;
   bin_count;
   bin_igram;
@@ -90,7 +90,7 @@ methods
       end
     end
     
-    obj.n_bins = obj.PARAMS.bin_max - obj.PARAMS.bin_min +1;
+    obj.nBins = obj.PARAMS.bin_max - obj.PARAMS.bin_min +1;
     obj.source.sampler = sampler; %is there a better way?
     obj.source.gate = gate;
     obj.source.spect = spect;
@@ -145,20 +145,20 @@ methods (Access = protected)
   
   function InitializeData(obj)
     
-    obj.bin_data = zeros(obj.nChan, obj.n_bins);
-    obj.bin_count = zeros(1, obj.n_bins);
-    obj.bin_igram = zeros(1, obj.n_bins);
+    obj.bin_data = zeros(obj.nChan, obj.nBins);
+    obj.bin_count = zeros(1, obj.nBins);
+    obj.bin_igram = zeros(1, obj.nBins);
     obj.b_axis = obj.PARAMS.bin_min:obj.PARAMS.bin_max;
     obj.t_axis = binToTimeFs(obj.b_axis, obj.PARAMS.bin_zero);
     
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
-    obj.nShotsSorted = obj.n_bins;
+    obj.nShotsSorted = obj.nBins;
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
-    obj.signal.data = zeros(obj.nPixelsPerArray,obj.n_bins,obj.nSignals);
-    obj.signal.std = zeros(obj.nPixelsPerArray,obj.n_bins,obj.nSignals);
+    obj.signal.data = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
+    obj.signal.std = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
     if isempty(obj.background.data),
-      obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
-      obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+      obj.background.data = zeros(obj.nPixelsPerArray,obj.nSignals);
+      obj.background.std = zeros(obj.nPixelsPerArray,obj.nSignals);
     end
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
@@ -309,18 +309,18 @@ methods (Access = protected)
     for ii=1:obj.PARAMS.nShots
         jj = obj.bin(ii)-obj.PARAMS.bin_min+1;
         
-        if (jj<=0) || (jj>obj.n_bins), continue, end;
+        if (jj<=0) || (jj>obj.nBins), continue, end;
         obj.bin_data(:,jj) = obj.bin_data(:,jj) + obj.sample(:,ii);
         obj.bin_count(jj)  = obj.bin_count(jj)+1;
         
 %        obj.bin_igram(jj)  = obj.bin_igram(:,jj) + obj.sorted(65,ii);
     end
 %     for ii=1:obj.nChan
-%         obj.bin_data(ii, 1:obj.n_bins) = obj.bin_data(ii, 1:obj.n_bins)./obj.bin_count(1:obj.n_bins);
+%         obj.bin_data(ii, 1:obj.nBins) = obj.bin_data(ii, 1:obj.nBins)./obj.bin_count(1:obj.nBins);
 %     end
 %     
-    obj.sorted(1:obj.nPixelsPerArray, 1:obj.n_bins, 1) = obj.bin_data(obj.ind_array1, 1:obj.n_bins);
-    obj.sorted(1:obj.nPixelsPerArray, 1:obj.n_bins, 2) = obj.bin_data(obj.ind_array2, 1:obj.n_bins);
+    obj.sorted(1:obj.nPixelsPerArray, 1:obj.nBins, 1) = obj.bin_data(obj.ind_array1, 1:obj.nBins);
+    obj.sorted(1:obj.nPixelsPerArray, 1:obj.nBins, 2) = obj.bin_data(obj.ind_array2, 1:obj.nBins);
     obj.bin_igram = obj.bin_data(obj.ind_igram, :);
     %obj.bin_igram = obj.bin_igram - mean(obj.bin_igram);
     
@@ -340,17 +340,10 @@ methods (Access = protected)
   end
 
   function ProcessSampleBackAvg(obj)
-    obj.background.data = (obj.background.data.*(obj.i_scan-1) + obj.signal.data)./obj.i_scan;
+    mean_bkgd = squeeze(mean(obj.signal.data, 2));
+    obj.background.data = bsxfun(@plus, obj.background.data.*(obj.i_scan-1), mean_bkgd./obj.i_scan);
     %check this might not be right
-    obj.background.std = sqrt((obj.background.std.^2.*(obj.i_scan-1) + obj.signal.std.^2)./obj.i_scan);
-  end
-  
-   function ProcessSampleAvg(obj)
-       temp = reshape(obj.bin_count,[1 obj.n_bins 1]);
-       obj.signal.data = bsxfun(@rdivide,obj.sorted,temp);
-       obj.signal.igram = obj.bin_igram./obj.bin_count;
-%    obj.signal.data = (obj.signal.data.*(obj.i_scan-1) + obj.sorted)./obj.i_scan;
-%    obj.signal.std = squeeze(std(obj.sorted,0,2))';
+    obj.background.std = bsxfun(@plus, sqrt(obj.background.std.^2.*(obj.i_scan-1)), (mean_bkgd.^2)./obj.i_scan);
   end
   
  function ProcessSampleSubtBack(obj)
@@ -371,24 +364,39 @@ methods (Access = protected)
     %So we first transpose the background from (nSignals x nPixels) to
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
     %nSignals).
-    bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
+%    bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
     
     %now bsxfun does the subtraction
-    obj.sorted = bsxfun(@minus,obj.sorted,bg);
+%    obj.sorted = bsxfun(@minus,obj.sorted,obj.background);
+    cnt = reshape(obj.bin_count, [1 obj.nBins 1]);
+    a = reshape(obj.background.data, [obj.nPixelsPerArray, 1, obj.nSignals]);
+%    b = reshape(cnt, [1, obj.PARAMS.nShots]);
+    weighted_bkgd = bsxfun(@times, a, cnt);
+    obj.signal.data = obj.sorted - weighted_bkgd;
   end
 
+  function ProcessSampleAvg(obj)
+    tmp = reshape(obj.bin_count, [1 obj.nBins 1]);
+    obj.signal.data = bsxfun(@rdivide, obj.signal.data, tmp);
+%    temp = reshape(obj.bin_count,[1 obj.nBins 1]);
+%    obj.signal.data = bsxfun(@rdivide,obj.sorted,temp);
+%    obj.signal.igram = obj.bin_igram./obj.bin_count;
+%    obj.signal.data = (obj.signal.data.*(obj.i_scan-1) + obj.sorted)./obj.i_scan;
+%    obj.signal.std = squeeze(std(obj.sorted,0,2))';
+  end
+ 
   function ProcessSampleResult(obj)
     %calculate the effective delta absorption (though we are plotting the
     %signals directly)
 %    obj.result.data = obj.bin_data(1:32,:)./obj.bin_data(33:64,:);
-try
-    [phase, t0_bin_shift, analysis] = phasing2dPP(obj.t_axis, obj.signal.igram);
-catch E
-    warning('phasing failed');
-    t0_bin_shift = 0;
-    phase = 0;
+    try
+      [phase, t0_bin_shift, analysis] = phasing2dPP(obj.t_axis, obj.signal.igram);
+    catch E
+      warning('phasing failed');
+      t0_bin_shift = 0;
+      phase = 0;
 %    rethrow E;
-end
+    end
     
     obj.result = construct2dPP;
     obj.result.phase = phase;
@@ -424,7 +432,6 @@ methods %public methods
     function delete(obj)
         DeleteParameters(obj);
     end
-    
 
 %
 % other inherited methods
