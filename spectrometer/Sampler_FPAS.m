@@ -23,6 +23,7 @@ classdef (Sealed) Sampler_FPAS < handle
         maxInd;
         initialized;
         hTask;
+        nSamplesPerSecond;
         timeout;
     end
     
@@ -61,6 +62,7 @@ classdef (Sealed) Sampler_FPAS < handle
             obj.lines = {'Dev1/line0:31'};
             obj.taskName = '';
             obj.chanName = {''};
+            obj.nSamplesPerSecond = 5000;
             obj.timeout = 1;
             
             %% load library
@@ -107,6 +109,7 @@ classdef (Sealed) Sampler_FPAS < handle
           global NICONST
           obj.nShots = PARAMS.nShots;
           obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
+          obj.timeout = ceil(obj.nShots/obj.nSamplesPerSecond+0.5);
           if obj.initialized
             [obj.hTask,obj.nDIChans] = DAQmxCreateDIChan(obj.lib,obj.lines,NICONST.DAQmx_Val_ChanForAllLines,'',{''});
             %here obj.nDIChans is the number of digital input channels, i.e. just 1
