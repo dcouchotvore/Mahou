@@ -232,6 +232,8 @@ classdef Method < handle
     %abstract operations
     function Scan(obj)
       
+      obj.InitializeMainPlot;
+      
       obj.ScanIsRunning = true;
 
       ScanInitialize(obj);
