@@ -136,7 +136,6 @@ classdef PI_TranslationStage < hgsetget
         end
         
         function new_position = MoveTo(obj, handles, desired_position, speed, move_relative, move_async)
-
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
                 desired_position = pos+desired_position;
@@ -150,35 +149,40 @@ classdef PI_TranslationStage < hgsetget
             end
             new_position = desired_position;
             
-            %% move to an absolute position
-            obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-            obj.sendPIMotorCommand(sprintf('MOV 1 %f', (desired_position+obj.center)*obj.scale), 0);
+            if obj.initialized 
 
-            %% Wait until stage reaches target
-            if move_async==0
-                while 1==1
-                    status = obj.sendPIMotorCommand('SRG? 1 1', 1);
-                    num = uint16(hex2dec(status(7:end-1)));
-                    if bitand(num, hex2dec('A000'))==hex2dec('8000')
-                        break;
-                    else
-                        drawnow
-                        pause(0.1);     % Shortening this makes little difference
+                %% move to an absolute position
+                obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
+                obj.sendPIMotorCommand(sprintf('MOV 1 %f', (desired_position+obj.center)*obj.scale), 0);
+
+                %% Wait until stage reaches target
+                if move_async==0
+                    while 1==1
+                        status = obj.sendPIMotorCommand('SRG? 1 1', 1);         % @@@@ change to use IsBusy
+                        num = uint16(hex2dec(status(7:end-1)));
+                        if bitand(num, hex2dec('A000'))==hex2dec('8000')
+                            break;
+                        else
+                            drawnow
+                            pause(0.1);     % Shortening this makes little difference
+                        end
                     end
                 end
-            end
 
-            if ~strcmp(obj.gui_object, '')
-                h = eval(sprintf('handles.%s', obj.gui_object));
-                set(h, 'String', num2str(obj.GetPosition));
+                if ~strcmp(obj.gui_object, '')
+                    h = eval(sprintf('handles.%s', obj.gui_object));
+                    set(h, 'String', num2str(obj.GetPosition));
+                end
+
             end
         end
 
         function MoveTwoStep(obj, pos1, pos2, speed)
-            obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-            obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', pos1*obj.scale, pos2*obj.scale), 0);
-            err=obj.sendPIMotorCommand('MAC ERR?', 1);
-            
+            if obj.initialized
+                obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
+                obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', pos1*obj.scale, pos2*obj.scale), 0);
+                err=obj.sendPIMotorCommand('MAC ERR?', 1);
+            end
         end
             
         function position = GetPosition(obj)
@@ -219,11 +223,16 @@ classdef PI_TranslationStage < hgsetget
             end
         end
         
+        function busy = IsBusy(obj)
+            if obj.initialized
+                status = obj.sendPIMotorCommand('SRG? 1 1', 1);
+                num = uint16(hex2dec(status(7:end-1)));
+                busy = bitand(num, hex2dec('A000'))~=hex2dec('8000')
+            else busy = 0;
+            end
+        end
+
+        
     end
     
 end
-
-
-
-     
-        

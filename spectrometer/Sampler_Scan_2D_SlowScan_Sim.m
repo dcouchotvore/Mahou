@@ -49,7 +49,10 @@ classdef (Sealed) Sampler_Scan_2D_SlowScan_Sim < handle
     methods
           
         function Initialize(obj)
-            obj.options.path = 'c:\Users\INFRARED\Documents\GitHub\Mahou\spectrometer\test data processing\';
+            %this should be fixed
+            pathAndFileName = mfilename('fullpath');
+            [path,~,~] = fileparts(pathAndFileName);
+            obj.options.path = [path '\test data processing\'];
 obj.options.inputfile_name = 'igram_inputfile';
 obj.options.IR_voltage = 2; %volts on the detector
 obj.options.IR_fwhm = 250; %in cm-1
@@ -99,8 +102,20 @@ obj.options.spectrometer_resolution = 30; %wavenumbers
         % Finish up and collect data
         function result = Read(obj)
             drawnow
-            [~,~,result] = simulateData(obj.fcns,obj.options);
-
+            [~,~,out] = simulateData(obj.fcns,obj.options);
+            
+            %copy the correct amount of data into the output
+            result=zeros(obj.nChan,obj.nShots);
+            n = size(out,2);
+            if n<obj.nShots
+                warning('data buffer is underfull');
+                %if out is too small
+                m = n;
+            else
+                %if out is too big
+                m = obj.nShots;
+            end
+            result(:,1:m) = out(:,1:m);
         end
         
         function ClearTask(obj)

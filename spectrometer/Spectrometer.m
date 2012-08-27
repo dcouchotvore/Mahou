@@ -67,6 +67,15 @@ guidata(hObject, handles);
 splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
 splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color', [0 0 0.6] )
 
+Constants;
+scales.ch32 = [0:31];
+
+%Default method on startup.
+%method = Method_RawData;
+method = Method_Test_Phasing;
+%method.InitializePlot(handles); % @@@ rethink this.
+
+global IO;
 try
   IO = IO_Interface;
   IO.CloseClockGate();
@@ -117,7 +126,6 @@ if method.ScanIsRunning == true
     method.ScanIsStopping = true;
     return;
 end
-
 
 set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 

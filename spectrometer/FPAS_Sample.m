@@ -13,7 +13,7 @@ switch PARAMS.dataSource
     switch phase
       
       % Configure the task
-      case 0
+      case 0s
         if FPAS.initialized
           FPAS.nSampsPerChan = FPAS.nMaxChan/2*PARAMS.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
           [FPAS.hTask,FPAS.nChan] = DAQmxCreateDIChan(FPAS.lib,{'Dev1/line0:31'},NICONST.DAQmx_Val_ChanForAllLines,'',{''});
