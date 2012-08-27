@@ -73,6 +73,7 @@ classdef (Sealed) Monochromator_JY < handle
       function out = get.wavelengthAxis(obj)
         dir = -1; %do increasing pixels go to higher (+1) or lower (-1) wavelength
         tur = obj.turret;
+        dispersion = 0;
         switch tur
           case 0
             dispersion = 15.926; %nm/pix
@@ -80,6 +81,8 @@ classdef (Sealed) Monochromator_JY < handle
             dispersion = 10.3; %nm/pix
           case 2
             dispersion = 5.15; %nm/pix
+          otherwise
+            warning('turret numbering is out of bounds');
         end
         out = dir.*((1:obj.nPixelsPerArray)-obj.zeroPixel)*dispersion ...
           + obj.wavelength;
