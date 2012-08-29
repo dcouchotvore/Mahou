@@ -75,28 +75,27 @@ scales.ch32 = [0:31];
 method = Method_Test_Phasing;
 %method.InitializePlot(handles); % @@@ rethink this.
 
-global IO;
+IO = [];
 try
   IO = IO_Interface;
   IO.CloseClockGate();
 catch
-  warning('IO not enabled');
+  warning('SGRLAB:SimulationMode','IO not enabled');
 end
 
 try
   Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
 catch
-  warning('PI stage not enabled');
+  warning('SGRLAB:SimulationMode','PI stage not enabled');
 end
 
 FPAS = Sampler_FPAS.getInstance;
-TEST = Sampler_test.getInstance;
 
 JY = Monochromator_JY.getInstance;
 JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
-method = Method_Show_Spectrum(TEST,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
+method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
   handles.axesMain,handles.axesRawData,handles.uipanelNoise);
 
 delete(splash);
