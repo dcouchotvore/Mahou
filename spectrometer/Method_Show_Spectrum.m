@@ -153,7 +153,7 @@ methods (Access = protected)
   end
   
   function InitializeUITable(obj)
-    set(obj.handles.uitableExtChans,'Data',obj.ext);
+    set(obj.handles.uitableExtChans,'Data',obj.ext,'columnformat',{'short g'});
   end
   
   function RefreshUITable(obj)
