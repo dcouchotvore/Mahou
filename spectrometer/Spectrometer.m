@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 31-Aug-2012 09:45:47
+% Last Modified by GUIDE v2.5 31-Aug-2012 14:22:43
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1321,7 +1321,11 @@ val = get(hObject, 'Value');
 val = 10^((val-0.5)*2);
 name = get(hObject, 'Tag');
 channel = str2double(name(14:15));
-% @@@ Insert call to set gain for this channel
+if strcmp(get(handles.panelMCTGain, 'title'), 'MCT Gain')
+  % @@@ Insert call to set gain for this channel
+else 
+  % @@@ Insert call to set gain for this channel
+end
 
 % --- Executes on button press in pbMCTGainClose.
 function pbMCTGainClose_Callback(hObject, eventdata, handles)
@@ -1348,4 +1352,17 @@ function menuMCTGain_Callback(hObject, eventdata, handles)
 
 set(handles.pnlRawData, 'visible', 'off');
 set(handles.uipanelNoise, 'visible', 'off');
+set(handles.panelMCTGain, 'title', 'MCT Gain');
+set(handles.panelMCTGain, 'visible', 'on');
+
+
+% --------------------------------------------------------------------
+function menuMCTTrim_Callback(hObject, eventdata, handles)
+% hObject    handle to menuMCTTrim (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+set(handles.pnlRawData, 'visible', 'off');
+set(handles.uipanelNoise, 'visible', 'off');
+set(handles.panelMCTGain, 'title', 'MCT Gain');
 set(handles.panelMCTGain, 'visible', 'on');
