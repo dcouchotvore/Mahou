@@ -373,7 +373,7 @@ methods (Access = protected)
 %    b = reshape(cnt, [1, obj.PARAMS.nShots]);
     weighted_bkgd = bsxfun(@times, a, cnt);
     obj.signal.data = obj.sorted - weighted_bkgd;
-  end
+ end
 
   function ProcessSampleAvg(obj)
     tmp = reshape(obj.bin_count, [1 obj.nBins 1]);
