@@ -16,6 +16,7 @@ properties (SetAccess = protected)
   sample;
   sorted;
   aux;
+  ext; %testing external channels for uitable
   signal = struct('data',[],'std',[],'freq',[]);  
   background = struct('data',[],'std',[],'freq',[]);
   
@@ -39,9 +40,10 @@ properties (SetAccess = protected)
   nChan = 80;
   ind_array1 = 1:32;
   ind_array2 = 33:64;
-  ind_igram = 1;
-  ind_hene_x = 15;
-  ind_hene_y = 16;
+  ind_igram = 65;
+  ind_hene_x = 79;
+  ind_hene_y = 80
+  ind_ext = 65:80;
   
   nShotsSorted;
   i_scan;
@@ -124,6 +126,7 @@ methods (Access = protected)
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
 
+    obj.ext = zeros(obj.nExtInputs,1);
     obj.aux.igram = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_y = zeros(1,obj.PARAMS.nShots);
@@ -138,6 +141,7 @@ methods (Access = protected)
   function InitializeMainPlot(obj)
     %attach signal.data(1,:) and signal.data(2,:) to the main plot
     obj.hPlotMain = zeros(1,obj.nSignals);
+    set(obj.hMainAxes,'Nextplot','replacechildren');
     hold(obj.hMainAxes,'off');
     for i = 1:obj.nSignals
       obj.hPlotMain(i) = plot(obj.hMainAxes,obj.freq,obj.signal.data(i,:));
@@ -147,6 +151,14 @@ methods (Access = protected)
     end
     set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
     
+  end
+  
+  function InitializeUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext,'columnformat',{'short g'});
+  end
+  
+  function RefreshUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext);
   end
   
   %set up the ADC task(s)
@@ -204,6 +216,7 @@ methods (Access = protected)
     RefreshPlots(obj,obj.hPlotMain)
     RefreshPlots(obj,obj.hPlotRaw)
     UpdateDiagnostics(obj);
+    RefreshUITable(obj);
     drawnow
     
     %no saving
@@ -228,7 +241,8 @@ methods (Access = protected)
     RefreshPlots(obj,obj.hPlotMain)
     RefreshPlots(obj,obj.hPlotRaw)
     UpdateDiagnostics(obj);
-    
+    RefreshUITable(obj);
+    drawnow
     %no saving
     
   end
@@ -256,10 +270,11 @@ methods (Access = protected)
     obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
     obj.sorted(:,:,2) = obj.sample(obj.ind_array2,1:obj.nShotsSorted);
 
-    obj.aux.igram = obj.sample(obj.ind_igram);
-    obj.aux.hene_x = obj.sample(obj.ind_hene_x);
-    obj.aux.hene_y = obj.sample(obj.ind_hene_y);
-
+    obj.aux.igram = obj.sample(obj.ind_igram,:);
+    obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
+    obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
+    obj.ext = obj.sample(obj.ind_ext,:);
+    
     %unfinished:
 %     rowInd1 = obj.ind_array1;
 %     rowInd2 = obj.ind_array2;
@@ -278,6 +293,7 @@ methods (Access = protected)
   function ProcessSampleAvg(obj)
     obj.signal.data = squeeze(mean(obj.sorted,2))';
     obj.signal.std = squeeze(std(obj.sorted,0,2))';
+    obj.ext = mean(obj.ext,2);
   end
   
   function ProcessSampleBackAvg(obj)

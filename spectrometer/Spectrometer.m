@@ -67,6 +67,12 @@ guidata(hObject, handles);
 splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
 splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color', [0 0 0.6] )
 
+%add menu item
+hmenu = uimenu(gcf,'Label','MCT','Tag','menuMCT');
+hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata,method)});
+%hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',@test_menu_callback);
+hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata,method)});
+
 Constants;
 % scales.ch32 = [0:31];     % @@@ Not sure we use this anymore.
 
@@ -75,28 +81,27 @@ Constants;
 method = Method_Test_Phasing;
 %method.InitializePlot(handles); % @@@ rethink this.
 
-global IO;
+IO = [];
 try
   IO = IO_Interface;
   IO.CloseClockGate();
 catch
-  warning('IO not enabled');
+  warning('SGRLAB:SimulationMode','IO not enabled');
 end
 
 try
   Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
 catch
-  warning('Spectrometer:TranslationStage', 'PI stage not enabled');
+  warning('SGRLAB:SimulationMode','PI stage not enabled');
 end
 
 FPAS = Sampler_FPAS.getInstance;
-TEST = Sampler_test.getInstance;
 
 JY = Monochromator_JY.getInstance;
 JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
-method = Method_Show_Spectrum(TEST,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
+method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
   handles.axesMain,handles.axesRawData,handles.uipanelNoise);
 
 delete(splash);
@@ -586,783 +591,205 @@ catch E
     rethrow(E);
 end
 
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain00_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain00 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
+function menuMCT_callback(varargin)
+PANEL_NAME = 'uipanelGainTrim';
+
+src = 'uninited src';
+eventdata =  'uninited eventdata';
+method = 'uninited method';
+
+if nargin >= 1
+  src = varargin{1};
+end
+if nargin >= 2
+  eventdata = varargin{2};
+end
+if nargin >= 3
+  method = varargin{3};
+end
+
+cleanupPanel(PANEL_NAME);
+
+%[obj,fig] = gcbo;
+%fig = gcf;
+%set(fig,'Visible','off');
+
+%%open new figure
+%f = figure;clf;%('Name','Gains','NumberTitle','off');
+%open new panel
+handles = guihandles(gcf);
+pos = get(handles.axesMain,'Position');
+xoffset = -0.1;
+height = 0.3;
+uipanelGainTrim = uipanel(gcf,'units','normalized',...
+  'Position',[pos(1)+xoffset pos(2)-height pos(3)-xoffset*1.05 height],...
+  'Tag','uipanelGainTrim');
+% pbDone = uicontrol(uipanelGainTrim,'Style','PushButton','Tag','pbGainTrimDone',...
+%   'units','normalized',...
+%   'Position',[0 0.7 0.11 0.3],...
+%   'String','Done',...
+%   'Callback',{@(src,eventinfo) cleanup(src,eventinfo,uipanelGainTrim)});
+pbDone = uicontrol(uipanelGainTrim,'Style','PushButton','Tag','pbGainTrimDone',...
+  'units','normalized',...
+  'Position',[0 0.8 0.11 0.2],...
+  'String','Done',...
+  'Callback',{@(src,eventinfo) cleanupPanel(PANEL_NAME)});
+
+label = get(src,'Label');
+switch label
+  case 'Set gain'
+    newGainFunction(uipanelGainTrim,method);
+  case 'Set trim'
+    newTrimFunction(uipanelGainTrim,method);
+end
+
+%waitfor(f);
+%disp('done')
+%set(fig,'Visible','on');
+
+function newGainFunction(uipanelGainTrim,varargin)
+
+if nargin >=1
+  method = varargin{1};
+end
+nPix = method.nPixelsPerArray;
+nArrays = method.nArrays;
+
+set(uipanelGainTrim,'Title','Set gain');
+
+%a  = axes('units','normalized','OuterPosition',[0.05 0.2 0.9 0.8]);
+%plot(a,1:10,rand(1,10));
+HIGH = 1; 
+LOW = 0;
+bgHighLow = uibuttongroup(uipanelGainTrim,'Tag','bgHighLow','units','normalized',...
+  'Position',[0.0 0.0 0.11 .4]);
+uicontrol(bgHighLow,'Style','radiobutton',...
+  'String','High','units','normalized','Position',[0 0 1 0.5],...
+  'UserData',HIGH);
+uicontrol(bgHighLow,'Style','radiobutton',...
+  'String','Low','units','normalized','Position',[0 0.5 1 0.5],...
+  'UserData',LOW);
+set(bgHighLow,'SelectedObject',[]);
+set(bgHighLow,'SelectionChangeFcn',{@(src,event) bgGainTrim_selection_change(src,event,uipanelGainTrim,method)});
+
+
+bgBatchSet = uibuttongroup(uipanelGainTrim,'Tag','bgBatchSetGain','units','normalized',...
+  'Position',[0.0 .4 0.11 .4]);
+uicontrol(bgBatchSet,'Style','radiobutton',...
+  'String','All 7','units','normalized','Position',[0 0 1 0.5],...
+  'UserData',7);
+uicontrol(bgBatchSet,'Style','radiobutton',...
+  'String','All 0','units','normalized','Position',[0 0.5 1 0.5],...
+  'UserData',0);
+set(bgBatchSet,'SelectedObject',[]);
+set(bgBatchSet,'SelectionChangeFcn',{@(src,event) bgGainTrim_selection_change(src,event,uipanelGainTrim,method)});
+
+
+%make sliders / text boxes
+height = 1/nArrays;
+width = 0.89/nPix;
+
+PnlOpt.title = 'Gain';
+PnlOpt.bordertype = 'none';
+PnlOpt.titleposition = 'centertop';
+PnlOpt.fontweight = 'bold';
+SldrOpt.min = 0;
+SldrOpt.max = 7;
+SldrOpt.SliderStep = [1 1];
+SldrOpt.value = 7; % read from somewhere?
+SldrOpt.Position = [0 0.4 0.7 0.6];
+EditOpts = {'fontsize',9,'units','normalized','Position',[0 0 1 0.4],...
+  'Tag','edit'};
+LabelOpts = {'fontsize',6,'fontweight','b','Visible','off'};
+numFormat = '%1.0f';
+
+count = 0;    
+for i = 1:nArrays
+  for j = 1:nPix
+    count = count+1;
+    PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
+    PnlOpt.title = num2str(j +(i-1)*nPix);
+    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setGain(count,round(get(src,'Value')))};
+    SldrOpt.Tag = sprintf('slider%i',count);
+    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+   
+  end
+end
+
+
+function newTrimFunction(uipanelGainTrim,varargin)
+if nargin >=1
+  method = varargin{1};
+end
+nPix = method.nPixelsPerArray;
+nArrays = method.nArrays;
+
+set(uipanelGainTrim,'Title','Set trim');
+
+bgBatchSet = uibuttongroup(uipanelGainTrim,'Tag','bgBatchSetTrim','units','normalized',...
+  'Position',[0.0 .4 0.11 .4]);
+uicontrol(bgBatchSet,'Style','radiobutton',...
+  'String','All 255','units','normalized','Position',[0 0 1 0.5],...
+  'UserData',255);
+uicontrol(bgBatchSet,'Style','radiobutton',...
+  'String','All 0','units','normalized','Position',[0 0.5 1 0.5],...
+  'UserData',0);
+set(bgBatchSet,'SelectedObject',[]);
+set(bgBatchSet,'SelectionChangeFcn',{@(src,event) bgGainTrim_selection_change(src,event,uipanelGainTrim,method)});
+
+%make sliders / text boxes
+height = 1/nArrays;
+width = 0.89/nPix;
+
+PnlOpt.title = 'Gain';
+PnlOpt.bordertype = 'none';
+PnlOpt.titleposition = 'centertop';
+PnlOpt.fontweight = 'bold';
+SldrOpt.min = 0;
+SldrOpt.max = 255;
+SldrOpt.SliderStep = [1 1];
+SldrOpt.value = 255; % read from somewhere?
+SldrOpt.Position = [0 0.4 0.7 0.6];
+EditOpts = {'fontsize',9,'units','normalized','Position',[0 0 1 0.4],'Tag','edit'};
+LabelOpts = {'fontsize',6,'fontweight','b','Visible','off'};
+numFormat = '%1.0f';
+
+count = 0;    
+for i = 1:nArrays
+  for j = 1:nPix
+    count = count+1;
+    PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
+    PnlOpt.title = num2str(j +(i-1)*nPix);
+    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setTrim(count,round(get(src,'Value')))};
+    SldrOpt.Tag = sprintf('slider%i',count);
+    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+   
+  end
+end
+
+
+function bgGainTrim_selection_change(src,eventdata,uipanelGainTrim,method)
+s = get(src,'Tag');
+val = get(eventdata.NewValue,'UserData');
+handles = guihandles(src);
+sliders = findobj(uipanelGainTrim,'-regexp','Tag','slider[\d]');
+edits = findobj(uipanelGainTrim,'-regexp','Tag','edit');
+switch s
+  case 'bgHighLow'
+    method.source.sampler.setGainRange(val);
+  case 'bgBatchSetGain'
+    method.source.sampler.setGainAll(val);
+    set(sliders,'Value',val);
+    set(edits,'String',sprintf('%1.0f',val));
+  case 'bgBatchSetTrim'
+    method.source.sampler.setTrimAll(val);
+    set(sliders,'Value',val);
+    set(edits,'String',sprintf('%1.0f',val));
+end
+
+
+function cleanupPanel(name)
+h = findobj(gcf,'Tag',name);
+delete(h);
 
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain01_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain01 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain02_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain02 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain03_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain03 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain04_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain04 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain05_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain05 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain03_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain03 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain07_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain07 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain06_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain06 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain08_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain08 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain09_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain09 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain10_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain10 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain11_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain11 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain15_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain15 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain14_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain14 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain13_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain13 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain12_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain12 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain16_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain16 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain17_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain17 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain18_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain18 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain19_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain19 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain23_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain23 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain22_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain22 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain21_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain21 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain20_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain20 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain24_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain24 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain25_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain25 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain26_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain26 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function slider29sliderMCTGain27_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider29sliderMCTGain27 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain31_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain31 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain30_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain30 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain29_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain29 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain28_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain28 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function slider34sliderMCTGain32_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider34sliderMCTGain32 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain33_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain33 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain34_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain34 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain35_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain35 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain39_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain39 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain38_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain38 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain37_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain37 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain36_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain36 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain43_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain43 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain42_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain42 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain41_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain41 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain40_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain40 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain47_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain47 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain46_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain46 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain45_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain45 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain44_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain44 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain51_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain51 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain50_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain50 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain49_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain49 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain48_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain48 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain55_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain55 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain54_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain54 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain53_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain53 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain52_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain52 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain59_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain59 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain58_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain58 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain57_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain57 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain56_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain56 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain63_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain63 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain62_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain62 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain61_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain61 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes during object creation, after setting all properties.
-function sliderMCTGain60_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain60 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
-
-% --- Executes on slider movement.
-function sliderMCTGain_Callback(hObject, eventdata, handles)
-% hObject    handle to sliderMCTGain00 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-val = get(hObject, 'Value');
-val = 10^((val-0.5)*2);
-name = get(hObject, 'Tag');
-channel = str2double(name(14:15));
-if strcmp(get(handles.panelMCTGain, 'title'), 'MCT Gain')
-  % @@@ Insert call to set gain for this channel
-else 
-  % @@@ Insert call to set gain for this channel
-end
-
-% --- Executes on button press in pbMCTGainClose.
-function pbMCTGainClose_Callback(hObject, eventdata, handles)
-% hObject    handle to pbMCTGainClose (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-set(handles.panelMCTGain, 'visible', 'off');
-set(handles.pnlRawData, 'visible', 'on');
-set(handles.uipanelNoise, 'visible', 'on');
-
-% --------------------------------------------------------------------
-function menuMCT_Callback(hObject, eventdata, handles)
-% hObject    handle to menuMCT (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --------------------------------------------------------------------
-function menuMCTGain_Callback(hObject, eventdata, handles)
-% hObject    handle to menuMCTGain (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-set(handles.pnlRawData, 'visible', 'off');
-set(handles.uipanelNoise, 'visible', 'off');
-set(handles.panelMCTGain, 'title', 'MCT Gain');
-set(handles.panelMCTGain, 'visible', 'on');
-
-
-% --------------------------------------------------------------------
-function menuMCTTrim_Callback(hObject, eventdata, handles)
-% hObject    handle to menuMCTTrim (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-set(handles.pnlRawData, 'visible', 'off');
-set(handles.uipanelNoise, 'visible', 'off');
-set(handles.panelMCTGain, 'title', 'MCT Gain');
-set(handles.panelMCTGain, 'visible', 'on');

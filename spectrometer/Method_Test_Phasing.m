@@ -16,6 +16,7 @@ properties (SetAccess = protected)
   sample;
   sorted;
   aux;
+  ext;
   signal = struct('data',[],'std',[],'freq',[],'igram',[]);  
   background = struct('data',[],'std',[],'freq',[]);
   
@@ -163,6 +164,7 @@ methods (Access = protected)
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
 
+    obj.ext = zeros(obj.nExtInputs,1);
     obj.aux.igram = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_y = zeros(1,obj.PARAMS.nShots);
@@ -171,6 +173,14 @@ methods (Access = protected)
     
   function InitializeFreqAxis(obj)
     obj.freq = ((1:32)-16.5)*30+1600; % TO DO: read from spectrometer                
+  end
+  
+  function InitializeUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext);
+  end
+  
+  function RefreshUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext);
   end
   
   %set up the plot for the main output. Called by the class constructor.

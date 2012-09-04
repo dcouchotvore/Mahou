@@ -94,6 +94,9 @@ classdef Method < handle
     %set up the plot for the main output. Called by the class constructor.
     InitializeMainPlot(obj,hMainAxes);
     
+    %set up the uitable for external channels
+    InitializeUITable(obj);
+    
     %set up the ADC task(s)
     InitializeTask(obj);
     
@@ -196,6 +199,8 @@ classdef Method < handle
       InitializeRawDataPlot(obj);
       
       InitializeDiagnostics(obj);
+      
+      InitializeUITable(obj);
     end
     
     %untested
