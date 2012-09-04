@@ -626,7 +626,7 @@ set(handles.sliderNoiseGain,'Visible','off');
 %open new panel
 set(handles.axesMain,'units','normalized')
 pos = get(handles.axesMain,'Position');
-xoffset = -0.1;
+xoffset = -0.05;
 height = 0.3;
 uipanelGainTrim = uipanel(gcf,'units','normalized',...
   'Position',[pos(1)+xoffset pos(2)-height pos(3)-xoffset*1.05 height],...
