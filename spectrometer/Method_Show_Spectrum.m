@@ -141,7 +141,6 @@ methods (Access = protected)
   function InitializeMainPlot(obj)
     %attach signal.data(1,:) and signal.data(2,:) to the main plot
     obj.hPlotMain = zeros(1,obj.nSignals);
-    set(obj.hMainAxes,'Nextplot','replacechildren');
     hold(obj.hMainAxes,'off');
     for i = 1:obj.nSignals
       obj.hPlotMain(i) = plot(obj.hMainAxes,obj.freq,obj.signal.data(i,:));
