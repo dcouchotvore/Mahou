@@ -66,16 +66,16 @@ splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color',
 
 %add menu item
 hmenu = uimenu(gcf,'Label','MCT','Tag','menuMCT');
-hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata,method)});
+hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata)});
 %hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',@test_menu_callback);
-hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata,method)});
+hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata)});
 
 Constants;
 % scales.ch32 = [0:31];     % @@@ Not sure we use this anymore.
 
 %Default method on startup.
 %method = Method_RawData;
-method = Method_Test_Phasing;
+%method = Method_Test_Phasing;
 %method.InitializePlot(handles); % @@@ rethink this.
 
 IO = [];
@@ -591,20 +591,17 @@ catch E
 end
 
 function menuMCT_callback(varargin)
+global method
 PANEL_NAME = 'uipanelGainTrim';
 
 src = 'uninited src';
 eventdata =  'uninited eventdata';
-method = 'uninited method';
 
 if nargin >= 1
   src = varargin{1};
 end
 if nargin >= 2
   eventdata = varargin{2};
-end
-if nargin >= 3
-  method = varargin{3};
 end
 
 cleanupPanel(PANEL_NAME);
@@ -615,8 +612,18 @@ cleanupPanel(PANEL_NAME);
 
 %%open new figure
 %f = figure;clf;%('Name','Gains','NumberTitle','off');
+
+%get handles to ui elements
+handles = guidata(gcf);
+
+%hide overlapped things because they are in different stacks and just make
+%a mess of stuff
+set(handles.pnlRawData,'Visible','off');
+set(handles.uipanelNoise,'Visible','off');
+set(handles.sliderNoiseGain,'Visible','off');
+
 %open new panel
-handles = guihandles(gcf);
+set(handles.axesMain,'units','normalized')
 pos = get(handles.axesMain,'Position');
 xoffset = -0.1;
 height = 0.3;
@@ -773,7 +780,7 @@ end
 function bgGainTrim_selection_change(src,eventdata,uipanelGainTrim,method)
 s = get(src,'Tag');
 val = get(eventdata.NewValue,'UserData');
-handles = guihandles(src);
+handles = guidata(src);
 sliders = findobj(uipanelGainTrim,'-regexp','Tag','slider[\d]');
 edits = findobj(uipanelGainTrim,'-regexp','Tag','edit');
 switch s
@@ -793,5 +800,11 @@ end
 function cleanupPanel(name)
 h = findobj(gcf,'Tag',name);
 delete(h);
+%make sure that other elements are visible
+handles = guidata(gcf);
+set(handles.pnlRawData,'Visible','on');
+set(handles.uipanelNoise,'Visible','on');
+set(handles.sliderNoiseGain,'Visible','on');
+
 
 
