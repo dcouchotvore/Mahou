@@ -281,7 +281,7 @@ classdef (Sealed) Sampler_FPAS < handle
           %see FPAS2 Serial Communications Commands for specification.
           %Basically I is for command. G means set the gain. xxx is the channel
           %and yyy is the gain value (0-7)=> IGxxxyyy
-          fprintf(obj.COMPort,'IG%03.0f%03.0f',chan,val);
+          fprintf(obj.COMPort,sprintf('IG%03.0f%03.0f',chan,val));
           drawnow;
           pause(0.1);
         end
@@ -315,7 +315,7 @@ classdef (Sealed) Sampler_FPAS < handle
           %see FPAS2 Serial Communications Commands for specification.
           %Basically I is for command. L means set the gain range. 00000 is
           %a filler. v is the value 0=low or 1=high. => IL00000v IGxxxyyy
-          fprintf(obj.COMPort,'IL%06.0f',highlow);
+          fprintf(obj.COMPort,sprintf('IL%06.0f',highlow));
           drawnow;
           pause(0.1);
           

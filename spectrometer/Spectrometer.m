@@ -791,13 +791,13 @@ sliders = findobj(uipanelGainTrim,'-regexp','Tag','slider[\d]');
 edits = findobj(uipanelGainTrim,'-regexp','Tag','edit');
 switch s
   case 'bgHighLow'
-    method.source.sampler.setGainRange(val);
+    method.source.sampler.SetGainRange(val);
   case 'bgBatchSetGain'
-    method.source.sampler.setGainAll(val);
+    method.source.sampler.SetGainAll(val);
     set(sliders,'Value',val);
     set(edits,'String',sprintf('%1.0f',val));
   case 'bgBatchSetTrim'
-    method.source.sampler.setTrimAll(val);
+    method.source.sampler.SetTrimAll(val);
     set(sliders,'Value',val);
     set(edits,'String',sprintf('%1.0f',val));
 end
