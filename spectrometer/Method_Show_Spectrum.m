@@ -33,8 +33,6 @@ properties (SetAccess = protected)
   freq;
   
   nSignals = 2;
-  nArrays = 2;
-  nPixelsPerArray = 32;
   nPixels = 64;
   nExtInputs = 16;
   nChan = 80;
@@ -100,10 +98,10 @@ methods
 %     InitializeMainPlot(obj);
 %     InitializeRawData(obj);
 %     InitializeDiagnostics(obj);
-  end
   
   %inherited public methods:
   %ScanStop
+  end
 end
 
 %
@@ -141,7 +139,12 @@ methods (Access = protected)
   function InitializeMainPlot(obj)
     %attach signal.data(1,:) and signal.data(2,:) to the main plot
     obj.hPlotMain = zeros(1,obj.nSignals);
-    hold(obj.hMainAxes,'off');
+    
+    % !!! Important note: Cannot use 'hold off' here because of side
+    % effects.  This is equivalent.
+    set(obj.hMainAxes,'Nextplot','replacechildren');
+    %hold(obj.hMainAxes,'off');
+    
     for i = 1:obj.nSignals
       obj.hPlotMain(i) = plot(obj.hMainAxes,obj.freq,obj.signal.data(i,:));
       hold(obj.hMainAxes,'all');

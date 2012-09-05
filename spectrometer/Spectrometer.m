@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 22-Aug-2012 15:28:03
+% Last Modified by GUIDE v2.5 04-Sep-2012 15:03:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,9 +60,6 @@ set(hObject,'CloseRequestFcn',@cleanup);
 % Choose default command line output for Spectrometer
 handles.output = hObject;
 
-% Update handles structure
-guidata(hObject, handles);
-
 % Splash Screen
 splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
 splash.addText(30,50, 'Garrett-Roe 2D-IR Spectrometer', 'FontSize', 30, 'Color', [0 0 0.6] )
@@ -74,7 +71,7 @@ hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) me
 hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata)});
 
 Constants;
-scales.ch32 = [0:31];
+% scales.ch32 = [0:31];     % @@@ Not sure we use this anymore.
 
 %Default method on startup.
 %method = Method_RawData;
@@ -101,10 +98,12 @@ JY = Monochromator_JY.getInstance;
 JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
-method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
-  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
+method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage, handles,handles.pnlParameters,handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 delete(splash);
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Spectrometer_OutputFcn(hObject, eventdata, handles)
@@ -226,7 +225,7 @@ function updateMethod(handles)
 %update the current method based on the values of the popup menus Method
 %and DataSource. Gate and Spectrometer could be added but not yet
 %implemented. Called by popupMethods_Callback and popupDataSource_Callback
-global method FPAS IO JY Interferometer_Stage;
+global method IO JY Interferometer_Stage;
 
 %clear old class instance
 delete(method);
@@ -242,10 +241,10 @@ str = list{val}; %select contents of desired cell
 str_sampler = str(1:end-2); %chop off the ".m"
 sampler = feval([str_sampler '.getInstance']);
 
-%method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.uipanelParameters,...
-%  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
-method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
-  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
+%method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.pnlParameters,...
+%  handles.axesMain,handles.axesRawData,handles.pnlNoise);
+method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.pnlParameters,...
+  handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 % switch get(handles .popupMethods, 'Value')
 %     case 1    
@@ -620,7 +619,7 @@ handles = guidata(gcf);
 %hide overlapped things because they are in different stacks and just make
 %a mess of stuff
 set(handles.pnlRawData,'Visible','off');
-set(handles.uipanelNoise,'Visible','off');
+set(handles.pnlNoise,'Visible','off');
 set(handles.sliderNoiseGain,'Visible','off');
 
 %open new panel
@@ -630,7 +629,7 @@ xoffset = -0.05;
 height = 0.3;
 uipanelGainTrim = uipanel(gcf,'units','normalized',...
   'Position',[pos(1)+xoffset pos(2)-height pos(3)-xoffset*1.05 height],...
-  'Tag','uipanelGainTrim');
+  'Tag',PANEL_NAME);
 % pbDone = uicontrol(uipanelGainTrim,'Style','PushButton','Tag','pbGainTrimDone',...
 %   'units','normalized',...
 %   'Position',[0 0.7 0.11 0.3],...
@@ -654,13 +653,16 @@ end
 %disp('done')
 %set(fig,'Visible','on');
 
-function newGainFunction(uipanelGainTrim,varargin)
+function newGainFunction(uipanelGainTrim,method)
 
-if nargin >=1
-  method = varargin{1};
-end
+%if nargin >=1
+%  method = varargin{1};   
+%end
 nPix = method.nPixelsPerArray;
 nArrays = method.nArrays;
+% @@@
+%nPix = 32;
+%nArrays = 2;
 
 set(uipanelGainTrim,'Title','Set gain');
 
@@ -716,18 +718,20 @@ for i = 1:nArrays
     count = count+1;
     PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
     PnlOpt.title = num2str(j +(i-1)*nPix);
-    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setGain(count,round(get(src,'Value')))};
+    SldrOpt.callback = {@sliderGain_Callback};
     SldrOpt.Tag = sprintf('slider%i',count);
-    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
-   
+    slider = sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+    set(slider, 'UserData', count);
   end
 end
 
+function sliderGain_Callback(src, eventdata)
+global method;
 
-function newTrimFunction(uipanelGainTrim,varargin)
-if nargin >=1
-  method = varargin{1};
-end
+  method.source.sampler.SetGain(get(src,'UserData'), round(get(src,'Value')));
+
+function newTrimFunction(uipanelGainTrim, method)
+
 nPix = method.nPixelsPerArray;
 nArrays = method.nArrays;
 
@@ -767,13 +771,17 @@ for i = 1:nArrays
     count = count+1;
     PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
     PnlOpt.title = num2str(j +(i-1)*nPix);
-    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setTrim(count,round(get(src,'Value')))};
+    SldrOpt.callback = {@sliderTrim_Callback};
     SldrOpt.Tag = sprintf('slider%i',count);
-    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
-   
+    slider = sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+    set(slider, 'UserData', count);
   end
 end
 
+function sliderTrim_Callback(src, eventdata)
+global method;
+
+  method.source.sampler.SetTrim(get(src,'UserData'), round(get(src,'Value')));
 
 function bgGainTrim_selection_change(src,eventdata,uipanelGainTrim,method)
 s = get(src,'Tag');
@@ -801,9 +809,8 @@ delete(h);
 %make sure that other elements are visible
 handles = guidata(gcf);
 set(handles.pnlRawData,'Visible','on');
-set(handles.uipanelNoise,'Visible','on');
+set(handles.pnlNoise,'Visible','on');
 set(handles.sliderNoiseGain,'Visible','on');
-
 
 
 

@@ -50,6 +50,11 @@ classdef Method < handle
 
   %here are the properties that all methods share. 
 
+  properties (GetAccess = public)
+    nPixelsPerArray = 32;
+    nArrays = 2;
+  end
+
   %booleans to communicate about the state of a scan. When
   properties 
     ScanIsRunning = false;

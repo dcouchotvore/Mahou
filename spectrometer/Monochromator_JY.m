@@ -63,7 +63,11 @@ classdef (Sealed) Monochromator_JY < handle
       end
     
       function out = get.wavelength(obj)
-        out = obj.mono.GetCurrentWavelength;
+        if obj.initialized
+          out = obj.mono.GetCurrentWavelength;
+        else
+          out = 3000;
+        end
       end
       
       function out = get.wavenumbers(obj)
@@ -93,10 +97,18 @@ classdef (Sealed) Monochromator_JY < handle
       end
       
       function out = get.slit(obj)
-        out = obj.mono.GetCurrentSlitWidth(0); %0 means front slit (only one installed currenlty)
+        if obj.initialized
+          out = obj.mono.GetCurrentSlitWidth(0); %0 means front slit (only one installed currenlty)
+        else
+          out = 30;
+        end
       end
       function out = get.turret(obj)
-        out = obj.mono.GetCurrentTurret;
+        if obj.initialized
+          out = obj.mono.GetCurrentTurret;
+        else
+          out = 1;
+        end
       end
     end
     
@@ -104,13 +116,17 @@ classdef (Sealed) Monochromator_JY < handle
         function Initialize(obj)
           
           %% START HERE
-          obj.mono = actxserver('JYMono.monochromator');
-          obj.mono.UniqueID = 'Mono1'; %this cost me $800...
-          obj.mono.Load; %
-          obj.mono.OpenCommunications;
-          obj.mono.Initialize;
-
-          obj.initialized = 1;
+          try
+            obj.mono = actxserver('JYMono.monochromator');
+            obj.mono.UniqueID = 'Mono1'; %this cost me $800...
+            obj.mono.Load; %
+            obj.mono.OpenCommunications;
+            obj.mono.Initialize;
+            obj.initialized = 1;
+          catch E
+            warning(E.identifier, 'Monochromator');
+            warning('Monochromator not found.  Enter simulation mode.');
+          end
           
         end
         
