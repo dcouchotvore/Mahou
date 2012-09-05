@@ -619,17 +619,17 @@ handles = guidata(gcf);
 %hide overlapped things because they are in different stacks and just make
 %a mess of stuff
 set(handles.pnlRawData,'Visible','off');
-set(handles.uipanelNoise,'Visible','off');
+set(handles.pnlNoise,'Visible','off');
 set(handles.sliderNoiseGain,'Visible','off');
 
 %open new panel
 set(handles.axesMain,'units','normalized')
 pos = get(handles.axesMain,'Position');
-xoffset = -0.1;
+xoffset = -0.05;
 height = 0.3;
 uipanelGainTrim = uipanel(gcf,'units','normalized',...
   'Position',[pos(1)+xoffset pos(2)-height pos(3)-xoffset*1.05 height],...
-  'Tag','uipanelGainTrim');
+  'Tag',PANEL_NAME);
 % pbDone = uicontrol(uipanelGainTrim,'Style','PushButton','Tag','pbGainTrimDone',...
 %   'units','normalized',...
 %   'Position',[0 0.7 0.11 0.3],...
@@ -653,17 +653,16 @@ end
 %disp('done')
 %set(fig,'Visible','on');
 
-function newGainFunction(uipanelGainTrim,varargin)
-%global method;% @@@ side-effect!
+function newGainFunction(uipanelGainTrim,method)
 
-if nargin >=1
-  method = varargin{1};   
-end
-%nPix = method.nPixelsPerArray;
-%nArrays = method.nArrays;
+%if nargin >=1
+%  method = varargin{1};   
+%end
+nPix = method.nPixelsPerArray;
+nArrays = method.nArrays;
 % @@@
-nPix = 32;
-nArrays = 2;
+%nPix = 32;
+%nArrays = 2;
 
 set(uipanelGainTrim,'Title','Set gain');
 
@@ -719,18 +718,20 @@ for i = 1:nArrays
     count = count+1;
     PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
     PnlOpt.title = num2str(j +(i-1)*nPix);
-    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setGain(count,round(get(src,'Value')))};
+    SldrOpt.callback = {@sliderGain_Callback};
     SldrOpt.Tag = sprintf('slider%i',count);
-    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
-   
+    slider = sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+    set(slider, 'UserData', count);
   end
 end
 
+function sliderGain_Callback(src, eventdata)
+global method;
 
-function newTrimFunction(uipanelGainTrim,varargin)
-if nargin >=1
-  method = varargin{1};
-end
+  method.source.sampler.SetGain(get(src,'UserData'), round(get(src,'Value')));
+
+function newTrimFunction(uipanelGainTrim, method)
+
 nPix = method.nPixelsPerArray;
 nArrays = method.nArrays;
 
@@ -770,12 +771,17 @@ for i = 1:nArrays
     count = count+1;
     PnlOpt.position = [0.11+width*(j-1) 0.5*(nArrays-i) width height];
     PnlOpt.title = num2str(j +(i-1)*nPix);
-    SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setTrim(count,round(get(src,'Value')))};
+    SldrOpt.callback = {@sliderTrim_Callback};
     SldrOpt.Tag = sprintf('slider%i',count);
-    sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+    slider = sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
+    set(slider, 'UserData', count);
   end
 end
 
+function sliderTrim_Callback(src, eventdata)
+global method;
+
+  method.source.sampler.SetTrim(get(src,'UserData'), round(get(src,'Value')));
 
 function bgGainTrim_selection_change(src,eventdata,uipanelGainTrim,method)
 s = get(src,'Tag');
@@ -803,7 +809,7 @@ delete(h);
 %make sure that other elements are visible
 handles = guidata(gcf);
 set(handles.pnlRawData,'Visible','on');
-set(handles.uipanelNoise,'Visible','on');
+set(handles.pnlNoise,'Visible','on');
 set(handles.sliderNoiseGain,'Visible','on');
 
 
