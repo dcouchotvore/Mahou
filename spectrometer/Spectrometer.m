@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 31-Aug-2012 14:22:43
+% Last Modified by GUIDE v2.5 04-Sep-2012 15:03:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,9 +59,6 @@ set(hObject,'CloseRequestFcn',@cleanup);
 
 % Choose default command line output for Spectrometer
 handles.output = hObject;
-
-% Update handles structure
-guidata(hObject, handles);
 
 % Splash Screen
 splash = SplashScreen('Garrett-Roe 2D-IR Spectrometer', 'splash_screen.jpg');
@@ -101,10 +98,12 @@ JY = Monochromator_JY.getInstance;
 JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
-method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
-  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
+method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage, handles,handles.pnlParameters,handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 delete(splash);
+
+% Update handles structure
+guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Spectrometer_OutputFcn(hObject, eventdata, handles)
@@ -242,10 +241,10 @@ str = list{val}; %select contents of desired cell
 str_sampler = str(1:end-2); %chop off the ".m"
 sampler = feval([str_sampler '.getInstance']);
 
-%method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.uipanelParameters,...
-%  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
-method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.uipanelParameters,...
-  handles.axesMain,handles.axesRawData,handles.uipanelNoise);
+%method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.pnlParameters,...
+%  handles.axesMain,handles.axesRawData,handles.pnlNoise);
+method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.pnlParameters,...
+  handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 % switch get(handles .popupMethods, 'Value')
 %     case 1    
@@ -648,12 +647,16 @@ end
 %set(fig,'Visible','on');
 
 function newGainFunction(uipanelGainTrim,varargin)
+%global method;% @@@ side-effect!
 
 if nargin >=1
-  method = varargin{1};
+  method = varargin{1};   
 end
-nPix = method.nPixelsPerArray;
-nArrays = method.nArrays;
+%nPix = method.nPixelsPerArray;
+%nArrays = method.nArrays;
+% @@@
+nPix = 32;
+nArrays = 2;
 
 set(uipanelGainTrim,'Title','Set gain');
 
@@ -763,7 +766,6 @@ for i = 1:nArrays
     SldrOpt.callback = {@(src,eventinfo) method.source.sampler.setTrim(count,round(get(src,'Value')))};
     SldrOpt.Tag = sprintf('slider%i',count);
     sliderPanel(uipanelGainTrim,PnlOpt,SldrOpt,EditOpts,LabelOpts,numFormat);
-   
   end
 end
 

@@ -37,8 +37,6 @@ properties (SetAccess = protected)
   freq;
   
   nSignals = 2;
-  nArrays = 2;
-  nPixelsPerArray = 32;
   nPixels = 64;
   nExtInputs = 16;
   nChan = 80;
