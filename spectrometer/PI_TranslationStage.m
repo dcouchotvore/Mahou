@@ -142,13 +142,13 @@ classdef PI_TranslationStage < hgsetget
             end
 
             % Check against limits
-            if desired_position<obj.minimum
-                desired_position = obj.minimum;
-            elseif desired_position>obj.maximum
-                desired_position = obj.maximum;
+            new_position = desired_position+obj.center;
+            if new_position<obj.minimum
+                new_position = obj.minimum;
+            elseif new_position>obj.maximum
+                new_position = obj.maximum;
             end
-            new_position = desired_position;
-            
+              
             if obj.initialized 
 
                 %% move to an absolute position
@@ -189,7 +189,7 @@ classdef PI_TranslationStage < hgsetget
             if obj.initialized
                 result = obj.sendPIMotorCommand('POS?', 1);
                 [nums ~] = sscanf(result, '%i=%f');
-                position = nums(2)/obj.scale+obj.center;
+                position = nums(2)/obj.scale-obj.center;
             else
                 position = 0;
             end
@@ -197,7 +197,7 @@ classdef PI_TranslationStage < hgsetget
 
         function SetCenter(obj)
             if obj.initialized
-                result = sendPIMotorCommand('POS?', 1);
+                result = obj.sendPIMotorCommand('POS?', 1);
                 [nums ~] = sscanf(result, '%i=%f');
                 obj.center = nums(2)/obj.scale;
             end
@@ -217,6 +217,8 @@ classdef PI_TranslationStage < hgsetget
                 fprintf(obj.object, message);
             end
 
+% @@@ This should technically not go here.  Need to think out how 
+% to guarantee that it will always be updated if put somewhere else.
             error_code = query(obj.object, 'ERR?');
             if error_code(1)~='0'
                 error('Motor error code %s: %s\n', deblank(error_code), message);

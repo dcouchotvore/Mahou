@@ -377,6 +377,7 @@ function pbMotor1Reset_Callback(hObject, eventdata, handles)
 global Interferometer_Stage;
 
 Interferometer_Stage.SetCenter;
+set(handles.editMotor1, 'String', num2str(Interferometer_Stage.GetPosition));
 
 
 % --- Executes on button press in pbMotor1Go.
@@ -386,7 +387,10 @@ function pbMotor1Go_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global Interferometer_Stage;
 
-Interferometer_Stage.MoveTo(handles, str2double(get(handles.editMotor1, 'String')), 500, 0, 0);
+pos = str2double(get(handles.editMotor1, 'String'));
+set(handles.editMotor1, 'String', 'moving');
+Interferometer_Stage.MoveTo(handles, pos, 500, 0, 0);
+set(handles.editMotor1, 'String', num2str(Interferometer_Stage.GetPosition));
 
 
 % --- Executes on button press in pbMotor1Dn.
@@ -396,7 +400,9 @@ function pbMotor1Dn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global Interferometer_Stage;
 
+set(handles.editMotor1, 'String', 'moving');
 Interferometer_Stage.MoveTo(handles, -10.0, 100, 1, 0);
+set(handles.editMotor1, 'String', 'moving');
 
 % --- Executes on button press in pbMotor1Up.
 function pbMotor1Up_Callback(hObject, eventdata, handles)
@@ -406,7 +412,9 @@ function pbMotor1Up_Callback(hObject, eventdata, handles)
 
 global Interferometer_Stage;
 
+set(handles.editMotor1, 'String', 'moving');
 Interferometer_Stage.MoveTo(handles, 10.0, 100, 1, 0);
+set(handles.editMotor1, 'String', 'moving');
 
 
 function cleanup(src,event)
