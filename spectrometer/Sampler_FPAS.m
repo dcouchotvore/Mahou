@@ -282,7 +282,8 @@ classdef (Sealed) Sampler_FPAS < handle
           %Basically I is for command. G means set the gain. xxx is the channel
           %and yyy is the gain value (0-7)=> IGxxxyyy
           if obj.initialized
-            fprintf(obj.COMPort,sprintf('IG%03.0f%03.0f',chan,val));
+            msg = sprintf('IG%03.0f%03.0f',chan,val)
+            fprintf(obj.COMPort, msg);
           end
           drawnow;
           pause(0.1);
@@ -360,7 +361,7 @@ classdef (Sealed) Sampler_FPAS < handle
           %Basically I is for command. T means set the trim. xxx is the channel
           %and yyy is the gain value (0-255)=> IGxxxyyy
           if obj.initialized
-            fprintf(obj.COMPort,'IT%03.0f%03.0f',chan,val);
+            fprintf(obj.COMPort,sprintf('IT%03.0f%03.0f',chan,val));
           end
           drawnow;
           pause(0.1);

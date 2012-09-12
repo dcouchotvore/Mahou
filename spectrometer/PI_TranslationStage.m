@@ -180,7 +180,7 @@ classdef PI_TranslationStage < hgsetget
         function MoveTwoStep(obj, pos1, pos2, speed)
             if obj.initialized
                 obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-                obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', pos1*obj.scale, pos2*obj.scale), 0);
+                obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', (pos1+obj.center)*obj.scale, (pos2+obj.center)*obj.scale), 0);
                 err=obj.sendPIMotorCommand('MAC ERR?', 1);
             end
         end
@@ -227,7 +227,7 @@ classdef PI_TranslationStage < hgsetget
             if obj.initialized
                 status = obj.sendPIMotorCommand('SRG? 1 1', 1);
                 num = uint16(hex2dec(status(7:end-1)));
-                busy = bitand(num, hex2dec('A000'))~=hex2dec('8000')
+                busy = bitand(num, hex2dec('A000'))~=hex2dec('8000');
             else busy = 0;
             end
         end

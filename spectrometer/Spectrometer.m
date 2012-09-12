@@ -136,9 +136,8 @@ set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 try
   method.Scan;
 catch E
-  
-  set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
   cleanup('','');
+%  set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
   rethrow(E);
 end
 
@@ -421,7 +420,9 @@ disp('NOT YET IMPLEMENTED: save parameters for next time');
 
 disp('move motors to zero...')
 try
-  Interferometer_Stage.MoveTo([],0,10,0,0);
+  % @@@ Figure out what to do with this.  If an exception was thrown
+  % because of a motor error, it will probably hang during this.
+%  Interferometer_Stage.MoveTo([],0,10,0,0);
 catch
   %?
 end
