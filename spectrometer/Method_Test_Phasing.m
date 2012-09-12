@@ -398,6 +398,7 @@ methods (Access = protected)
     %signals directly)
 %    obj.result.data = obj.bin_data(1:32,:)./obj.bin_data(33:64,:);
     try
+      obj.signal.igram = obj.bin_igram./obj.bin_count;
       [phase, t0_bin_shift, analysis] = phasing2dPP(obj.t_axis, obj.signal.igram);
     catch E
       warning('phasing failed');
