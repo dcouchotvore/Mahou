@@ -36,8 +36,8 @@ properties (SetAccess = protected)
   nPixels = 64;
   nExtInputs = 16;
   nChan = 80;
-  ind_array1 = 1:32;
-  ind_array2 = 33:64;
+  nChopStates; %assigned in Initialize
+  ind_array = [1:32 ; 33:64];
   ind_igram = 65;
   ind_hene_x = 79;
   ind_hene_y = 80;
@@ -62,6 +62,8 @@ methods
   function obj = Method_Show_Signal(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
     %constructor
     
+    obj.nChopStates = obj.nSignals/obj.nArrays;
+    
     if nargin == 0
       %put actions here for when constructor is called with no arguments,
       %which will serve as defaults. 
@@ -69,7 +71,7 @@ methods
       return
     elseif nargin == 1
       %If item in is a method class object, just return that object.
-      if isa(obj,'Method_Show_Spectrum')
+      if isa(obj,'Method_Show_Signal')
         return
       elseif isa(obj,'Method')
         %what to do if it is a different class but still a Method? How does
@@ -114,7 +116,7 @@ methods (Access = protected)
   function InitializeData(obj)
     
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
-    obj.nShotsSorted = obj.nArrays*obj.PARAMS.nShots/obj.nSignals;
+    obj.nShotsSorted = obj.PARAMS.nShots/obj.nChopStates;
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -125,10 +127,13 @@ methods (Access = protected)
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
 
-    obj.ext = zeros(obj.nExtInputs,1);
-    obj.aux.igram = zeros(1,obj.PARAMS.nShots);
-    obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
-    obj.aux.hene_y = zeros(1,obj.PARAMS.nShots);
+    obj.ext = zeros(obj.nExtInputs,obj.nChopStates);
+
+    obj.aux.igram = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.hene_x = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.hene_y = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.ext = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.chop = zeros(1,obj.PARAMS.nShots);
     
   end
     
@@ -268,35 +273,32 @@ methods (Access = protected)
   end
    
   function ProcessSampleSort(obj)
-    %the easy thing
+    %assign chopper data
+    obj.aux.chop = obj.sample(obj.ind_chop,:);
     
-    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
-    obj.sorted(:,:,2) = obj.sample(obj.ind_array2,1:obj.nShotsSorted);
+    %look to see when chopper open/closed (pumped/unpumped)
+    ind_chop = lookChopper(obj.nSignals,obj.aux.chop);
+    
+    %assign sorted data for array detector
+    obj.sorted(:,:,1) = obj.sample(obj.ind_array(1,:),ind_chop(1,:));
+    obj.sorted(:,:,2) = obj.sample(obj.ind_array(2,:),ind_chop(1,:));
+    obj.sorted(:,:,3) = obj.sample(obj.ind_array(1,:),ind_chop(2,:));
+    obj.sorted(:,:,4) = obj.sample(obj.ind_array(2,:),ind_chop(2,:));
 
-    obj.aux.igram = obj.sample(obj.ind_igram,:);
-    obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
-    obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
-    obj.ext = obj.sample(obj.ind_ext,:);
+    %assign sorted values for external signals
+    for i = 1:obj.nChopStates
+      obj.aux.igram(i,:) = obj.sample(obj.ind_igram,ind_chop(i,:));
+      obj.aux.hene_x(i,:) = obj.sample(obj.ind_hene_x,ind_chop(i,:));
+      obj.aux.hene_y(i,:) = obj.sample(obj.ind_hene_y,ind_chop(i,:));
+      obj.aux.ext(i,:) = obj.sample(obj.ind_ext,ind_chop(i,:));
+    end
     
-    %unfinished:
-%     rowInd1 = obj.ind_array1;
-%     rowInd2 = obj.ind_array2;
-%     chop = 0; %this is a vector nSignals/nArrays in length 
-%     
-%     colInd1 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     colInd2 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     count = 0;
-%     for ii = 1:2:obj.nSignals/2;
-%       count = count+1;
-%       obj.sorted(:,:,ii) = obj.sample(rowInd1,obj.nShotsSorted);
-%       obj.sorted(:,:,ii+1) = obj.sample(obj.nPixelsPerArray+1:2*obj.nPixelsPerArray,obj.nShotsSorted);
-%     end 
   end
 
   function ProcessSampleAvg(obj)
     obj.signal.data = squeeze(mean(obj.sorted,2))';
     obj.signal.std = squeeze(std(obj.sorted,0,2))';
-    obj.ext = mean(obj.ext,2);
+    obj.ext = mean(obj.aux.ext,2);
   end
   
   function ProcessSampleBackAvg(obj)
@@ -332,12 +334,12 @@ methods (Access = protected)
   function ProcessSampleResult(obj)
     %calculate the effective delta absorption (though we are plotting the
     %signals directly)
-    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(2,:));
+    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(2,:).*obj.signal.data(4,:)./obj.signal.data(3,:));
   end
   
   function ProcessSampleNoise(obj)
     %calculate the signal from each shot for an estimate of the error
-    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2)),0,2)'/sqrt(obj.PARAMS.nShots);
+    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2).*obj.sorted(:,:,4)./obj.sorted(:,:,3)),0,2)'/sqrt(obj.PARAMS.nShots);
 
     %the other option would be a propagation of error calculation but I
     %haven't worked through that yet. See wikipedia Propagation of
