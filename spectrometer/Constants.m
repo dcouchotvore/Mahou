@@ -26,4 +26,6 @@ CONSTANTS.debyeToCm = 3.33564e-30; %Cm (coulomb meters)
 CONSTANTS.N_A = 6.022e23; 
 CONSTANTS.k_B = 1.38e-12; %J K-1
 CONSTANTS.amuToKg= 1.660538e-27; %kg
+CONSTANTS.fsToMm = CONSTANTS.c_SI*1e3/1e15;
+CONSTANTS.fsToMm2Pass = CONSTANTS.fsToMm/2; %for converting fs to delay stage position
 
