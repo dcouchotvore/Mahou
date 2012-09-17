@@ -385,7 +385,9 @@ methods (Access = protected)
 
   function ProcessSampleAvg(obj)
     tmp = reshape(obj.bin_count, [1 obj.nBins 1]);
-    obj.signal.data = bsxfun(@rdivide, obj.signal.data, tmp);
+    
+     obj.signal.data = bsxfun(@rdivide, obj.signal.data, tmp);
+     obj.signal.data(isnan(obj.signal.data)) = 0;
 %    temp = reshape(obj.bin_count,[1 obj.nBins 1]);
 %    obj.signal.data = bsxfun(@rdivide,obj.sorted,temp);
 %    obj.signal.igram = obj.bin_igram./obj.bin_count;
