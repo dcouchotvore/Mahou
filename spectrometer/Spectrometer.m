@@ -389,7 +389,7 @@ global Interferometer_Stage;
 
 pos = str2double(get(handles.editMotor1, 'String'));
 set(handles.editMotor1, 'String', 'moving');
-Interferometer_Stage.MoveTo(handles, pos, 500, 0, 0);
+Interferometer_Stage.MoveTo(handles, pos, 6000, 0, 0);
 set(handles.editMotor1, 'String', num2str(Interferometer_Stage.GetPosition));
 
 
