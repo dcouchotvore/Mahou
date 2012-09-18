@@ -116,6 +116,10 @@ obj.options.spectrometer_resolution = 30; %wavenumbers
                 m = obj.nShots;
             end
             result(:,1:m) = out(:,1:m);
+            
+            %copy the last data point to fill out the rest of the matrix
+            temp = repmat(result(:,m),1,obj.nShots-m);
+            result(:,m+1:obj.nShots) = temp;
         end
         
         function ClearTask(obj)

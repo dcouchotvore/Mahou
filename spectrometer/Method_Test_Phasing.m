@@ -137,7 +137,7 @@ methods (Access = protected)
       ReadParameters@Method(obj);
       
       %post
-      obj.PARAMS.nShots = 17000;  % @@@ DEBUG!
+      obj.PARAMS.nShots = 10000;  % @@@ DEBUG!
       %obj.PARAMS.nShots = 2 * (obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed*4800+2200;
       set(obj.handles.editnShots,'String',num2str(obj.PARAMS.nShots));
   end
