@@ -208,7 +208,7 @@ methods (Access = protected)
 
     InitializeTask(obj);
     
-    obj.source.motors.MoveTo(obj.handles, obj.PARAMS.start, obj.PARAMS.speed, 0, 1);
+    obj.source.motors.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 1);
   end
   
   %start first sample. This code is executed before the scan loop starts
@@ -286,7 +286,7 @@ methods (Access = protected)
   function ScanCleanup(obj)
     obj.source.gate.CloseClockGate;
     obj.source.sampler.ClearTask;
-    obj.source.motors.MoveTo(obj.handles, 0, obj.PARAMS.speed, 0, 0);
+    obj.source.motors.MoveTo(0, obj.PARAMS.speed, 0, 0);
   end
   
   %save the current result to a MAT file for storage.

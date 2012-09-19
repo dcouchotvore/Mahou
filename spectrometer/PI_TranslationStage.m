@@ -155,19 +155,11 @@ classdef PI_TranslationStage < hgsetget
             fclose(obj.object);
         end
         
-        function new_position = MoveTo(obj, handles, desired_position, speed, move_relative, move_async)
+        function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
             if move_relative
                 pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
                 desired_position = pos+desired_position;
             end
-
-%             % Check against limits
-%             new_position = desired_position+obj.center;
-%             if new_position<obj.minimum
-%                 new_position = obj.minimum;
-%             elseif new_position>obj.maximum
-%                 new_position = obj.maximum;
-%             end
             desired_position_mm = obj.ValidatePosition(desired_position);
             desired_speed_mm_s = obj.ValidateSpeed(speed);
             
@@ -182,26 +174,11 @@ classdef PI_TranslationStage < hgsetget
                     while obj.IsBusy
                       drawnow;
                       pause(0.1);
-%                     while 1==1
-%                         status = obj.sendPIMotorCommand('SRG? 1 1', 1);         % @@@@ change to use IsBusy
-%                         num = uint16(hex2dec(status(7:end-1)));
-%                         if bitand(num, hex2dec('A000'))==hex2dec('8000')
-%                             break;
-%                         else
-%                             drawnow
-%                             pause(0.1);     % Shortening this makes little difference
-%                         end
                     end
                 end
 
                 %read where we arrived
                 new_position = obj.GetPosition;
-                %should we remove this??? or make the class own the edit.
-                %That is probably best.
-%                 if ~strcmp(obj.gui_object, '')
-%                     h = eval(sprintf('handles.%s', obj.gui_object));
-%                     set(h, 'String', num2str(new_position));
-%                 end
 
             end
         end

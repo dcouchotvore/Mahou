@@ -389,7 +389,7 @@ global Interferometer_Stage;
 
 pos = str2double(get(handles.editMotor1, 'String'));
 set(handles.editMotor1, 'String', 'moving');
-new_pos = Interferometer_Stage.MoveTo(handles, pos, 6000, 0, 0);
+new_pos = Interferometer_Stage.MoveTo(pos, 6000, 0, 0);
 set(handles.editMotor1, 'String', num2str(new_pos));
 
 
@@ -401,7 +401,7 @@ function pbMotor1Dn_Callback(hObject, eventdata, handles)
 global Interferometer_Stage;
 
 set(handles.editMotor1, 'String', 'moving');
-Interferometer_Stage.MoveTo(handles, -10.0, 100, 1, 0);
+Interferometer_Stage.MoveTo(-10.0, 3000, 1, 0);
 set(handles.editMotor1, 'String', 'moving');
 
 % --- Executes on button press in pbMotor1Up.
@@ -413,7 +413,7 @@ function pbMotor1Up_Callback(hObject, eventdata, handles)
 global Interferometer_Stage;
 
 set(handles.editMotor1, 'String', 'moving');
-Interferometer_Stage.MoveTo(handles, 10.0, 100, 1, 0);
+Interferometer_Stage.MoveTo(10.0, 3000, 1, 0);
 set(handles.editMotor1, 'String', 'moving');
 
 
