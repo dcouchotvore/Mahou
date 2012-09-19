@@ -234,7 +234,28 @@ classdef PI_TranslationStage < hgsetget
             end
         end
 
+        function LoadResetPosition(obj)
+          fname = ['reset_' obj.gui_object '.mat'];
+          if ~exist(fname,'file')==2
+            warning('SGRLAB:NotImplemented','The reset file %s is not found on the path',fname);
+          end
+          load(fname);
+          if s.scale~=obj.scale
+            warning('SGRLAB:NotImplemented','The scales of the current %f and saved %f are different. Doing nothing.',obj.center,s.center);
+            return
+          end
+          obj.center = s.center;
+        end
         
+        function SaveResetPosition(obj)
+          warning('off','MATLAB:structOnObject');
+          fullNameAndPath = mfilename('fullpath'); %name of this m-file
+          [pathpart,~,~]=fileparts(fullNameAndPath);%we want path
+          fname = [pathpart filesep 'reset_' obj.gui_object '.mat'];
+          s = struct(obj);
+          save(fname,'s');
+          
+        end
     end
     
 end
