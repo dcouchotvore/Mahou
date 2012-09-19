@@ -129,24 +129,22 @@ classdef PI_TranslationStage < hgsetget
 %                         pause(0.1);
 %                     end
 %                 end
+                %at the limit switch consider the motor initialized. 
+                obj.initialized = 1;
+
+                %obj.initialized must =1 for is busy to work...
                 while obj.IsBusy
                   drawnow
                   pause(0.1)
                 end
                 
-                %at the limit switch consider the motor initialized. 
-                obj.initialized = 1;
-
                 %Now we can load previous paramters
                 %load last reset position
                 LoadResetPosition(obj);
                 
                 %move to last reset position
-                MoveTo(obj,guihandles(gcf),obj.center,obj.max_speed,0,0);
-                
-                %set center to current position
-                SetCenter(obj);
-                
+                MoveTo(obj,guihandles(gcf),0,obj.max_speed,0,0);
+                                
             catch
                 fclose(obj.object);
                 warning('Spectrometer:Interferometer', 'Cannot find translation stage.  Entering simulation mode.');
