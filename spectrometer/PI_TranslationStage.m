@@ -157,7 +157,7 @@ classdef PI_TranslationStage < hgsetget
         
         function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
             if move_relative
-                pos = GetMotorPos(motor_index);         % @@@ Not right.  Need real position.
+                pos = GetPosition(obj);         % @@@ Not right.  Need real position.
                 desired_position = pos+desired_position;
             end
             desired_position_mm = obj.ValidatePosition(desired_position);
