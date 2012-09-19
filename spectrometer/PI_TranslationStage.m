@@ -142,7 +142,7 @@ classdef PI_TranslationStage < hgsetget
                 LoadResetPosition(obj);
                 
                 %move to last reset position
-                MoveTo(obj,guihandles(gcf),0,obj.max_speed,0,0);
+                MoveTo(obj,0,obj.max_speed,0,0);
                                 
             catch
                 fclose(obj.object);
