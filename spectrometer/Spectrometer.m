@@ -389,8 +389,8 @@ global Interferometer_Stage;
 
 pos = str2double(get(handles.editMotor1, 'String'));
 set(handles.editMotor1, 'String', 'moving');
-Interferometer_Stage.MoveTo(handles, pos, 6000, 0, 0);
-set(handles.editMotor1, 'String', num2str(Interferometer_Stage.GetPosition));
+new_pos = Interferometer_Stage.MoveTo(handles, pos, 6000, 0, 0);
+set(handles.editMotor1, 'String', num2str(new_pos));
 
 
 % --- Executes on button press in pbMotor1Dn.
