@@ -59,9 +59,8 @@ classdef PI_TranslationStage < hgsetget
                 %maximum commandable position
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
                 obj.maximum = nums(2)/obj.scale;
-                %maximum commandable speed? TODO: test this
-                [nums ~] = sscanf(obj.sendPIMotorCommand('VEL?', 1), '%i=%f');
-                obj.max_speed = nums(2)/obj.scale
+                %maximum commandable speed
+                obj.max_speed = 1/obj.scale; %1mm/s = 6671 fs/s
 
                 %define 2-step macro
 %                 obj.sendPIMotorCommand('MAC BEG TWO', 0);
@@ -170,11 +169,12 @@ classdef PI_TranslationStage < hgsetget
 %                 new_position = obj.maximum;
 %             end
             desired_position_mm = obj.ValidatePosition(desired_position);
+            desired_speed_mm_s = obj.ValidateSpeed(speed);
             
             if obj.initialized 
 
                 %% move to an absolute position
-                obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
+                obj.sendPIMotorCommand(sprintf('VEL 1 %f',desired_speed_mm_s), 0);
                 obj.sendPIMotorCommand(sprintf('MOV 1 %f', desired_position_mm), 0);
 
                 %% Wait until stage reaches target
@@ -208,8 +208,15 @@ classdef PI_TranslationStage < hgsetget
 
         function MoveTwoStep(obj, pos1, pos2, speed)
             if obj.initialized
-                obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-                obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', (pos1+obj.center)*obj.scale, (pos2+obj.center)*obj.scale), 0);
+              desired_pos1_mm = obj.ValidatePosition(pos1);
+              desired_pos2_mm = obj.ValidatePosition(pos2);
+              desired_speed_mm_s = obj.ValidateSpeed(speed);
+              obj.sendPIMotorCommand(sprintf('VEL 1 %f', desired_speed_mm_s), 0);
+              obj.sendPIMotorCommand(...
+                sprintf('MAC START TWOSTEP %f %f', ...
+                        desired_pos1_mm,...
+                        desired_pos2_mm),...
+                0);
             end
         end
             
@@ -301,7 +308,7 @@ classdef PI_TranslationStage < hgsetget
           
         end
         
-        function new_position = ValidatePosition(obj,desired_position)
+        function new_position_mm = ValidatePosition(obj,desired_position)
           % Check against limits
             new_position = desired_position+obj.center;
             if new_position<obj.minimum
@@ -310,7 +317,14 @@ classdef PI_TranslationStage < hgsetget
                 new_position = obj.maximum;
             end
             %convert to mm
-            new_position = new_position*obj.scale;
+            new_position_mm = new_position*obj.scale;
+        end
+        
+        function new_speed_mm_s = ValidateSpeed(obj,speed)
+          if speed > obj.max_speed
+            speed = obj.max_speed;
+          end
+          new_speed_mm_s = speed*obj.scale;
         end
     end
     
