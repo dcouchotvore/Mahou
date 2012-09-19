@@ -1,10 +1,12 @@
 classdef PI_TranslationStage < hgsetget
 
     properties
+        Tag;
         center;
         scale;
         minimum;
         maximum;
+        max_speed;
         comPort;
         terminator;
         type;
@@ -13,10 +15,11 @@ classdef PI_TranslationStage < hgsetget
         gui_object;
         ID;
         initialized;
+        jogsize;
     end
         
     methods
-        
+        %port scale parent tag
         function obj = PI_TranslationStage(port, scale, gui_object_name)
             obj.initialized = 0;
             obj.center = 0;
@@ -56,6 +59,9 @@ classdef PI_TranslationStage < hgsetget
                 %maximum commandable position
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
                 obj.maximum = nums(2)/obj.scale;
+                %maximum commandable speed? TODO: test this
+                [nums ~] = sscanf(obj.sendPIMotorCommand('VEL?', 1), '%i=%f');
+                obj.max_speed = nums(2)/obj.scale
 
                 %define 2-step macro
 %                 obj.sendPIMotorCommand('MAC BEG TWO', 0);
@@ -112,18 +118,35 @@ classdef PI_TranslationStage < hgsetget
                 obj.sendPIMotorCommand('SVO 1 1', 0);
                 obj.sendPIMotorCommand('VEL 1 0.5', 0);
                 obj.sendPIMotorCommand('FNL 1', 0);
-
+                
                 %Wait until motor gets to limit.
-                while 1==1
-                    status = obj.sendPIMotorCommand('SRG? 1 1', 1);
-                    num = uint16(hex2dec(status(7:end-1)));
-                    if bitand(num, hex2dec('A000'))==hex2dec('8000')
-                        break;
-                    else
-                        pause(0.1);
-                    end
+%                 while 1==1
+%                     status = obj.sendPIMotorCommand('SRG? 1 1', 1);
+%                     num = uint16(hex2dec(status(7:end-1)));
+%                     if bitand(num, hex2dec('A000'))==hex2dec('8000')
+%                         break;
+%                     else
+%                         pause(0.1);
+%                     end
+%                 end
+                while obj.IsBusy
+                  drawnow
+                  pause(0.1)
                 end
+                
+                %at the limit switch consider the motor initialized. 
                 obj.initialized = 1;
+
+                %Now we can load previous paramters
+                %load last reset position
+                LoadResetPosition(obj);
+                
+                %move to last reset position
+                MoveTo(obj,guihandles(gcf),obj.center,obj.max_speed,0,0);
+                
+                %set center to current position
+                SetCenter(obj);
+                
             catch
                 fclose(obj.object);
                 warning('Spectrometer:Interferometer', 'Cannot find translation stage.  Entering simulation mode.');
@@ -141,38 +164,46 @@ classdef PI_TranslationStage < hgsetget
                 desired_position = pos+desired_position;
             end
 
-            % Check against limits
-            new_position = desired_position+obj.center;
-            if new_position<obj.minimum
-                new_position = obj.minimum;
-            elseif new_position>obj.maximum
-                new_position = obj.maximum;
-            end
-              
+%             % Check against limits
+%             new_position = desired_position+obj.center;
+%             if new_position<obj.minimum
+%                 new_position = obj.minimum;
+%             elseif new_position>obj.maximum
+%                 new_position = obj.maximum;
+%             end
+            desired_position_mm = obj.ValidatePosition(desired_position);
+            
             if obj.initialized 
 
                 %% move to an absolute position
                 obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
-                obj.sendPIMotorCommand(sprintf('MOV 1 %f', (desired_position+obj.center)*obj.scale), 0);
+                obj.sendPIMotorCommand(sprintf('MOV 1 %f', desired_position_mm), 0);
 
                 %% Wait until stage reaches target
                 if move_async==0
-                    while 1==1
-                        status = obj.sendPIMotorCommand('SRG? 1 1', 1);         % @@@@ change to use IsBusy
-                        num = uint16(hex2dec(status(7:end-1)));
-                        if bitand(num, hex2dec('A000'))==hex2dec('8000')
-                            break;
-                        else
-                            drawnow
-                            pause(0.1);     % Shortening this makes little difference
-                        end
+                    while obj.IsBusy
+                      drawnow;
+                      pause(0.1);
+%                     while 1==1
+%                         status = obj.sendPIMotorCommand('SRG? 1 1', 1);         % @@@@ change to use IsBusy
+%                         num = uint16(hex2dec(status(7:end-1)));
+%                         if bitand(num, hex2dec('A000'))==hex2dec('8000')
+%                             break;
+%                         else
+%                             drawnow
+%                             pause(0.1);     % Shortening this makes little difference
+%                         end
                     end
                 end
 
-                if ~strcmp(obj.gui_object, '')
-                    h = eval(sprintf('handles.%s', obj.gui_object));
-                    set(h, 'String', num2str(obj.GetPosition));
-                end
+                %read where we arrived
+                new_position = obj.GetPosition;
+                %should we remove this??? or make the class own the edit.
+                %That is probably best.
+%                 if ~strcmp(obj.gui_object, '')
+%                     h = eval(sprintf('handles.%s', obj.gui_object));
+%                     set(h, 'String', num2str(new_position));
+%                 end
 
             end
         end
@@ -181,14 +212,16 @@ classdef PI_TranslationStage < hgsetget
             if obj.initialized
                 obj.sendPIMotorCommand(sprintf('VEL 1 %f', speed*obj.scale), 0);
                 obj.sendPIMotorCommand(sprintf('MAC START TWOSTEP %f %f', (pos1+obj.center)*obj.scale, (pos2+obj.center)*obj.scale), 0);
-                err=obj.sendPIMotorCommand('MAC ERR?', 1);
             end
         end
             
         function position = GetPosition(obj)
             if obj.initialized
+                %what is the current position in hardware units?
                 result = obj.sendPIMotorCommand('POS?', 1);
                 [nums ~] = sscanf(result, '%i=%f');
+                
+                %convert to fs and shift origin
                 position = nums(2)/obj.scale-obj.center;
             else
                 position = 0;
@@ -197,9 +230,15 @@ classdef PI_TranslationStage < hgsetget
 
         function SetCenter(obj)
             if obj.initialized
+                %what is the current position in hardware units?
                 result = obj.sendPIMotorCommand('POS?', 1);
                 [nums ~] = sscanf(result, '%i=%f');
+                
+                %save that to center
                 obj.center = nums(2)/obj.scale;
+                
+                %save that to a file
+                obj.SaveResetPosition;
             end
         end
         
@@ -253,8 +292,27 @@ classdef PI_TranslationStage < hgsetget
           [pathpart,~,~]=fileparts(fullNameAndPath);%we want path
           fname = [pathpart filesep 'reset_' obj.gui_object '.mat'];
           s = struct(obj);
-          save(fname,'s');
+          save(fname,'s');      
+        end
+        
+        function s = LoadDefaults(obj)
+        
+        end
+        
+        function SaveDefaults(obj,s)
           
+        end
+        
+        function new_position = ValidatePosition(obj,desired_position)
+          % Check against limits
+            new_position = desired_position+obj.center;
+            if new_position<obj.minimum
+                new_position = obj.minimum;
+            elseif new_position>obj.maximum
+                new_position = obj.maximum;
+            end
+            %convert to mm
+            new_position = new_position*obj.scale;
         end
     end
     
