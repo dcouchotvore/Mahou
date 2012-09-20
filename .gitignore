@@ -7,4 +7,6 @@
 *.exe
 *.dll
 *.orig
+reset_*.mat
+defaults_*.mat
 
