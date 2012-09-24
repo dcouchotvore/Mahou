@@ -7,7 +7,6 @@ classdef PI_TranslationStage < hgsetget
         jogsize;
     end       
     properties(Access=private)
-        Tag;
         minimum;
         maximum;
         comPort;
@@ -18,7 +17,10 @@ classdef PI_TranslationStage < hgsetget
         gui_object;
         ID;
         initialized;
-    end      
+    end   
+    properties (Hidden,SetAccess = immutable)
+      Tag;
+    end
     methods
         %port scale parent tag
         function obj = PI_TranslationStage(port, scale, gui_object_name)
@@ -263,123 +265,17 @@ classdef PI_TranslationStage < hgsetget
         end
 
         function LoadResetPosition(obj)
-%           fname = ['defaults_' obj.Tag '.mat'];
-%           if ~(exist(fname,'file')==2)
-%             warning('SGRLAB:NotImplemented','The reset file %s is not found on the path',fname);
-%             return;
-%           end
-%           load(fname);
-%           if s.scale~=obj.scale
-%             warning('SGRLAB:NotImplemented','The scales of the current %f and saved %f are different. Doing nothing.',obj.center,s.center);
-%             return
-%           end
-%           obj.center = s.center;
             name = 'center';
-            val = obj.(name);
-            s = ReadDefaults(obj);
-                        
-            if isfield(s,name)&&any(strcmp(properties(obj),name))
-              obj.(name) = s.(name);
-            else
-              warning('SGRLAB:BadDefaultField','%s is not a public property of class or not saved in defaults file',name);
-            end
+            d = Defaults(obj);
+            d.LoadDefaults(name);
         end
         
         function SaveResetPosition(obj)
-%           warning('off','MATLAB:structOnObject');
-%           fullNameAndPath = mfilename('fullpath'); %name of this m-file
-%           [pathpart,~,~]=fileparts(fullNameAndPath);%we want path
-%           fname = [pathpart filesep 'defaults_' obj.Tag '.mat'];
-%           s = struct(obj);
-%           save(fname,'s');      
-
             name = 'center';
-            val = obj.(name);
-            s = ReadDefaults(obj);
-                        
-            if any(strcmp(properties(obj),name))
-              s.(name) = obj.(name);
-            else
-              warning('SGRLAB:BadDefaultField','%s is not a public property of class',name);
-            end
-            SaveDefaults(obj,s);
+            d = Defaults(obj);
+            d.SaveDefaults(name);
         end
-        
-        function s = ReadDefaults(obj)
-          s = EmptyDefaults(obj);
-
-          %try to load file
-          fname = ['defaults_' obj.Tag '.mat'];
-          if ~(exist(fname,'file')==2)
-            %if can't find it use empty
-            warning('SGRLAB:DefaultsMissing','Cannot find defaults file %s on search path.',fname);
-            return; %return empty emp
-          end
-          
-          %load file
-          tmp = load(fname);
-          
-          %if the structure with the name obj.Tag exists return it
-          %otherwise the empty struct will be returned
-          if isfield(tmp,obj.Tag)
-            s = tmp.(obj.Tag);
-          end
-          
-        end
-        
-        function SaveDefaults(obj,s)
-          [fname,vname] = DefaultsFileName(obj);
-          
-          %this is a little tricky. We want to save the information in s as
-          %a variable with the name obj.Tag (Motor1 for example). So we
-          %make a field of a structure with the name vname and the value
-          %s. Then the save command we use with the '-struct' option, which
-          %takes all the fields of a struct and saves them to variables
-          %with the same names in a mat file. The append option means we
-          %will add new variables to the mat file and replace existing ones
-          %but leave other variables unchanged.
-          saveStruct = struct(vname,s);
-          if exist(fname,'file')==2
-            save(fname,'-struct','saveStruct',vname,'-append');
-          else
-            save(fname,'-struct','saveStruct',vname);
-          end            
-          
-        end
-        
-        function s = EmptyDefaults(obj)
-          %warning('off','MATLAB:structOnObject');
-          %s = struct(obj);
-          names = properties(obj); %public properties only
-          vals = cell(1,length(names)); %empty cell array
-          s = cell2struct(vals,names,2);
-        end
-        
-        function LoadDefaults(obj)
-          s = ReadDefaults(obj);
-          field_names = fieldnames(s);
-          n_fields = length(field_names);
-          for ii = 1:n_fields
-            name = field_names(ii);
-            
-            if isfield(s,name)&&any(strcmp(properties(obj),name))
-              obj.(name) = s.(name);
-            else
-              warning('SGRLAB:BadDefaultField','%s is not a public property of class or not saved in defaults file',name);
-            end
-          end
-        end
-        
-        function [filename,varname] = DefaultsFileName(obj)
-          %build the file name of the defaults file
-          fullNameAndPath = mfilename('fullpath'); %name of this m-file
-          [pathpart,~,~]=fileparts(fullNameAndPath);%we want path
-          filename = [pathpart filesep 'defaults_' obj.Tag '.mat'];
-          
-          varname = obj.Tag;
-  
-        end
-        
+               
         function new_position_mm = ValidatePosition(obj,desired_position)
           if isempty(obj.center)
             obj.center = 0;
