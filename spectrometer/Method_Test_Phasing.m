@@ -138,7 +138,7 @@ methods (Access = protected)
       
       %post
       %obj.PARAMS.nShots = 10000;  % @@@ DEBUG!
-      obj.PARAMS.nShots = 2 * (obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed*obj.sampler.LASER.PulseRate+1000;
+      obj.PARAMS.nShots = 2 * ceil((obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed)*obj.source.sampler.LASER.PulseRate+1000;
       set(obj.handles.editnShots,'String',num2str(obj.PARAMS.nShots));
   end
   

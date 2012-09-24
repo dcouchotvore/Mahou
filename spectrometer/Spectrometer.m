@@ -52,7 +52,7 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global method IO FPAS Interferometer_Stage JY fsToMm2Pass;
+global method IO FPAS motors JY fsToMm2Pass;
 
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
@@ -81,9 +81,9 @@ catch
 end
 
 try
-  Pump_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
-  Probe_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'editMotor2');
-  motors = { Pump_Stage, Probe_Stage };
+  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
+  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'editMotor2');
+  motors = { Interferometer_Stage, Population_Stage };
 catch
   warning('SGRLAB:SimulationMode','PI stages not enabled');
 end
@@ -221,7 +221,7 @@ function updateMethod(handles)
 %update the current method based on the values of the popup menus Method
 %and DataSource. Gate and Spectrometer could be added but not yet
 %implemented. Called by popupMethods_Callback and popupDataSource_Callback
-global method IO JY Interferometer_Stage;
+global method IO JY motors;
 
 %clear old class instance
 delete(method);
@@ -239,7 +239,7 @@ sampler = feval([str_sampler '.getInstance']);
 
 %method = Method_Show_Spectrum(TEST,IO,JY,handles,handles.pnlParameters,...
 %  handles.axesMain,handles.axesRawData,handles.pnlNoise);
-method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.pnlParameters,...
+method = feval(str_method,sampler,IO,JY,motors,handles,handles.pnlParameters,...
   handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 % --- Executes during object creation, after setting all properties.
@@ -357,10 +357,11 @@ function pbMotor1Reset_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Reset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Interferometer_Stage;
+global motors;
+i_motor = 1;
 
-Interferometer_Stage.SetCenter;
-set(handles.editMotor1, 'String', num2str(Interferometer_Stage.GetPosition));
+motors(i_motor).SetCenter;
+set(handles.editMotor1, 'String', num2str(motors(i_motor).GetPosition));
 
 
 % --- Executes on button press in pbMotor1Go.
@@ -368,11 +369,12 @@ function pbMotor1Go_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Go (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Interferometer_Stage;
+global motors;
+i_motor = 1;
 
 pos = str2double(get(handles.editMotor1, 'String'));
 set(handles.editMotor1, 'String', 'moving');
-new_pos = Interferometer_Stage.MoveTo(pos, 6000, 0, 0);
+new_pos = motors(i_motor).MoveTo(pos, 6000, 0, 0);
 set(handles.editMotor1, 'String', num2str(new_pos));
 
 
@@ -381,10 +383,11 @@ function pbMotor1Dn_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Dn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global Interferometer_Stage;
+global motors;
+i_motor = 1;
 
 set(handles.editMotor1, 'String', 'moving');
-new_pos = Interferometer_Stage.MoveTo(10.0, 3000, 1, 0);
+new_pos = motors(i_motor).MoveTo(10.0, 3000, 1, 0);
 set(handles.editMotor1, 'String', num2str(new_pos));
 
 % --- Executes on button press in pbMotor1Up.
@@ -393,33 +396,30 @@ function pbMotor1Up_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global Interferometer_Stage;
+global motors;
+i_motor = 1;
 
 set(handles.editMotor1, 'String', 'moving');
-new_pos = Interferometer_Stage.MoveTo(-10.0, 3000, 1, 0);
+new_pos = motors(i_motor).MoveTo(-10.0, 3000, 1, 0);
 set(handles.editMotor1, 'String', num2str(new_pos));
 
 
 function cleanup(src,event)
 %for exit
-global IO FPAS method Interferometer_Stage;
+global IO FPAS JY method motors;
 
 disp('shutting down');
 
 %save parameters for next time?
 disp('NOT YET IMPLEMENTED: save parameters for next time');
 
-disp('move motors to zero...')
-try
-  % @@@ Figure out what to do with this.  If an exception was thrown
-  % because of a motor error, it will probably hang during this.
-%  Interferometer_Stage.MoveTo([],0,10,0,0);
-catch
-  %?
+disp('clean up stages')
+for i = 1:length(motors)
+  delete(motors{i});
 end
 
-disp('clean up stage')
-delete(Interferometer_Stage);
+disp('clean up Monochromator')
+delete(JY);
 
 disp('clean up Method')
 delete(method);
