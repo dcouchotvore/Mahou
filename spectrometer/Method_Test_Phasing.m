@@ -137,8 +137,8 @@ methods (Access = protected)
       ReadParameters@Method(obj);
       
       %post
-      obj.PARAMS.nShots = 10000;  % @@@ DEBUG!
-      %obj.PARAMS.nShots = 2 * (obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed*4800+2200;
+      %obj.PARAMS.nShots = 10000;  % @@@ DEBUG!
+      obj.PARAMS.nShots = 2 * (obj.PARAMS.end-obj.PARAMS.start)/obj.PARAMS.speed*obj.sampler.LASER.PulseRate+1000;
       set(obj.handles.editnShots,'String',num2str(obj.PARAMS.nShots));
   end
   
@@ -208,7 +208,7 @@ methods (Access = protected)
 
     InitializeTask(obj);
     
-    obj.source.motors.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 1);
+    obj.source.motors{1}.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 1);
   end
   
   %start first sample. This code is executed before the scan loop starts
@@ -216,7 +216,7 @@ methods (Access = protected)
     %start the data acquisition task
     obj.source.sampler.Start;
     obj.source.gate.OpenClockGate;
-    obj.source.motors.MoveTwoStep(obj.PARAMS.end, obj.PARAMS.start, obj.PARAMS.speed);
+    obj.source.motors{1}.MoveTwoStep(obj.PARAMS.end, obj.PARAMS.start, obj.PARAMS.speed);
   end
   
   %This code is executed inside the scan loop. This is different from
@@ -227,7 +227,7 @@ methods (Access = protected)
   function ScanMiddle(obj)
       
     % Have to make sure movement is done.
-    while obj.source.motors.IsBusy
+    while obj.source.motors{1}.IsBusy
         pause(0.1);
     end
     obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
@@ -239,7 +239,7 @@ methods (Access = protected)
     %start the data acquisition task
     obj.source.sampler.Start;
     obj.source.gate.OpenClockGate;
-    obj.source.motors.MoveTwoStep(obj.PARAMS.end, obj.PARAMS.start, obj.PARAMS.speed);
+    obj.source.motors{1}.MoveTwoStep(obj.PARAMS.end, obj.PARAMS.start, obj.PARAMS.speed);
 
     %process the previous results
     ProcessSample(obj);
@@ -258,7 +258,7 @@ methods (Access = protected)
   %This code executes after the scan loop. It should read but not start a
   %new scan. It should usually save the final results.
   function ScanLast(obj)
-    while obj.source.motors.IsBusy
+    while obj.source.motors{1}.IsBusy
         pause(0.1);
     end
     obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
@@ -286,7 +286,7 @@ methods (Access = protected)
   function ScanCleanup(obj)
     obj.source.gate.CloseClockGate;
     obj.source.sampler.ClearTask;
-    obj.source.motors.MoveTo(0, obj.PARAMS.speed, 0, 0);
+    obj.source.motors{1}.MoveTo(0, obj.PARAMS.speed, 0, 0);
   end
   
   %save the current result to a MAT file for storage.

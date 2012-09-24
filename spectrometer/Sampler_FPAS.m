@@ -32,7 +32,7 @@ classdef (Sealed) Sampler_FPAS < handle
           'DataBit',8,...
           'StopBits',1,...
           'FlowControl','software');
-  
+        LASER;
 
     end
     
@@ -63,6 +63,7 @@ classdef (Sealed) Sampler_FPAS < handle
         function Initialize(obj)
             
             %propteries of the array detector
+            obj.LASER = Laser;
             obj.nPixels = 64;
             obj.nExtInputs = 16;
             obj.nMaxChan = 256; %the number of channels written to the FIFO buffer in the FPAS
@@ -71,7 +72,7 @@ classdef (Sealed) Sampler_FPAS < handle
             obj.lines = {'Dev1/line0:31'};
             obj.taskName = '';
             obj.chanName = {''};
-            obj.nSamplesPerSecond = 5000;
+            obj.nSamplesPerSecond = obj.LASER.PulseRate;
             obj.timeout = 1;
             
             %% load library

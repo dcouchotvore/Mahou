@@ -3,7 +3,7 @@ function varargout = Spectrometer(varargin)
 %      SPECTROMETER, by itself, creates a new SPECTROMETER or raises the existing
 %      singleton*.
 %
-%      H = SPECTROMETER returns the handle to a new SPECTROMETER or the handle to
+%      H = SPECTROMETER returns the handle to a new SPECTROMETER or theinter handle to
 %      the existing singleton*.
 %
 %      SPECTROMETER('CALLBACK',hObject,eventData,handles,...) calls the local
@@ -71,12 +71,6 @@ hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) me
 hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata)});
 
 Constants;
-% scales.ch32 = [0:31];     % @@@ Not sure we use this anymore.
-
-%Default method on startup.
-%method = Method_RawData;
-%method = Method_Test_Phasing;
-%method.InitializePlot(handles); % @@@ rethink this.
 
 IO = [];
 try
@@ -87,9 +81,11 @@ catch
 end
 
 try
-  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
+  Pump_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
+  Probe_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'editMotor2');
+  motors = { Pump_Stage, Probe_Stage };
 catch
-  warning('SGRLAB:SimulationMode','PI stage not enabled');
+  warning('SGRLAB:SimulationMode','PI stages not enabled');
 end
 
 FPAS = Sampler_FPAS.getInstance;
@@ -97,8 +93,9 @@ FPAS = Sampler_FPAS.getInstance;
 JY = Monochromator_JY.getInstance;
 JY.InitializeGui(handles.uipanelMonochromator);
 
+
 %Default method on startup.
-method = Method_Show_Spectrum(FPAS,IO,JY,Interferometer_Stage, handles,handles.pnlParameters,handles.axesMain,handles.axesRawData,handles.pnlNoise);
+method = Method_Show_Spectrum(FPAS,IO,JY,motors, handles,handles.pnlParameters,handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
 delete(splash);
 
@@ -245,21 +242,6 @@ sampler = feval([str_sampler '.getInstance']);
 method = feval(str_method,sampler,IO,JY,Interferometer_Stage,handles,handles.pnlParameters,...
   handles.axesMain,handles.axesRawData,handles.pnlNoise);
 
-% switch get(handles .popupMethods, 'Value')
-%     case 1    
-%         method = Method_RawData;
-%     case 2
-%         method = Method_Spectrum;
-%     case 3
-%         method = Method_2DScan_SoftPhasing;
-%     otherwise
-%         error('Nonexistent data acquisition method selected');
-% end
-% 
-% %EnableParameters(handles);
-% method.InitializePlot(handles)
-
-
 % --- Executes during object creation, after setting all properties.
 function popupMethods_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to popupMethods (see GCBO)
@@ -354,6 +336,7 @@ function editMotor1_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of editMotor1 as text
 %        str2double(get(hObject,'String')) returns contents of editMotor1 as a double
+
 pbMotor1Go_Callback(handles.pbMotor1Go,eventdata,handles);
 
 % --- Executes during object creation, after setting all properties.

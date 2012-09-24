@@ -23,6 +23,7 @@ classdef (Sealed) Sampler_Scan_2D_SlowScan_Sim < handle
         
         options; %for simulation only
         fcns; %for simulation only
+        LASER;
     end
 
     properties (Dependent)
@@ -49,6 +50,8 @@ classdef (Sealed) Sampler_Scan_2D_SlowScan_Sim < handle
     methods
           
         function Initialize(obj)
+           obj.LASER = Laser;
+           obj.options.laser_rep_rate = obj.LASER.PulseRate;
             %this should be fixed
             pathAndFileName = mfilename('fullpath');
             [path,~,~] = fileparts(pathAndFileName);
@@ -63,7 +66,6 @@ obj.options.HeNe_phase = 0; %degrees (I am not sure this is correct yet)
 obj.options.t_start = -500;%fs
 obj.options.t_end = 1000; %fs
 obj.options.fringes_per_shot = 0.15;
-obj.options.laser_rep_rate = 5000;
 obj.options.acceleration = 10; %mm/s^2
 obj.options.spectrometer_n_pixels = 32;
 obj.options.spectrometer_resolution = 30; %wavenumbers
@@ -71,23 +73,19 @@ obj.options.spectrometer_resolution = 30; %wavenumbers
         end
         
         function ConfigureTask(obj,PARAMS)
-            global fringeToFs fsToMm2Pass
+          global fringeToFs fsToMm2Pass
           obj.nShots = PARAMS.nShots;
           obj.nChan = 80;
           obj.options.n_scans = PARAMS.nScans;
-          obj.options.t_start = PARAMS.start;
-          obj.options.t_end = PARAMS.end;
           obj.options.timing_error = 0;
           %speed should be fs/s, and this should give a number <0.25
-          obj.options.fringes_per_shot = PARAMS.speed/fringeToFs/obj.options.laser_rep_rate;
-            if obj.options.fringes_per_shot > 0.2,
-                warning('SGRLAB:ParameterLimit',...
-                    ['The number of fringes per shot should be less than' ...
-                    ' 0.2 for correct counting, currently %f\n'],...
-                    obj.options.fringes_per_shot);
-            end
-            obj.options.acceleration = PARAMS.acceleration*fsToMm2Pass;
-            fprintf(1,'acceleration (mm/s^2) = %f\n',obj.options.acceleration);
+%          obj.options.fringes_per_shot = PARAMS.speed/fringeToFs/obj.options.LASER.pulseRate;
+%            if obj.options.fringes_per_shot > 0.2,
+%                warning('SGRLAB:ParameterLimit',...
+%                    ['The number of fringes per shot should be less than' ...
+%                    ' 0.2 for correct counting, currently %f\n'],...
+%                    obj.options.fringes_per_shot);
+%            end
 
             old_wd = pwd;
             cd(obj.options.path);

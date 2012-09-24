@@ -110,7 +110,7 @@ end
 methods (Access = protected)
   %initialize sample, signal, background, and result. Called at the 
   %beginning of a scan
-  function InitializeData(obj)
+  function InitializeData(obj, LASER)
     
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
     obj.nShotsSorted = obj.nArrays*obj.PARAMS.nShots/obj.nSignals;
