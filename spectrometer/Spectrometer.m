@@ -81,8 +81,8 @@ catch
 end
 
 try
-  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'editMotor1');
-  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'editMotor2');
+  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass);
+  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass);
   motors = { Interferometer_Stage, Population_Stage };
 catch
   warning('SGRLAB:SimulationMode','PI stages not enabled');
@@ -381,7 +381,8 @@ function pbMotorGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global motors;
-i_motor = get(hObject, 'UserData');
+hObject
+i_motor = get(hObject, 'UserData')
 H =handles.(['editMotor' num2str(i_motor)]);
 
 pos = str2double(get(H, 'String'));
@@ -817,17 +818,3 @@ handles = guidata(gcf);
 set(handles.pnlRawData,'Visible','on');
 set(handles.pnlNoise,'Visible','on');
 set(handles.sliderNoiseGain,'Visible','on');
-
-
-
-% --- Executes during object creation, after setting all properties.
-function editMotor2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to editMotor2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

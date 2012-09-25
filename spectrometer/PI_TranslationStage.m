@@ -14,7 +14,6 @@ classdef PI_TranslationStage < hgsetget
         type;
         baud;
         object;
-        gui_object;
         ID;
         initialized;
     end   
@@ -23,21 +22,14 @@ classdef PI_TranslationStage < hgsetget
     end
     methods
         %port scale parent tag
-        function obj = PI_TranslationStage(port, scale, gui_object_name)
+        function obj = PI_TranslationStage(port, scale)
             obj.initialized = 0;
             obj.center = 0;
             obj.scale = scale;
             obj.comPort = port;
             obj.terminator = {'LF','LF'};
             obj.type = 'serial';
-            obj.gui_object = gui_object_name;
             obj.baud = 38400;
-            %build a tag from the last input
-            if strcmp(gui_object_name(1:4),'edit')
-              obj.Tag = gui_object_name(5:end);
-            else
-              obj.Tag = gui_object_name;
-            end
 
             obj.object = instrfind('Type', obj.type, 'Port', obj.comPort, 'Tag', '');
 
@@ -167,11 +159,11 @@ classdef PI_TranslationStage < hgsetget
         function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
             if move_relative
                 pos = GetPosition(obj);         % @@@ Not right.  Need real position.
-                desired_position = pos+desired_position;
+                desired_position_mm = pos+desired_position_mm;
             end
             desired_position_mm = obj.ValidatePosition(desired_position);
             desired_speed_mm_s = obj.ValidateSpeed(speed);
-            new_position = desired_position; % In case object not initialized
+            new_position = desired_position_mm; % In case object not initialized
 
             if obj.initialized 
 
