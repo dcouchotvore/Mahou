@@ -171,7 +171,8 @@ classdef PI_TranslationStage < hgsetget
             end
             desired_position_mm = obj.ValidatePosition(desired_position);
             desired_speed_mm_s = obj.ValidateSpeed(speed);
-            
+            new_position = desired_position; % In case object not initialized
+
             if obj.initialized 
 
                 %% move to an absolute position

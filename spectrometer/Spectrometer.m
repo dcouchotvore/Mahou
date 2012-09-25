@@ -22,7 +22,7 @@ function varargout = Spectrometer(varargin)
 
 % Edit the above text to modify the response to help Spectrometer
 
-% Last Modified by GUIDE v2.5 04-Sep-2012 15:03:35
+% Last Modified by GUIDE v2.5 24-Sep-2012 16:13:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -327,18 +327,6 @@ if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColo
     set(hObject,'BackgroundColor',[.9 .9 .9]);
 end
 
-
-
-function editMotor1_Callback(hObject, eventdata, handles)
-% hObject    handle to editMotor1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of editMotor1 as text
-%        str2double(get(hObject,'String')) returns contents of editMotor1 as a double
-
-pbMotor1Go_Callback(handles.pbMotor1Go,eventdata,handles);
-
 % --- Executes during object creation, after setting all properties.
 function editMotor1_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to editMotor1 (see GCBO)
@@ -351,57 +339,83 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes during object creation, after setting all properties.
+function editMotor2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editMotor1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function editMotor_Callback(hObject, eventdata, handles)
+% hObject    handle to editMotor1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of editMotor1 as text
+%        str2double(get(hObject,'String')) returns contents of editMotor1 as a double
+
+pbMotorGo_Callback(handles.pbMotor1Go,eventdata,handles);
+
 
 % --- Executes on button press in pbMotor1Reset.
-function pbMotor1Reset_Callback(hObject, eventdata, handles)
+function pbMotorReset_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Reset (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global motors;
-i_motor = 1;
+i_motor = get(hObject, 'UserData');
+H =handles.(['editMotor' num2str(i_motor)]);
 
-motors(i_motor).SetCenter;
-set(handles.editMotor1, 'String', num2str(motors(i_motor).GetPosition));
+motors{i_motor}.SetCenter;
+set(H, 'String', num2str(motors{i_motor}.GetPosition));
 
 
 % --- Executes on button press in pbMotor1Go.
-function pbMotor1Go_Callback(hObject, eventdata, handles)
+function pbMotorGo_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Go (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global motors;
-i_motor = 1;
+i_motor = get(hObject, 'UserData');
+H =handles.(['editMotor' num2str(i_motor)]);
 
-pos = str2double(get(handles.editMotor1, 'String'));
-set(handles.editMotor1, 'String', 'moving');
-new_pos = motors(i_motor).MoveTo(pos, 6000, 0, 0);
-set(handles.editMotor1, 'String', num2str(new_pos));
+pos = str2double(get(H, 'String'));
+set(H, 'String', 'moving');
+new_pos = motors{i_motor}.MoveTo(pos, 6000, 0, 0);
+set(H, 'String', num2str(new_pos));
 
 
 % --- Executes on button press in pbMotor1Dn.
-function pbMotor1Dn_Callback(hObject, eventdata, handles)
+function pbMotorDn_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Dn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 global motors;
-i_motor = 1;
+i_motor = get(hObject, 'UserData');
+H = handles.(['editMotor' num2str(i_motor)]);
 
-set(handles.editMotor1, 'String', 'moving');
-new_pos = motors(i_motor).MoveTo(10.0, 3000, 1, 0);
-set(handles.editMotor1, 'String', num2str(new_pos));
+set(H, 'String', 'moving');
+new_pos = motors{i_motor}.MoveTo(-10.0, 3000, 1, 0);
+set(H, 'String', num2str(new_pos));
 
 % --- Executes on button press in pbMotor1Up.
-function pbMotor1Up_Callback(hObject, eventdata, handles)
+function pbMotorUp_Callback(hObject, eventdata, handles)
 % hObject    handle to pbMotor1Up (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 global motors;
-i_motor = 1;
+i_motor = get(hObject, 'UserData');
+H = handles.(['editMotor' num2str(i_motor)]);
 
-set(handles.editMotor1, 'String', 'moving');
-new_pos = motors(i_motor).MoveTo(-10.0, 3000, 1, 0);
-set(handles.editMotor1, 'String', num2str(new_pos));
+set(H, 'String', 'moving');
+new_pos = motors{i_motor}.MoveTo(10.0, 3000, 1, 0);
+set(H, 'String', num2str(new_pos));
 
 
 function cleanup(src,event)
@@ -806,3 +820,14 @@ set(handles.sliderNoiseGain,'Visible','on');
 
 
 
+% --- Executes during object creation, after setting all properties.
+function editMotor2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to editMotor2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
