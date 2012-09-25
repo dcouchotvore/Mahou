@@ -413,9 +413,11 @@ global motors;
 H =handles.(['editMotor' num2str(i_motor)]);
 
 pos = str2double(get(H, 'String'));
-set(H, 'String', 'moving');
-new_pos = motors{i_motor}.MoveTo(pos, 6000, 0, 0);
-set(H, 'String', num2str(new_pos));
+if ~isnan(pos)
+  set(H, 'String', 'moving');
+  new_pos = motors{i_motor}.MoveTo(pos, 6000, 0, 0);
+  set(H, 'String', num2str(new_pos));
+end
 
 % --- Executes on button press in pbMotor1Reset.
 function pbMotor1Reset_Callback(hObject, eventdata, handles)
