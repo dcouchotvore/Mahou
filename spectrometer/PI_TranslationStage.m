@@ -169,11 +169,11 @@ classdef PI_TranslationStage < hgsetget
                 pos = GetPosition(obj);         % @@@ Not right.  Need real position.
                 desired_position = pos+desired_position;
             end
-            desired_position_mm = obj.ValidatePosition(desired_position);
-            desired_speed_mm_s = obj.ValidateSpeed(speed);
             new_position = desired_position; % In case object not initialized
-
+ 
             if obj.initialized 
+                desired_position_mm = obj.ValidatePosition(desired_position);
+                desired_speed_mm_s = obj.ValidateSpeed(speed);
 
                 %% move to an absolute position
                 obj.sendPIMotorCommand(sprintf('VEL 1 %f',desired_speed_mm_s), 0);
