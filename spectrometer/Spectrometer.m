@@ -98,8 +98,8 @@ catch
 end
 
 try
-  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass);
-  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass);
+  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'Motor1');
+  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'Motor2');
   motors = { Interferometer_Stage, Population_Stage };
 catch
   warning('SGRLAB:SimulationMode','PI stages not enabled');

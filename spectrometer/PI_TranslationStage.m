@@ -22,7 +22,7 @@ classdef PI_TranslationStage < hgsetget
     end
     methods
         %port scale parent tag
-        function obj = PI_TranslationStage(port, scale)
+        function obj = PI_TranslationStage(port, scale, tagname)
             obj.initialized = 0;
             obj.center = 0;
             obj.scale = scale;
@@ -30,6 +30,12 @@ classdef PI_TranslationStage < hgsetget
             obj.terminator = {'LF','LF'};
             obj.type = 'serial';
             obj.baud = 38400;
+            %build a tag from the last input
+            if strcmp(tagname(1:4),'edit')
+              obj.Tag = tagname(5:end);
+            else
+              obj.Tag = tagname;
+            end
 
             obj.object = instrfind('Type', obj.type, 'Port', obj.comPort, 'Tag', '');
 
@@ -159,7 +165,7 @@ classdef PI_TranslationStage < hgsetget
         function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
             if move_relative
                 pos = GetPosition(obj);         % @@@ Not right.  Need real position.
-                desired_position_mm = pos+desired_position_mm;
+                desired_position = pos+desired_position;
             end
             desired_position_mm = obj.ValidatePosition(desired_position);
             desired_speed_mm_s = obj.ValidateSpeed(speed);
