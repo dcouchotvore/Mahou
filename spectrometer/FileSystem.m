@@ -72,7 +72,7 @@ classdef FileSystem < handle
       matches = matches(~cellfun('isempty',matches));
       
       if isempty(matches)
-        obj.FileIndex = 1;Sp
+        obj.FileIndex = 1;
       else
         
         % As to what is going on here.  regexp returns a cell array of

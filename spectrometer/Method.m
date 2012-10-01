@@ -259,16 +259,16 @@ classdef Method < handle
       
       while obj.i_scan ~= obj.PARAMS.nScans && obj.ScanIsStopping == false
 
+        ScanMiddle(obj);
+
+        SaveTmpResult(obj);
+
         obj.i_scan = obj.i_scan + 1;
         
         set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
         
         drawnow;
 
-        ScanMiddle(obj);
-
-        SaveTmpResult(obj);
-        
       end
       
       set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
