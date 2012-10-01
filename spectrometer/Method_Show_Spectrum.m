@@ -256,17 +256,7 @@ methods (Access = protected)
     %no need to move motors back to zero
   end
   
-  %save the current result to a MAT file for storage.
-  function SaveResult(obj)
-    
-  end
-  
-  %save intermediate results to a temp folder
-  function SaveTmpResult(obj)
-    
-  end
-   
-  function ProcessSampleSort(obj)
+ function ProcessSampleSort(obj)
     %the easy thing
     
     obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);

@@ -288,21 +288,23 @@ methods (Access = protected)
     obj.source.sampler.ClearTask;
     obj.source.motors{1}.MoveTo(0, obj.PARAMS.speed, 0, 0);
   end
-  
+ 
+  % @@@ Figure out what this is about.
   %save the current result to a MAT file for storage.
   function SaveResult(obj)
-        setappdata(obj.handles.figure1,'result',obj.result);
-    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
-
+%        setappdata(obj.handles.figure1,'result',obj.result);
+%    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
   end
   
   %save intermediate results to a temp folder
   function SaveTmpResult(obj)
-    setappdata(obj.handles.figure1,'result',obj.result);
-    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
+    obj.fileSystem.Save(obj.result);
+%    setappdata(obj.handles.figure1,'result',obj.result);
+%    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
   end
    
   function ProcessSampleSort(obj)
+    obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
     %the easy thing
     
 %    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
