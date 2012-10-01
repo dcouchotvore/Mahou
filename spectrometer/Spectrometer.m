@@ -52,16 +52,6 @@ end
 % Hints: get(hObject,'String') returns contents of editMotor1 as text
 %        str2double(get(hObject,'String')) returns contents of editMotor1 as a double
 
-
-
-function editMotor2_Callback(hObject, eventdata, handles)
-% hObject    handle to editMotor2 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of editMotor2 as text
-%        str2double(get(hObject,'String')) returns contents of editMotor2 as a double
-
 function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
@@ -472,7 +462,7 @@ global motors;
 H = handles.(['editMotor' num2str(i_motor)]);
 
 set(H, 'String', 'moving');
-new_pos = motors{i_motor}.MoveTo(-10.0, 3000, 1, 0);
+new_pos = motors{i_motor}.MoveTo(-100.0, 3000, 1, 0);
 set(H, 'String', num2str(new_pos));
 
 % --- Executes on button press in pbMotor1Up.
@@ -501,7 +491,7 @@ global motors;
 H = handles.(['editMotor' num2str(i_motor)]);
 
 set(H, 'String', 'moving');
-new_pos = motors{i_motor}.MoveTo(10.0, 3000, 1, 0);
+new_pos = motors{i_motor}.MoveTo(100.0, 3000, 1, 0);
 set(H, 'String', num2str(new_pos));
 
 
