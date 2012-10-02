@@ -59,7 +59,7 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global method IO FPAS motors JY fsToMm2Pass;
+global method IO FPAS motors JY fsToMm2Pass FS;
 
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
@@ -95,6 +95,10 @@ catch
   warning('SGRLAB:SimulationMode','PI stages not enabled');
 end
 
+FS = FileSystem.getInstance();
+set(handles.textDate, 'String', FS.DateString);
+set(handles.textRunNumber, 'String', ['Run # ' num2str(FS.FileIndex)]);
+
 FPAS = Sampler_FPAS.getInstance;
 
 JY = Monochromator_JY.getInstance;
@@ -125,7 +129,7 @@ function pbGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global method;
+global method FS;
 
 % Called recursively if scan is running
 if method.ScanIsRunning == true
@@ -146,6 +150,8 @@ catch E
 end
 
 set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
+set(handles.textDate, 'String', FS.DateString);
+set(handles.textRunNumber, 'String', ['Run # ' num2str(FS.FileIndex)]);
 
 % --------------------------------------------------------------------
 function FileMenu_Callback(hObject, eventdata, handles)

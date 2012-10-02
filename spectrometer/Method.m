@@ -46,6 +46,7 @@ classdef Method < handle
     
     % Number of current scan
     i_scan;
+    
   end
 
   %here are the properties that all methods share. 
@@ -87,7 +88,12 @@ classdef Method < handle
   methods (Abstract) %public
 
   end
-  
+
+  properties (SetAccess = private)
+    % FileSystem, how we record the data
+    fileSystem = FileSystem.getInstance;
+  end
+
   methods (Abstract, Access = protected)
     %initialize sample, signal, background, and result. Called by the class
     %constructor.
@@ -126,12 +132,6 @@ classdef Method < handle
     %move the motors back to their zero positions. Clear the ADC tasks. 
     ScanCleanup(obj);
     
-    %save the current result to a MAT file for storage.
-    SaveResult(result);
-    
-    %save intermediate results to a temp folder
-    SaveTmpResult(result);
-    
     %the entire 
     ProcessSampleSort(obj);
     
@@ -152,6 +152,7 @@ classdef Method < handle
   %
   %the public
   methods
+    
     function ScanStop(obj)
       obj.ScanIsStopping = true;
     end
@@ -258,16 +259,16 @@ classdef Method < handle
       
       while obj.i_scan ~= obj.PARAMS.nScans && obj.ScanIsStopping == false
 
+        ScanMiddle(obj);
+
+        SaveTmpResult(obj);
+
         obj.i_scan = obj.i_scan + 1;
         
         set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
         
         drawnow;
 
-        ScanMiddle(obj);
-
-        SaveTmpResult(obj);
-        
       end
       
       set(obj.handles.textScanNumber,'String',sprintf('Scan # %i',obj.i_scan));
@@ -419,6 +420,16 @@ classdef Method < handle
         result = round(time/fringeToFs)+zerobin;
     end
 
+     %save the current result to a MAT file for storage.
+    function SaveResult(obj)
+      obj.fileSystem.Save(obj.result);
+    end
+
+    %save intermediate results to a temp folder
+    function SaveTmpResult(obj)
+      obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
+    end
+   
   end
   
 end
