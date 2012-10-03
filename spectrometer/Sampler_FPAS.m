@@ -126,7 +126,7 @@ classdef (Sealed) Sampler_FPAS < handle
         
         function ConfigureTask(obj,PARAMS)
           global NICONST
-          obj.nShots = PARAMS.nShots;
+          obj.nShots = PARAMS.nShots+1;
           obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
           obj.timeout = ceil(obj.nShots/obj.nSamplesPerSecond+0.5);
           if obj.initialized
@@ -220,8 +220,8 @@ classdef (Sealed) Sampler_FPAS < handle
                 hmm = typecast(hm,'uint16');
                 hmm = reshape(hmm,obj.maxInd,obj.nShots);
 
-                %use ind to sort the data
-                result = double(hmm(obj.ind,1:obj.nShots));
+                %use ind to sort the data AND throw away first shot
+                result = double(hmm(obj.ind,2:obj.nShots));
                 result = result(1:obj.nChan,:);
 
             else
