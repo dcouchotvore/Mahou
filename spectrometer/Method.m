@@ -321,6 +321,22 @@ classdef Method < handle
     obj.ScanIsRunning = false;
 
   end
+  
+      %save the current result to a MAT file for storage.
+    function SaveResult(obj)
+      if obj.saveData
+        obj.fileSystem.Save(obj.result);
+      end
+    end
+
+    %save intermediate results to a temp folder
+    function SaveTmpResult(obj)
+      if obj.saveData
+        obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
+      end
+    end
+   
+
   end
   
   %private methods
@@ -422,20 +438,6 @@ classdef Method < handle
         result = round(time/fringeToFs)+zerobin;
     end
 
-     %save the current result to a MAT file for storage.
-    function SaveResult(obj)
-      if obj.saveData
-        obj.fileSystem.Save(obj.result);
-      end
-    end
-
-    %save intermediate results to a temp folder
-    function SaveTmpResult(obj)
-      if obj.saveData
-        obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
-      end
-    end
-   
-  end
+   end
   
 end

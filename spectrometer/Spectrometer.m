@@ -59,7 +59,7 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global method IO FPAS motors JY fsToMm2Pass FS;
+global method IO FPAS motors JY fsToMm2Pass;
 
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
@@ -129,7 +129,7 @@ function pbGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global method FS;
+global method;
 
 % Called recursively if scan is running
 if method.ScanIsRunning == true
@@ -149,6 +149,7 @@ catch E
   rethrow(E);
 end
 
+FS = FileSystem.getInstance;
 set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
 set(handles.textDate, 'String', FS.DateString);
 set(handles.textRunNumber, 'String', ['Run # ' num2str(FS.FileIndex)]);
@@ -503,7 +504,7 @@ set(H, 'String', num2str(new_pos));
 
 function cleanup(src,event)
 %for exit
-global IO FPAS JY method motors FS;
+global IO FPAS JY method motors;
 
 disp('shutting down');
 
@@ -527,9 +528,9 @@ delete(IO);
 disp('clean up FPAS')
 delete(FPAS);
 
-disp('clean up File System')
-delete(FS);
-
+% disp('clean up File System')
+% delete(FS);
+ 
 disp('close figure')
 delete(gcbf);
 

@@ -48,7 +48,6 @@ properties (SetAccess = protected)
   
   nShotsSorted;
 
-  nBins;
   bin_data;
   bin_count;
   bin_igram;
@@ -62,6 +61,7 @@ properties (Dependent, SetAccess = protected)
   Raw_data;
   Diagnostic_data;
   Noise;
+  nBins;
 end
 
 %
@@ -89,7 +89,7 @@ methods
       end
     end
     
-    obj.nBins = obj.PARAMS.bin_max - obj.PARAMS.bin_min +1;
+    %obj.nBins = obj.PARAMS.bin_max - obj.PARAMS.bin_min +1;
     obj.source.sampler = sampler; %is there a better way?
     obj.source.gate = gate;
     obj.source.spect = spect;
@@ -290,23 +290,22 @@ methods (Access = protected)
     obj.source.sampler.ClearTask;
     obj.source.motors{1}.MoveTo(0, obj.PARAMS.speed, 0, 0);
   end
- 
-  % @@@ Figure out what this is about.
-  %save the current result to a MAT file for storage.
-  function SaveResult(obj)
-%        setappdata(obj.handles.figure1,'result',obj.result);
-%    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
-  end
-  
-  %save intermediate results to a temp folder
-  function SaveTmpResult(obj)
-    obj.fileSystem.Save(obj.result);
-%    setappdata(obj.handles.figure1,'result',obj.result);
-%    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
-  end
-   
+%  
+%   % @@@ Figure out what this is about.
+%   %save the current result to a MAT file for storage.
+%   function SaveResult(obj)
+% %        setappdata(obj.handles.figure1,'result',obj.result);
+% %    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
+%   end
+%   
+%   %save intermediate results to a temp folder
+%   function SaveTmpResult(obj)
+%     obj.fileSystem.Save(obj.result);
+% %    setappdata(obj.handles.figure1,'result',obj.result);
+% %    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
+%   end
+%    
   function ProcessSampleSort(obj)
-    obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
     %the easy thing
     
 %    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
@@ -424,7 +423,8 @@ methods (Access = protected)
     try
       obj.result = absorptive2dPP(obj.result);
     catch E
-      warning(E);
+      warning('absorptive2dPP failed');
+      disp(E);
     end
   end
   
@@ -448,6 +448,10 @@ methods %public methods
         out = obj.result.noise;
     end
   
+    function out = get.nBins(obj)
+      out = obj.PARAMS.bin_max - obj.PARAMS.bin_min;
+    end
+    
     function delete(obj)
         DeleteParameters(obj);
     end
