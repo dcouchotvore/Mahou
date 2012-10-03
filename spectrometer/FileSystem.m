@@ -59,7 +59,7 @@ classdef FileSystem < handle
       if ~exist(obj.DatePath, 'file')
         mkdir(obj.DatePath);
       end
-      dateTmpPath = [obj.DatePath 'temp/'];
+      dateTmpPath = [obj.DatePath '/temp/'];
       if ~exist(dateTmpPath, 'file')
         mkdir(dateTmpPath);
       end

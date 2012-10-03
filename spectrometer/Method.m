@@ -72,6 +72,8 @@ classdef Method < handle
     handles; %should be able to do this better but for now try this
 
     noiseGain = 1;
+    
+    saveData = false;
   end
 
   %These are all calculated from other data, and are not stored 
@@ -422,12 +424,16 @@ classdef Method < handle
 
      %save the current result to a MAT file for storage.
     function SaveResult(obj)
-      obj.fileSystem.Save(obj.result);
+      if obj.saveData
+        obj.fileSystem.Save(obj.result);
+      end
     end
 
     %save intermediate results to a temp folder
     function SaveTmpResult(obj)
-      obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
+      if obj.saveData
+        obj.fileSystem.SaveTemp(obj.result, obj.i_scan);
+      end
     end
    
   end

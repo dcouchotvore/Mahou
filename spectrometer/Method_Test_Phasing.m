@@ -100,6 +100,8 @@ methods
     obj.hDiagnosticsPanel = hDiagnosticsPanel;
     obj.handles = handles;
     
+    obj.saveData = true;
+
     Initialize(obj);
     
 %     InitializeFreqAxis(obj);
@@ -419,7 +421,11 @@ methods (Access = protected)
     obj.result.zeropad = 1024;
     obj.result.PP = squeeze(obj.signal.data(:,:,1));
     obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)-t0_bin_shift;
-    obj.result = absorptive2dPP(obj.result);
+    try
+      obj.result = absorptive2dPP(obj.result);
+    catch E
+      warning(E);
+    end
   end
   
   function ProcessSampleNoise(obj)

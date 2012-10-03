@@ -503,7 +503,7 @@ set(H, 'String', num2str(new_pos));
 
 function cleanup(src,event)
 %for exit
-global IO FPAS JY method motors;
+global IO FPAS JY method motors FS;
 
 disp('shutting down');
 
@@ -526,6 +526,9 @@ delete(IO);
 
 disp('clean up FPAS')
 delete(FPAS);
+
+disp('clean up File System')
+delete(FS);
 
 disp('close figure')
 delete(gcbf);
