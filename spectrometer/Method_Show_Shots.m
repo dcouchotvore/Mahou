@@ -255,16 +255,6 @@ methods (Access = protected)
     obj.source.sampler.ClearTask;
     %no need to move motors back to zero
   end
-  
-  %save the current result to a MAT file for storage.
-  function SaveResult(obj)
-    
-  end
-  
-  %save intermediate results to a temp folder
-  function SaveTmpResult(obj)
-    
-  end
    
   function ProcessSampleSort(obj)
     %the easy thing
