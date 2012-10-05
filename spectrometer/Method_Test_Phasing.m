@@ -210,7 +210,7 @@ methods (Access = protected)
 
     InitializeTask(obj);
     
-    obj.source.motors{1}.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 1);
+    obj.source.motors{1}.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 0);
   end
   
   %start first sample. This code is executed before the scan loop starts
@@ -449,7 +449,7 @@ methods %public methods
     end
   
     function out = get.nBins(obj)
-      out = obj.PARAMS.bin_max - obj.PARAMS.bin_min;
+      out = obj.PARAMS.bin_max - obj.PARAMS.bin_min+1;
     end
     
     function delete(obj)
