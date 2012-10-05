@@ -29,7 +29,7 @@ end
 %points cross more than 2 axes at a time
 %try to vectorize
 x = x_in(1,2:end);
-y = y_in(1,2:end);
+y = (y_in(1,2:end)+y_in(1,1:end-1)) ./ 2;
 last_x = x_in(1,1:end-1);
 %last_y = obj.sample.data.external(16,1:end-1); %SGR algorithm
 %doesn't use last_ys
