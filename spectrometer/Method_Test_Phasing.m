@@ -172,7 +172,8 @@ methods (Access = protected)
   end
     
   function InitializeFreqAxis(obj)
-    obj.freq = ((1:32)-16.5)*30+1600; % TO DO: read from spectrometer                
+    obj.freq = obj.source.spect.wavenumbersAxis;
+    set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
   end
   
   function InitializeUITable(obj)
