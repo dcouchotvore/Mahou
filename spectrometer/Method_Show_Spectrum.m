@@ -133,6 +133,8 @@ methods (Access = protected)
     
   function InitializeFreqAxis(obj)
     obj.freq = obj.source.spect.wavenumbersAxis;
+    set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
+
   end
   
   %set up the plot for the main output. Called by the class constructor.
@@ -151,7 +153,7 @@ methods (Access = protected)
       set(obj.hPlotMain(i),'XDataSource','obj.freq',...
           'YDataSource',['obj.signal.data(' num2str(i) ',:)'])
     end
-    set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
+    %set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
     
   end
   
@@ -213,6 +215,9 @@ methods (Access = protected)
     
     %no averaging
     %obj.AverageSample(obj);
+    
+    %update freq axis if it changed
+    InitializeFreqAxis(obj);
     
     %plot results
     RefreshPlots(obj,obj.hPlotMain)

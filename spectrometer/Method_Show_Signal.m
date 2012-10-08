@@ -1,4 +1,4 @@
-classdef Method_Show_Shots < Method
+classdef Method_Show_Signal < Method
 %inherits from Method superclass
 
 properties (SetAccess = protected)
@@ -20,7 +20,7 @@ properties (SetAccess = protected)
   signal = struct('data',[],'std',[],'freq',[]);  
   background = struct('data',[],'std',[],'freq',[]);
   
-  PARAMS = struct('nShots',500,'nScans',-1,'chan',65);
+  PARAMS = struct('nShots',500,'nScans',-1);
   
   source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
 
@@ -32,15 +32,16 @@ properties (SetAccess = protected)
   
   freq;
   
-  nSignals = 2;
+  nSignals = 4;
   nPixels = 64;
   nExtInputs = 16;
   nChan = 80;
-  ind_array1 = 1:32;
-  ind_array2 = 33:64;
+  nChopStates; %assigned in Initialize
+  ind_array = [1:32 ; 33:64];
   ind_igram = 65;
   ind_hene_x = 79;
-  ind_hene_y = 80
+  ind_hene_y = 80;
+  ind_chopper = 78;
   ind_ext = 65:80;
   
   nShotsSorted;
@@ -58,8 +59,10 @@ end
 % public methods
 %
 methods
-  function obj = Method_Show_Shots(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
+  function obj = Method_Show_Signal(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
     %constructor
+    
+    obj.nChopStates = obj.nSignals/obj.nArrays;
     
     if nargin == 0
       %put actions here for when constructor is called with no arguments,
@@ -68,7 +71,7 @@ methods
       return
     elseif nargin == 1
       %If item in is a method class object, just return that object.
-      if isa(obj,'Method_Show_Spectrum')
+      if isa(obj,'Method_Show_Signal')
         return
       elseif isa(obj,'Method')
         %what to do if it is a different class but still a Method? How does
@@ -113,7 +116,7 @@ methods (Access = protected)
   function InitializeData(obj)
     
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
-    obj.nShotsSorted = obj.nArrays*obj.PARAMS.nShots/obj.nSignals;
+    obj.nShotsSorted = obj.PARAMS.nShots/obj.nChopStates;
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -121,36 +124,39 @@ methods (Access = protected)
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
     end
-    obj.result.data = zeros(1,obj.PARAMS.nShots);
+    obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
 
-    obj.ext = zeros(obj.nExtInputs,1);
-    obj.aux.igram = zeros(1,obj.PARAMS.nShots);
-    obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
-    obj.aux.hene_y = zeros(1,obj.PARAMS.nShots);
+    obj.ext = zeros(obj.nExtInputs,obj.nChopStates);
+
+    obj.aux.igram = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.hene_x = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.hene_y = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.ext = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.chop = zeros(1,obj.PARAMS.nShots);
     
   end
     
   function InitializeFreqAxis(obj)
-    obj.freq = 1:obj.PARAMS.nShots;
+    obj.freq = obj.source.spect.wavenumbersAxis;
   end
   
   %set up the plot for the main output. Called by the class constructor.
   function InitializeMainPlot(obj)
-    %attach signal to main plot
-    obj.hPlotMain = 0;
+    %attach signal.data(1,:) and signal.data(2,:) to the main plot
+    obj.hPlotMain = zeros(1,obj.nSignals);
     
     % !!! Important note: Cannot use 'hold off' here because of side
     % effects.  This is equivalent.
     set(obj.hMainAxes,'Nextplot','replacechildren');
     %hold(obj.hMainAxes,'off');
     
-    %obj.hPlotMain = bar(obj.hMainAxes,obj.freq,obj.result.data,'hist');
-    obj.hPlotMain = plot(obj.hMainAxes,obj.freq,obj.result.data,'g');
-    set(obj.hPlotMain,'XDataSource','obj.freq',...
-      'YDataSource','obj.result.data')
-
-    %set(obj.hPlotMain,'FaceColor','none','EdgeColor',[0 1 0]);
+    for i = 1:obj.nSignals
+      obj.hPlotMain(i) = plot(obj.hMainAxes,obj.freq,obj.signal.data(i,:));
+      hold(obj.hMainAxes,'all');
+      set(obj.hPlotMain(i),'XDataSource','obj.freq',...
+          'YDataSource',['obj.signal.data(' num2str(i) ',:)'])
+    end
     set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
     
   end
@@ -255,37 +261,44 @@ methods (Access = protected)
     obj.source.sampler.ClearTask;
     %no need to move motors back to zero
   end
+  
+  %save the current result to a MAT file for storage.
+  function SaveResult(obj)
+    
+  end
+  
+  %save intermediate results to a temp folder
+  function SaveTmpResult(obj)
+    
+  end
    
   function ProcessSampleSort(obj)
-    %the easy thing
+    %assign chopper data
+    obj.aux.chop = obj.sample(obj.ind_chop,:);
     
-    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
-    obj.sorted(:,:,2) = obj.sample(obj.ind_array2,1:obj.nShotsSorted);
+    %look to see when chopper open/closed (pumped/unpumped)
+    ind_chop = lookChopper(obj.nSignals,obj.aux.chop);
+    
+    %assign sorted data for array detector
+    obj.sorted(:,:,1) = obj.sample(obj.ind_array(1,:),ind_chop(1,:));
+    obj.sorted(:,:,2) = obj.sample(obj.ind_array(2,:),ind_chop(1,:));
+    obj.sorted(:,:,3) = obj.sample(obj.ind_array(1,:),ind_chop(2,:));
+    obj.sorted(:,:,4) = obj.sample(obj.ind_array(2,:),ind_chop(2,:));
 
-    obj.aux.igram = obj.sample(obj.ind_igram,:);
-    obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
-    obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
-    obj.ext = obj.sample(obj.ind_ext,:);
+    %assign sorted values for external signals
+    for i = 1:obj.nChopStates
+      obj.aux.igram(i,:) = obj.sample(obj.ind_igram,ind_chop(i,:));
+      obj.aux.hene_x(i,:) = obj.sample(obj.ind_hene_x,ind_chop(i,:));
+      obj.aux.hene_y(i,:) = obj.sample(obj.ind_hene_y,ind_chop(i,:));
+      obj.aux.ext(i,:) = obj.sample(obj.ind_ext,ind_chop(i,:));
+    end
     
-    %unfinished:
-%     rowInd1 = obj.ind_array1;
-%     rowInd2 = obj.ind_array2;
-%     chop = 0; %this is a vector nSignals/nArrays in length 
-%     
-%     colInd1 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     colInd2 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     count = 0;
-%     for ii = 1:2:obj.nSignals/2;
-%       count = count+1;
-%       obj.sorted(:,:,ii) = obj.sample(rowInd1,obj.nShotsSorted);
-%       obj.sorted(:,:,ii+1) = obj.sample(obj.nPixelsPerArray+1:2*obj.nPixelsPerArray,obj.nShotsSorted);
-%     end 
   end
 
   function ProcessSampleAvg(obj)
     obj.signal.data = squeeze(mean(obj.sorted,2))';
     obj.signal.std = squeeze(std(obj.sorted,0,2))';
-    obj.ext = mean(obj.ext,2);
+    obj.ext = mean(obj.aux.ext,2);
   end
   
   function ProcessSampleBackAvg(obj)
@@ -321,12 +334,12 @@ methods (Access = protected)
   function ProcessSampleResult(obj)
     %calculate the effective delta absorption (though we are plotting the
     %signals directly)
-    obj.result.data = obj.sample(obj.PARAMS.chan,:);
+    obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(2,:).*obj.signal.data(4,:)./obj.signal.data(3,:));
   end
   
   function ProcessSampleNoise(obj)
     %calculate the signal from each shot for an estimate of the error
-    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2)),0,2)'/sqrt(obj.PARAMS.nShots);
+    obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2).*obj.sorted(:,:,4)./obj.sorted(:,:,3)),0,2)'/sqrt(obj.PARAMS.nShots);
 
     %the other option would be a propagation of error calculation but I
     %haven't worked through that yet. See wikipedia Propagation of

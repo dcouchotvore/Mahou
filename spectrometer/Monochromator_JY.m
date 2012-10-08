@@ -80,11 +80,11 @@ classdef (Sealed) Monochromator_JY < handle
         dispersion = 0;
         switch tur
           case 0
-            dispersion = 15.926; %nm/pix
+            dispersion = 5.15;%15.926; %nm/pix
           case 1
             dispersion = 10.3; %nm/pix
           case 2
-            dispersion = 5.15; %nm/pix
+            dispersion = 15.926;%5.15; %nm/pix
           otherwise
             warning('turret numbering is out of bounds');
         end
@@ -92,8 +92,18 @@ classdef (Sealed) Monochromator_JY < handle
           + obj.wavelength;
       end
       
-      function out = get.wavenumbersAxis(obj);
-        out = 10^7./obj.wavelengthAxis;
+      function out = get.wavenumbersAxis(obj)
+        %convert wavelength to wavenumbers (cm-1)
+        
+        cutoff_wavelength = 100; %nm 
+        
+        %as a default (when wavelength is less than cutoff)
+        out = 1:obj.nPixelsPerArray;
+        
+        %if wavelength is not too short calculate wavenumbers
+        if obj.wavelength >= cutoff_wavelength
+          out = 10^7./obj.wavelengthAxis;
+        end
       end
       
       function out = get.slit(obj)

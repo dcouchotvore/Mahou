@@ -126,7 +126,7 @@ classdef (Sealed) Sampler_FPAS < handle
         
         function ConfigureTask(obj,PARAMS)
           global NICONST
-          obj.nShots = PARAMS.nShots;
+          obj.nShots = PARAMS.nShots+1;
           obj.nSampsPerChan = obj.nMaxChan/2*obj.nShots+1; %nChan/2+1; %total number of points to acquire #Ch*#scans (where scans is NI language for shots)
           obj.timeout = ceil(obj.nShots/obj.nSamplesPerSecond+0.5);
           if obj.initialized
@@ -180,8 +180,21 @@ classdef (Sealed) Sampler_FPAS < handle
                 fillMode = NICONST.DAQmx_Val_GroupByChannel; % Group by Channel
                 %fillMode = NICONST.DAQmx_Val_GroupByScanNumber; % I think this doesn't matter when only 1 channel
 
-          
-                [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(obj.lib,obj.hTask,obj.nDIChans,obj.nSampsPerChan,obj.timeout,fillMode,obj.bufSizeInSamps);
+                try
+                  [portdata,sampsPerChanRead] = DAQmxReadDigitalU32(obj.lib,obj.hTask,obj.nDIChans,obj.nSampsPerChan,obj.timeout,fillMode,obj.bufSizeInSamps);
+                catch E
+                  warning(E);
+                  fprintf(1,['\n\nPROBABLY no trigger!!! Check that:\n'...
+                    '1) Laser is running\n'...
+                    '2) SDG Delay 3 is active (on) \n' ...
+                    '3) FPAS is on\n' ...
+                    '4) Powersupply for clock is on\n'...
+                    '5) signal path from SDG -> clock -> FPAS -> PC is complete']);
+                  %% stop
+                  DAQmxStopTask(obj.lib,obj.hTask);
+                  result = zeros(obj.nChan, obj.nShots);
+                  return;
+                end
 
                 %do any error checking on sampsPerChanRead here?
                 if sampsPerChanRead ~= obj.nSampsPerChan
@@ -207,8 +220,8 @@ classdef (Sealed) Sampler_FPAS < handle
                 hmm = typecast(hm,'uint16');
                 hmm = reshape(hmm,obj.maxInd,obj.nShots);
 
-                %use ind to sort the data
-                result = double(hmm(obj.ind,1:obj.nShots));
+                %use ind to sort the data AND throw away first shot
+                result = double(hmm(obj.ind,2:obj.nShots));
                 result = result(1:obj.nChan,:);
 
             else

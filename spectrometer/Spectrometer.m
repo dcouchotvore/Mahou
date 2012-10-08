@@ -59,7 +59,7 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Spectrometer (see VARARGIN)
 
-global method IO FPAS motors JY fsToMm2Pass FS;
+global method IO FPAS motors JY fsToMm2Pass;
 
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
@@ -133,7 +133,7 @@ function pbGo_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-global method FS;
+global method;
 
 % Called recursively if scan is running
 if method.ScanIsRunning == true
@@ -153,6 +153,7 @@ catch E
   rethrow(E);
 end
 
+FS = FileSystem.getInstance;
 set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
 set(handles.textDate, 'String', FS.DateString);
 set(handles.textRunNumber, 'String', ['Run # ' num2str(FS.FileIndex)]);
@@ -472,7 +473,7 @@ global motors;
 H = handles.(['editMotor' num2str(i_motor)]);
 
 set(H, 'String', 'moving');
-new_pos = motors{i_motor}.MoveTo(-10.0, 3000, 1, 0);
+new_pos = motors{i_motor}.MoveTo(-100.0, 3000, 1, 0);
 set(H, 'String', num2str(new_pos));
 
 % --- Executes on button press in pbMotor1Up.
@@ -501,7 +502,7 @@ global motors;
 H = handles.(['editMotor' num2str(i_motor)]);
 
 set(H, 'String', 'moving');
-new_pos = motors{i_motor}.MoveTo(10.0, 3000, 1, 0);
+new_pos = motors{i_motor}.MoveTo(100.0, 3000, 1, 0);
 set(H, 'String', num2str(new_pos));
 
 
@@ -531,6 +532,9 @@ delete(IO);
 disp('clean up FPAS')
 delete(FPAS);
 
+% disp('clean up File System')
+% delete(FS);
+ 
 disp('close figure')
 delete(gcbf);
 
