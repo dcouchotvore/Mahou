@@ -207,6 +207,8 @@ methods (Access = protected)
   function ScanInitialize(obj)
     ReadParameters(obj);
     
+    InitializeFreqAxis(obj);
+    
     InitializeData(obj);
 
     InitializeTask(obj);
