@@ -9,7 +9,13 @@ classdef Method < handle
     %the final spectrum which will be saved to disk
     result;
   end
-  
+
+  properties
+    %the background which is subtracted from each signal after sorting. The
+    %background must match the structure of the data in <sorted>. 
+    background = struct('data',[],'std',[],'freq',[]);
+  end
+
   %the properties not visible outside the class or subclass
   properties (Abstract, SetAccess = protected) 
     %the raw data block(s) straight from ADC(s) (the FPAS for example).
@@ -28,10 +34,7 @@ classdef Method < handle
     signal; 
     nSignals;
         
-    %the background which is subtracted from each signal after sorting. The
-    %background must match the structure of the data in <sorted>. 
-    background; 
-    
+   
     %a struct of all the parameters describing the data acquisition event
     PARAMS;
     
@@ -154,7 +157,20 @@ classdef Method < handle
   %
   %the public
   methods
-    
+
+    function LoadBackground(obj)
+        name = 'background';
+        tsize = size(obj.(name));
+        d = Defaults(obj);
+        d.LoadDefaults(name);
+    end
+
+    function SaveBackground(obj)
+        name = 'background';
+        d = Defaults(obj);
+        d.SaveDefaults(name);
+    end
+
     function ScanStop(obj)
       obj.ScanIsStopping = true;
     end
@@ -318,6 +334,7 @@ classdef Method < handle
 
     end
     obj.source.sampler.ClearTask;
+    obj.SaveBackground;
     obj.ScanIsRunning = false;
 
   end
@@ -438,6 +455,7 @@ classdef Method < handle
         result = round(time/fringeToFs)+zerobin;
     end
 
+       
    end
   
 end

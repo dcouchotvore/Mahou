@@ -111,6 +111,7 @@ JY.InitializeGui(handles.uipanelMonochromator);
 
 %Default method on startup.
 method = Method_Show_Spectrum(FPAS,IO,JY,motors, handles,handles.pnlParameters,handles.axesMain,handles.axesRawData,handles.pnlNoise);
+method.LoadBackground;
 
 delete(splash);
 
@@ -259,6 +260,7 @@ sampler = feval([str_sampler '.getInstance']);
 %  handles.axesMain,handles.axesRawData,handles.pnlNoise);
 method = feval(str_method,sampler,IO,JY,motors,handles,handles.pnlParameters,...
   handles.axesMain,handles.axesRawData,handles.pnlNoise);
+method.LoadBackground;
 
 % --- Executes during object creation, after setting all properties.
 function popupMethods_CreateFcn(hObject, eventdata, handles)

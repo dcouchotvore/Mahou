@@ -18,7 +18,6 @@ properties (SetAccess = protected)
   aux;
   ext; %testing external channels for uitable
   signal = struct('data',[],'std',[],'freq',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',500,'nScans',-1,'chan',65);
   
@@ -308,6 +307,13 @@ methods (Access = protected)
     %bg which has size nPixels 1 nSignals). The bsxfun realizes that the
     %middle dimension 1 needs to match nShots so it expands the size of the
     %array automatically. 
+    
+    % Background might have been saved with another method.  Make sure
+    % the dimensions agree.
+    % @@@@ could be optimized with next step.
+    if size(obj.background)~=[obj.nPixelsPerArray, obj.nSignals]
+      obj.background = obj.background.';
+    end
     
     %So we first transpose the background from (nSignals x nPixels) to
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x

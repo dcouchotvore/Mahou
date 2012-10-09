@@ -1,6 +1,10 @@
 classdef Method_Test_Phasing < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = 'methodscommon';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
@@ -18,7 +22,6 @@ properties (SetAccess = protected)
   aux;
   ext;
   signal = struct('data',[],'std',[],'freq',[],'igram',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',[],'nScans',500,'start',-500, 'end', 1000, ...
       'speed', 1700, 'bin_zero', 4000, 'bin_min', timeFsToBin(-500, 4000)+1, ...
@@ -157,9 +160,9 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
     obj.signal.std = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
-    if isempty(obj.background.data),
-      obj.background.data = zeros(obj.nPixelsPerArray,obj.nSignals);
-      obj.background.std = zeros(obj.nPixelsPerArray,obj.nSignals);
+    if isempty(obj.background.data)
+      obj.background.data = zeros(obj.nPixelsPerArray, obj.nSignals);
+      obj.background.std = zeros(obj.nPixelsPerArray, obj.nSignals);
     end
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);
@@ -377,6 +380,12 @@ methods (Access = protected)
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
     %nSignals).
 %    bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
+    
+    % Background might have been saved with another method.  Make sure
+    % the dimensions agree.
+    if size(obj.background)~=[obj.nPixelsPerArray, obj.nSignals]
+      obj.background = obj.background.';
+    end
     
     %now bsxfun does the subtraction
 %    obj.sorted = bsxfun(@minus,obj.sorted,obj.background);

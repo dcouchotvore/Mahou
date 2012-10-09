@@ -2,7 +2,6 @@ classdef Method_RawData < Method
     
     properties (SetAccess = protected)
         signal = struct('data',[],'std',[],'freq',[]);  
-        background = struct('data',[],'std',[],'freq',[]);
 
         PARAMS = struct('nScans', 100);
 
