@@ -266,11 +266,6 @@ methods (Access = protected)
     %no need to move motors back to zero
   end
   
-  %save the current result to a MAT file for storage.
-  function SaveResult(obj)
-    
-  end
-  
   function ProcessSampleSort(obj)
     %assign chopper data
     obj.aux.chop = obj.sample(obj.ind_chop,:);
