@@ -2,7 +2,7 @@ classdef Method_Show_Signal_Shifting_t1 < Method
 %inherits from Method superclass
 
 properties (Hidden,SetAccess = immutable)
-  Tag = '2Signals32Pixels';
+  Tag = 'Method4Signals32Pixels';
 end
 
 properties (SetAccess = protected)
@@ -22,7 +22,7 @@ properties (SetAccess = protected)
   aux;
   ext; %testing external channels for uitable
   signal = struct('data',[],'std',[],'freq',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
+%  background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',500,'nScans',-1);
   
@@ -120,7 +120,7 @@ methods (Access = protected)
   function InitializeData(obj)
     
     obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
-    obj.nShotsSorted = obj.PARAMS.nShots/obj.nChopStates;
+    obj.nShotsSorted = obj.PARAMS.nShots;%/obj.nChopStates;
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -134,10 +134,10 @@ methods (Access = protected)
 
     obj.ext = zeros(obj.nExtInputs,obj.nChopStates);
 
-    obj.aux.igram = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
-    obj.aux.hene_x = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
-    obj.aux.hene_y = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
-    obj.aux.ext = zeros(obj.nChopStates,obj.PARAMS.nShotsSorted);
+    obj.aux.igram = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.hene_x = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.hene_y = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.ext = zeros(obj.nExtInputs,obj.nShotsSorted,obj.nChopStates);
     obj.aux.chop = zeros(1,obj.PARAMS.nShots);
     
   end
@@ -148,20 +148,14 @@ methods (Access = protected)
   
   %set up the plot for the main output. Called by the class constructor.
   function InitializeMainPlot(obj)
-    %attach signal.data(1,:) and signal.data(2,:) to the main plot
-    obj.hPlotMain = zeros(1,obj.nSignals);
     
     % !!! Important note: Cannot use 'hold off' here because of side
     % effects.  This is equivalent.
     set(obj.hMainAxes,'Nextplot','replacechildren');
-    %hold(obj.hMainAxes,'off');
-    
-    for i = 1:obj.nSignals
-      obj.hPlotMain(i) = plot(obj.hMainAxes,obj.freq,obj.signal.data(i,:));
-      hold(obj.hMainAxes,'all');
-      set(obj.hPlotMain(i),'XDataSource','obj.freq',...
-          'YDataSource',['obj.signal.data(' num2str(i) ',:)'])
-    end
+ 
+    obj.hPlotMain = plot(obj.hMainAxes,obj.freq,obj.result.data);
+    set(obj.hPlotMain,'XDataSource','obj.freq',...
+          'YDataSource','obj.result.data');
     set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
     
   end
@@ -171,7 +165,7 @@ methods (Access = protected)
   end
   
   function RefreshUITable(obj)
-    set(obj.handles.uitableExtChans,'Data',obj.ext);
+    set(obj.handles.uitableExtChans,'Data',obj.ext,'columnformat',{'short g'});
   end
   
   %set up the ADC task(s)
@@ -218,10 +212,14 @@ methods (Access = protected)
     %move motors
     if mod(obj.i_scan,2)==0
       %odd scans (but we're off by one! ie i_scan is updated *after* scanMiddle is called)
-      obj.motors{1}.MoveTo(0,1700,0,0);
+      set(obj.handles.editMotor1,'String','moving...');
+      pos = obj.source.motors{1}.MoveTo(0,1700,0,0);
+      set(obj.handles.editMotor1,'String',num2str(pos));
     else
       %evens
-      obj.motors{1}.MoveTo(1/(obj.source.spect.wavenumbers*wavenumbersToInvFs),1700,0,0);
+      set(obj.handles.editMotor1,'String','moving...');
+      pos = obj.source.motors{1}.MoveTo(0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs),1700,0,0);
+      set(obj.handles.editMotor1,'String',num2str(pos));
     end
     
     %start the data acquisition task
@@ -276,7 +274,9 @@ methods (Access = protected)
     obj.source.gate.CloseClockGate;
     obj.source.sampler.ClearTask;
     % move motors back to zero
-    obj.motors{1}.MoveTo(0,1700,0,0);
+    set(obj.handles.editMotor1,'String','moving...');
+    pos = obj.source.motors{1}.MoveTo(0,1700,0,0);
+    set(obj.handles.editMotor1,'String',num2str(pos));
   end
   
   function ProcessSampleSort(obj)
@@ -288,14 +288,14 @@ methods (Access = protected)
       obj.aux.igram(1,:) = obj.sample(obj.ind_igram,:);
       obj.aux.hene_x(1,:) = obj.sample(obj.ind_hene_x,:);
       obj.aux.hene_y(1,:) = obj.sample(obj.ind_hene_y,:);
-      obj.aux.ext(1,:) = obj.sample(obj.ind_ext,:);
+      obj.aux.ext(:,:,1) = obj.sample(obj.ind_ext,:);
     else
       obj.sorted(:,:,3) = obj.sample(obj.ind_array(1,:),:);
       obj.sorted(:,:,4) = obj.sample(obj.ind_array(2,:),:);
       obj.aux.igram(2,:) = obj.sample(obj.ind_igram,:);
       obj.aux.hene_x(2,:) = obj.sample(obj.ind_hene_x,:);
       obj.aux.hene_y(2,:) = obj.sample(obj.ind_hene_y,:);
-      obj.aux.ext(2,:) = obj.sample(obj.ind_ext,:);
+      obj.aux.ext(:,:,2) = obj.sample(obj.ind_ext,:);
     end
     
   end
@@ -304,7 +304,7 @@ methods (Access = protected)
     if mod(obj.i_scan,2)==0
       obj.signal.data = squeeze(mean(obj.sorted,2))';
       obj.signal.std = squeeze(std(obj.sorted,0,2))';
-      obj.ext = mean(obj.aux.ext,2);
+      obj.ext = squeeze(mean(obj.aux.ext,2));
     end
   end
   
