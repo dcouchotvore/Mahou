@@ -1,6 +1,10 @@
 classdef Method_Show_Signal < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = 'Method2Signals32Pixels';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
@@ -18,8 +22,7 @@ properties (SetAccess = protected)
   aux;
   ext; %testing external channels for uitable
   signal = struct('data',[],'std',[],'freq',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
-  
+
   PARAMS = struct('nShots',500,'nScans',-1);
   
   source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
@@ -120,6 +123,7 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.LoadBackground;
     if isempty(obj.background.data),
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -267,11 +271,6 @@ methods (Access = protected)
     
   end
   
-  %save intermediate results to a temp folder
-  function SaveTmpResult(obj)
-    
-  end
-   
   function ProcessSampleSort(obj)
     %assign chopper data
     obj.aux.chop = obj.sample(obj.ind_chop,:);
@@ -321,7 +320,7 @@ methods (Access = protected)
     %bg which has size nPixels 1 nSignals). The bsxfun realizes that the
     %middle dimension 1 needs to match nShots so it expands the size of the
     %array automatically. 
-    
+
     %So we first transpose the background from (nSignals x nPixels) to
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
     %nSignals).

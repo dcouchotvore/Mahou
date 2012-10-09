@@ -1,6 +1,10 @@
 classdef Method_Show_Shots < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = 'Method2Signals32Pixels';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
@@ -18,7 +22,6 @@ properties (SetAccess = protected)
   aux;
   ext; %testing external channels for uitable
   signal = struct('data',[],'std',[],'freq',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',500,'nScans',-1,'chan',65);
   
@@ -117,6 +120,7 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.LoadBackground;
     if isempty(obj.background.data),
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);

@@ -1,8 +1,11 @@
 classdef Method_RawData < Method
-    
+
+    properties (Hidden,SetAccess = immutable)
+      Tag = 'Method2Signals32Pixels';
+    end
+
     properties (SetAccess = protected)
         signal = struct('data',[],'std',[],'freq',[]);  
-        background = struct('data',[],'std',[],'freq',[]);
 
         PARAMS = struct('nScans', 100);
 
@@ -62,6 +65,7 @@ classdef Method_RawData < Method
             obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
             obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
             obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+            obj.LoadBackground;
             if isempty(obj.background.data),
                 obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
                 obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);

@@ -1,9 +1,13 @@
 classdef Method_Test_Phasing < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = 'Method32Pixels2Signals';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
-  
+  df
   %our result is a one dimensional spectrum of the intensity on the
   %detector (this should be some generic constructor...)
   result = struct('data',[],...
@@ -18,7 +22,6 @@ properties (SetAccess = protected)
   aux;
   ext;
   signal = struct('data',[],'std',[],'freq',[],'igram',[]);  
-  background = struct('data',[],'std',[],'freq',[]);
   
   PARAMS = struct('nShots',[],'nScans',500,'start',-500, 'end', 1000, ...
       'speed', 1700, 'bin_zero', 4000, 'bin_min', timeFsToBin(-500, 4000)+1, ...
@@ -157,9 +160,10 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
     obj.signal.std = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
-    if isempty(obj.background.data),
-      obj.background.data = zeros(obj.nPixelsPerArray,obj.nSignals);
-      obj.background.std = zeros(obj.nPixelsPerArray,obj.nSignals);
+    obj.LoadBackground;
+    if isempty(obj.background.data)
+      obj.background.data = zeros(obj.nPixelsPerArray, obj.nSignals);
+      obj.background.std = zeros(obj.nPixelsPerArray, obj.nSignals);
     end
     obj.result.data = zeros(1,obj.nPixelsPerArray);
     obj.result.noise = zeros(1,obj.nPixelsPerArray);

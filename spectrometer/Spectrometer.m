@@ -77,6 +77,10 @@ hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',{@(src,eventdata) me
 %hmenuitems(1)  = uimenu(hmenu,'Label','Set gain','Callback',@test_menu_callback);
 hmenuitems(2)  = uimenu(hmenu,'Label','Set trim','Callback',{@(src,eventdata) menuMCT_callback(src,eventdata)});
 
+
+hmenuTools = uimenu(gcf, 'Label', 'Tools', 'Tag', 'menuTools');
+hmenuToolsItems(1) = uimenu(hmenuTools, 'Label', 'Purge temporary data', 'Callback', {@(src, eventdata) menuPurgeData_callback(src, eventdata)});
+
 Constants;
 
 IO = [];
@@ -746,6 +750,7 @@ end
 %disp('done')
 %set(fig,'Visible','on');
 
+
 function newGainFunction(uipanelGainTrim,method)
 
 %if nargin >=1
@@ -904,3 +909,7 @@ handles = guidata(gcf);
 set(handles.pnlRawData,'Visible','on');
 set(handles.pnlNoise,'Visible','on');
 set(handles.sliderNoiseGain,'Visible','on');
+
+function menuPurgeData_callback(hObject, eventdata, handles)
+
+open('Purge.fig');
