@@ -308,6 +308,7 @@ classdef Method < handle
   function BackgroundReset(obj)
     obj.background.data = zeros(size(obj.background.data));
     obj.background.std = zeros(size(obj.background.std));
+    obj.SaveBackground;
   end
     
   %acquire a background (might need to be public)
