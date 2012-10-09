@@ -148,9 +148,13 @@ set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 try
   method.Scan;
 catch E
-  cleanup('','');
-%  set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
-  rethrow(E);
+  %cleanup('','');
+  set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
+  warning(E.message);
+  %reset FPAS
+  method.source.sampler.Initialize;
+  %reset scan is running
+  method.ScanIsRunning = false;
 end
 
 FS = FileSystem.getInstance;
@@ -664,8 +668,13 @@ try
 catch E
   
   set(hObject, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
-  cleanup('','');
-  rethrow(E);
+  %cleanup('','');
+  warning('SGRLAB:UnderConstruction','An error occured during the background!!!');
+  warning(E.message);
+  %reset FPAS
+  method.source.sampler.Initialize;
+  %reset scan is running
+  method.ScanIsRunning = false;  
 end
 
 set(hObject, 'String', 'Background', 'BackgroundColor', [0.8 0.8 0.8]);
