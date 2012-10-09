@@ -1,4 +1,4 @@
-classdef Method_Show_Signal < Method
+classdef Method_Show_Signal_Shifting_t1 < Method
 %inherits from Method superclass
 
 properties (SetAccess = protected)
@@ -59,7 +59,7 @@ end
 % public methods
 %
 methods
-  function obj = Method_Show_Signal(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
+  function obj = Method_Show_Signal_Shifting_t1(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
     %constructor
     
     obj.nChopStates = obj.nSignals/obj.nArrays;
