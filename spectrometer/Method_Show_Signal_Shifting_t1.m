@@ -1,6 +1,10 @@
 classdef Method_Show_Signal < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = '2Signals32Pixels';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
@@ -120,6 +124,7 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.LoadBackground;
     if isempty(obj.background.data),
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);

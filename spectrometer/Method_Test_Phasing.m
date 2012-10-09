@@ -2,12 +2,12 @@ classdef Method_Test_Phasing < Method
 %inherits from Method superclass
 
 properties (Hidden,SetAccess = immutable)
-  Tag = 'methodscommon';
+  Tag = 'Method32Pixels2Signals';
 end
 
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
-  
+  df
   %our result is a one dimensional spectrum of the intensity on the
   %detector (this should be some generic constructor...)
   result = struct('data',[],...
@@ -160,6 +160,7 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
     obj.signal.std = zeros(obj.nPixelsPerArray,obj.nBins,obj.nSignals);
+    obj.LoadBackground;
     if isempty(obj.background.data)
       obj.background.data = zeros(obj.nPixelsPerArray, obj.nSignals);
       obj.background.std = zeros(obj.nPixelsPerArray, obj.nSignals);
@@ -382,12 +383,6 @@ methods (Access = protected)
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
     %nSignals).
 %    bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
-    
-    % Background might have been saved with another method.  Make sure
-    % the dimensions agree.
-    if size(obj.background)~=[obj.nPixelsPerArray, obj.nSignals]
-      obj.background = obj.background.';
-    end
     
     %now bsxfun does the subtraction
 %    obj.sorted = bsxfun(@minus,obj.sorted,obj.background);

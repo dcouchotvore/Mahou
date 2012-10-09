@@ -1,6 +1,10 @@
 classdef Method_Show_Signal < Method
 %inherits from Method superclass
 
+properties (Hidden,SetAccess = immutable)
+  Tag = 'Method2Signals32Pixels';
+end
+
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
@@ -119,6 +123,7 @@ methods (Access = protected)
     obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
     obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
     obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.LoadBackground;
     if isempty(obj.background.data),
       obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
       obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
@@ -315,13 +320,6 @@ methods (Access = protected)
     %bg which has size nPixels 1 nSignals). The bsxfun realizes that the
     %middle dimension 1 needs to match nShots so it expands the size of the
     %array automatically. 
-
-    % Background might have been saved with another method.  Make sure
-    % the dimensions agree.
-    % @@@@ could be optimized with next step.
-    if size(obj.background)~=[obj.nPixelsPerArray, obj.nSignals]
-      obj.background = obj.background.';
-    end
 
     %So we first transpose the background from (nSignals x nPixels) to
     %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
