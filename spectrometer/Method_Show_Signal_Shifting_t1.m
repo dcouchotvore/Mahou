@@ -24,7 +24,7 @@ properties (SetAccess = protected)
   signal = struct('data',[],'std',[],'freq',[]);  
 %  background = struct('data',[],'std',[],'freq',[]);
   
-  PARAMS = struct('nShots',500,'nScans',-1);
+  PARAMS = struct('nShots',2500,'nScans',-1);
   
   source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
 
@@ -213,6 +213,9 @@ methods (Access = protected)
     if mod(obj.i_scan,2)==0
       %odd scans (but we're off by one! ie i_scan is updated *after* scanMiddle is called)
       set(obj.handles.editMotor1,'String','moving...');
+      %poorman's backlash correction 
+      pos = obj.source.motors{1}.MoveTo(-40,1700,0,0);
+      %real target
       pos = obj.source.motors{1}.MoveTo(0,1700,0,0);
       set(obj.handles.editMotor1,'String',num2str(pos));
     else
@@ -275,6 +278,8 @@ methods (Access = protected)
     obj.source.sampler.ClearTask;
     % move motors back to zero
     set(obj.handles.editMotor1,'String','moving...');
+    %poorman's backlash correction
+    pos = obj.source.motors{1}.MoveTo(-40,1700,0,0);
     pos = obj.source.motors{1}.MoveTo(0,1700,0,0);
     set(obj.handles.editMotor1,'String',num2str(pos));
   end
