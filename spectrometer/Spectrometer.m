@@ -61,6 +61,11 @@ function Spectrometer_OpeningFcn(hObject, eventdata, handles, varargin)
 
 global method IO FPAS motors JY fsToMm2Pass;
 
+if isfield(handles,'initialized')
+  figure(gcf);
+  return
+end
+
 %set the function that will execute when the figure closes
 set(hObject,'CloseRequestFcn',@cleanup);
 
@@ -92,8 +97,8 @@ catch
 end
 
 try
-  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass, 'Motor1');
-  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'Motor2');
+  Interferometer_Stage = PI_TranslationStage('COM3', fsToMm2Pass,'backward', 'Motor1');
+  Population_Stage = PI_TranslationStage('COM4', fsToMm2Pass, 'forward', 'Motor2');
   motors = { Interferometer_Stage, Population_Stage };
 catch
   warning('SGRLAB:SimulationMode','PI stages not enabled');
@@ -115,6 +120,7 @@ method = Method_Show_Spectrum(FPAS,IO,JY,motors, handles,handles.pnlParameters,h
 delete(splash);
 
 % Update handles structure
+handles.initialized = 1;
 guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
@@ -147,6 +153,7 @@ set(handles.pbGo, 'String', 'Stop', 'BackgroundColor', [1.0 0.0 0.0]);
 
 try
   method.Scan;
+  %print;
 catch E
   %cleanup('','');
   set(handles.pbGo, 'String', 'Go', 'BackgroundColor', 'green');
