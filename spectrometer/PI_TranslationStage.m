@@ -3,8 +3,10 @@ classdef PI_TranslationStage < hgsetget
     properties
         center;
         scale;
+        direction;
         max_speed;
         jogsize;
+        backlash_mm = 0.007; %in mm???
     end       
     properties(Access=private)
         minimum;
@@ -22,7 +24,7 @@ classdef PI_TranslationStage < hgsetget
     end
     methods
         %port scale parent tag
-        function obj = PI_TranslationStage(port, scale, tagname)
+        function obj = PI_TranslationStage(port, scale, direction,tagname)
             obj.initialized = 0;
             obj.center = 0;
             obj.scale = scale;
@@ -36,7 +38,15 @@ classdef PI_TranslationStage < hgsetget
             else
               obj.Tag = tagname;
             end
-
+            %establish the direction the motor moves 
+            switch direction
+              case {'forward',1}
+                obj.direction = 1;
+              case {'backward',-1}
+                obj.direction = -1;
+              otherwise
+                warning('SGRLAB:PI_TranslationStage:BadInputArgument','The input %s for direction is not supported. Using "forward"',direction);            
+            end
             obj.object = instrfind('Type', obj.type, 'Port', obj.comPort, 'Tag', '');
 
             % Create the serial port object if it does not exist
@@ -62,10 +72,17 @@ classdef PI_TranslationStage < hgsetget
 
                 %minimum commandable position 
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMN?', 1), '%i=%f');
-                obj.minimum = nums(2)/obj.scale;
+                obj.minimum = obj.direction*nums(2)/obj.scale;
                 %maximum commandable position
                 [nums ~] = sscanf(obj.sendPIMotorCommand('TMX?', 1), '%i=%f');
-                obj.maximum = nums(2)/obj.scale;
+                obj.maximum = obj.direction*nums(2)/obj.scale;
+                %put them in the right order
+                if obj.maximum<obj.minimum
+                  dummy = obj.maximum;
+                  obj.maximum = obj.minimum;
+                  obj.minimum = dummy;
+                end
+                  
                 %maximum commandable speed
                 obj.max_speed = 1/obj.scale; %1mm/s = 6671 fs/s
 
@@ -164,17 +181,25 @@ classdef PI_TranslationStage < hgsetget
         
         function new_position = MoveTo(obj, desired_position, speed, move_relative, move_async)
             if move_relative
-                pos = GetPosition(obj);         % @@@ Not right.  Need real position.
+                pos = GetPosition(obj);        
                 desired_position = pos+desired_position;
             end
             desired_position_mm = obj.ValidatePosition(desired_position);
             desired_speed_mm_s = obj.ValidateSpeed(speed);
             new_position = desired_position_mm; % In case object not initialized
 
+            
             if obj.initialized 
-                desired_position_mm = obj.ValidatePosition(desired_position);
-                desired_speed_mm_s = obj.ValidateSpeed(speed);
+%                 desired_position_mm = obj.ValidatePosition(desired_position);
+%                 desired_speed_mm_s = obj.ValidateSpeed(speed);
 
+                %backlash correction
+                old_position_mm = obj.GetPositionMm;
+                if desired_position_mm < old_position_mm
+                  obj.sendPIMotorCommand(sprintf('VEL 1 %f',desired_speed_mm_s), 0);
+                  obj.sendPIMotorCommand(sprintf('MOV 1 %f', desired_position_mm - obj.backlash_mm), 0);
+                end
+                
                 %% move to an absolute position
                 obj.sendPIMotorCommand(sprintf('VEL 1 %f',desired_speed_mm_s), 0);
                 obj.sendPIMotorCommand(sprintf('MOV 1 %f', desired_position_mm), 0);
@@ -214,7 +239,20 @@ classdef PI_TranslationStage < hgsetget
                 [nums ~] = sscanf(result, '%i=%f');
                 
                 %convert to fs and shift origin
-                position = nums(2)/obj.scale-obj.center;
+                position = obj.direction*nums(2)/obj.scale-obj.center;
+            else
+                position = 0;
+            end
+        end
+        
+        function position = GetPositionMm(obj)
+            if obj.initialized
+                %what is the current position in hardware units?
+                result = obj.sendPIMotorCommand('POS?', 1);
+                [nums ~] = sscanf(result, '%i=%f');
+                
+                %convert to fs and shift origin
+                position = nums(2);
             else
                 position = 0;
             end
@@ -227,7 +265,7 @@ classdef PI_TranslationStage < hgsetget
                 [nums ~] = sscanf(result, '%i=%f');
                 
                 %save that to center
-                obj.center = nums(2)/obj.scale;
+                obj.center = obj.direction*nums(2)/obj.scale;
                 
                 %save that to a file
                 obj.SaveResetPosition;
@@ -289,7 +327,7 @@ classdef PI_TranslationStage < hgsetget
                 new_position = obj.maximum;
             end
             %convert to mm
-            new_position_mm = new_position*obj.scale;
+            new_position_mm = obj.direction*new_position*obj.scale;
         end
         
         function new_speed_mm_s = ValidateSpeed(obj,speed)
