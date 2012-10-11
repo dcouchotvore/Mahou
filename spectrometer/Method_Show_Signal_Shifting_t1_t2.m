@@ -1,0 +1,455 @@
+classdef Method_Show_Signal_Shifting_t1_t2 < Method
+%inherits from Method superclass
+
+properties (Hidden,SetAccess = immutable)
+  Tag = 'Method4Signals32Pixels';
+end
+
+properties (SetAccess = protected)
+  %define specific values for Abstract properties listed in superclass
+  
+  %our result is a one dimensional spectrum of the intensity on the
+  %detector (this should be some generic constructor...)
+  result = struct('data',[],...
+    'freq',[],...
+    'noise',[]);
+  %ScanIsRunning and ScanIsStopping are inherited
+end
+
+properties (SetAccess = protected)
+  sample;
+  sorted;
+  aux;
+  ext; %testing external channels for uitable
+  signal = struct('data',[],'std',[],'freq',[]);  
+%  background = struct('data',[],'std',[],'freq',[]);
+  
+  PARAMS = struct('nShots',2500,'nScans',-1);
+  
+  source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
+
+  %TODO: split source to separate objects
+%   sampler;
+%   gate;
+%   spect;
+%   motors;
+  
+  freq;
+  
+  nSignals = 4;
+  nPixels = 64;
+  nExtInputs = 16;
+  nChan = 80;
+  nChopStates; %assigned in Initialize
+  ind_array = [1:32 ; 33:64];
+  ind_igram = 65;
+  ind_hene_x = 79;
+  ind_hene_y = 80;
+  ind_chopper = 78;
+  ind_ext = 65:80;
+  
+  nShotsSorted;
+  i_scan;
+
+  initialPosition; %original positions
+  sequence; %set of motor moves
+end
+
+properties (Dependent, SetAccess = protected)
+  Raw_data;
+  Diagnostic_data;
+  Noise;
+end
+
+%
+% public methods
+%
+methods
+  function obj = Method_Show_Signal_Shifting_t1_t2(sampler,gate,spect,motors,handles,hParamsPanel,hMainAxes,hRawDataAxes,hDiagnosticsPanel)
+    %constructor
+    
+    obj.nChopStates = obj.nSignals/obj.nArrays;
+    
+    if nargin == 0
+      %put actions here for when constructor is called with no arguments,
+      %which will serve as defaults. 
+      obj.sample = 1;
+      return
+    elseif nargin == 1
+      %If item in is a method class object, just return that object.
+      if isa(obj,'Method_Show_Signal')
+        return
+      elseif isa(obj,'Method')
+        %what to do if it is a different class but still a Method? How does
+        %that work? take FPAS and IO values and handles, delete input object,
+        %and call constructor with those input arguments (one level of
+        %recursion I guess). Will that work?
+        return
+      end
+    end
+    
+    obj.source.sampler = sampler; %is there a better way?
+    obj.source.gate = gate;
+    obj.source.spect = spect;
+    obj.source.motors = motors;
+    obj.hMainAxes = hMainAxes;
+    obj.hParamsPanel = hParamsPanel;
+    obj.hRawDataAxes = hRawDataAxes;
+    obj.hDiagnosticsPanel = hDiagnosticsPanel;
+    obj.handles = handles;
+    
+    obj.initialPosition(1) = obj.source.motors{1}.GetPosition;
+    obj.initialPosition(2) = obj.source.motors{2}.GetPosition;
+    
+    Initialize(obj);
+    
+%     InitializeFreqAxis(obj);
+%     InitializeParameters(obj,hParamsPanel);
+%     ReadParameters(obj);
+%     InitializeData(obj);
+%     InitializeMainPlot(obj);
+%     InitializeRawData(obj);
+%     InitializeDiagnostics(obj);
+  
+  %inherited public methods:
+  %ScanStop
+  end
+end
+
+%
+% private (protected) methods
+%
+methods (Access = protected)
+  %initialize sample, signal, background, and result. Called at the 
+  %beginning of a scan
+  function InitializeData(obj)
+    
+    obj.sample = zeros(obj.nChan,obj.PARAMS.nShots);
+    obj.nShotsSorted = obj.PARAMS.nShots;%/obj.nChopStates;
+    obj.sorted = zeros(obj.nPixelsPerArray,obj.nShotsSorted,obj.nSignals);
+    obj.signal.data = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.signal.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    obj.LoadBackground;
+    if isempty(obj.background.data),
+      obj.background.data = zeros(obj.nSignals,obj.nPixelsPerArray);
+      obj.background.std = zeros(obj.nSignals,obj.nPixelsPerArray);
+    end
+    obj.result.data = zeros(1,obj.nPixelsPerArray);
+    obj.result.noise = zeros(1,obj.nPixelsPerArray);
+
+    obj.ext = zeros(obj.nExtInputs,obj.nChopStates);
+
+    obj.aux.igram = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.hene_x = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.hene_y = zeros(obj.nChopStates,obj.nShotsSorted);
+    obj.aux.ext = zeros(obj.nExtInputs,obj.nShotsSorted,obj.nChopStates);
+    obj.aux.chop = zeros(1,obj.PARAMS.nShots);
+    
+  end
+    
+  function InitializeFreqAxis(obj)
+    obj.freq = obj.source.spect.wavenumbersAxis;
+  end
+  
+  %set up the plot for the main output. Called by the class constructor.
+  function InitializeMainPlot(obj)
+    
+    % !!! Important note: Cannot use 'hold off' here because of side
+    % effects.  This is equivalent.
+    set(obj.hMainAxes,'Nextplot','replacechildren');
+ 
+    obj.hPlotMain = plot(obj.hMainAxes,obj.freq,obj.result.data);
+    set(obj.hPlotMain,'XDataSource','obj.freq',...
+          'YDataSource','obj.result.data');
+    set(obj.hMainAxes,'Xlim',[obj.freq(1) obj.freq(end)]);
+    
+  end
+  
+  function InitializeUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext,'columnformat',{'short g'});
+  end
+  
+  function RefreshUITable(obj)
+    set(obj.handles.uitableExtChans,'Data',obj.ext,'columnformat',{'short g'});
+  end
+  
+  %set up the ADC task(s)
+  function InitializeTask(obj)
+    %close gate
+    obj.source.gate.CloseClockGate;
+    
+    %configure task
+    obj.source.sampler.ConfigureTask(obj.PARAMS); 
+  end
+  
+  %initialize the data acquisition event and move motors to their
+  %starting positions
+  function ScanInitialize(obj)
+    global wavenumbersToInvFs
+
+    ReadParameters(obj);
+    
+    InitializeFreqAxis(obj);
+    
+    InitializeData(obj);
+
+    InitializeTask(obj);
+
+    %update positions
+    obj.initialPosition(1) = obj.source.motors{1}.GetPosition;
+    obj.initialPosition(2) = obj.source.motors{2}.GetPosition;
+    
+    %calculate sequence of moves (index by  ii-floor((ii-1)/4)*4)
+    obj.sequence = zeros(2,4);
+    %motor1
+    obj.sequence(1,1) = 0;
+    obj.sequence(1,2) = -0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs);
+    obj.sequence(1,3) = 0;
+    obj.sequence(1,4) = 0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs);
+    %motor2
+    obj.sequence(2,1) = 0;
+    obj.sequence(2,2) = 0;
+    obj.sequence(2,3) = -0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs);
+    obj.sequence(2,4) = -0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs);
+    
+    %include initial positions
+    obj.sequence(1,:) = obj.sequence(1,:)+obj.initialPosition(1);
+    obj.sequence(2,:) = obj.sequence(2,:)+obj.initialPosition(2);
+end
+  
+  %start first sample. This code is executed before the scan loop starts
+  function ScanFirst(obj)
+    %start the data acquisition task
+    obj.source.sampler.Start;
+    obj.source.gate.OpenClockGate;
+  end
+  
+  %This code is executed inside the scan loop. This is different from
+  %ScanFirst for efficiency. It allows us to read data from ScanFirst
+  %(making sure it is finished), then immediately start the second, and
+  %process the first while the second is acquiring. It is also the place
+  %to put code to save temporary files
+  function ScanMiddle(obj)
+    
+    obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
+    obj.source.gate.CloseClockGate;
+    %any other reading can happen next
+    
+    %where were the motors when we read the data
+    i_seq = obj.i_scan - floor((obj.i_scan-1)/4)*4; %where we are in the sequence
+    p1 = obj.source.motors{1}.GetPosition;
+    p2 = obj.source.motors{2}.GetPosition;
+    if obj.i_scan==1,fprintf(1,'i_scan\ti_seq\tmotor1\tmotor2\tDelta_t\n');end
+    fprintf(1,'%3.0f\t%3.0f\t%8.1f\t%8.1f\t%8.1f\n',obj.i_scan,i_seq,p1,p2,p1+p2);
+    
+    %move motors
+    obj.MotorWrapper;
+    
+    %start the data acquisition task
+    obj.source.sampler.Start;
+    obj.source.gate.OpenClockGate;
+
+    %process the previous results
+    ProcessSample(obj);
+    
+    %no averaging
+    %obj.AverageSample(obj);
+    
+    if mod(obj.i_scan,size(obj.sequence,2))==0
+      %plot results
+      RefreshPlots(obj,obj.hPlotMain)
+      RefreshPlots(obj,obj.hPlotRaw)
+      UpdateDiagnostics(obj);
+      RefreshUITable(obj);
+      drawnow
+    end
+    
+    %no saving
+  end
+  
+  %This code executes after the scan loop. It should read but not start a
+  %new scan. It should usually save the final results.
+  function ScanLast(obj)
+    obj.sample = obj.source.sampler.Read; %this will wait until the required points have been transferred (ie it will finish)
+    obj.source.gate.CloseClockGate;
+    %any other reading can happen next
+    
+    %no need to move motors
+    
+    %process the previous results
+    ProcessSample(obj); %this is a public method of the Method superclass
+    
+    %no averaging
+    %obj.AverageScan(obj);
+    
+    %plot results
+    RefreshPlots(obj,obj.hPlotMain)
+    RefreshPlots(obj,obj.hPlotRaw)
+    UpdateDiagnostics(obj);
+    RefreshUITable(obj);
+    drawnow
+    %no saving
+    
+  end
+  
+  %move the motors back to their zero positions. Clear the ADC tasks.
+  function ScanCleanup(obj)
+    obj.source.gate.CloseClockGate;
+    obj.source.sampler.ClearTask;
+    % move motors back to zero
+    set(obj.handles.editMotor1,'String','moving...');
+    %poorman's backlash correction
+    pos = obj.source.motors{1}.MoveTo(obj.initialPosition(1)+40,1700,0,0);
+    pos = obj.source.motors{1}.MoveTo(obj.initialPosition(1),1700,0,0);
+    set(obj.handles.editMotor1,'String',num2str(pos));
+
+    set(obj.handles.editMotor2,'String','moving...');
+    %poorman's backlash correction
+    pos = obj.source.motors{2}.MoveTo(obj.initialPosition(2)-40,1700,0,0);
+    pos = obj.source.motors{2}.MoveTo(obj.initialPosition(2),1700,0,0);
+    set(obj.handles.editMotor2,'String',num2str(pos));
+  end
+  
+  function ProcessSampleSort(obj)
+    
+    %assign sorted data for array detector
+    rem = mod(obj.i_scan,4);
+    switch rem %mod(obj.i_scan,2) 
+      case 1 %scan 1 (odds) case
+        obj.sorted(:,:,1) = obj.sample(obj.ind_array(1,:),:);
+        obj.sorted(:,:,2) = obj.sample(obj.ind_array(2,:),:);
+        obj.aux.igram(1,:) = obj.sample(obj.ind_igram,:);
+        obj.aux.hene_x(1,:) = obj.sample(obj.ind_hene_x,:);
+        obj.aux.hene_y(1,:) = obj.sample(obj.ind_hene_y,:);
+        obj.aux.ext(:,:,1) = obj.sample(obj.ind_ext,:);
+      case 2
+        obj.sorted(:,:,3) = obj.sample(obj.ind_array(1,:),:);
+        obj.sorted(:,:,4) = obj.sample(obj.ind_array(2,:),:);
+        obj.aux.igram(2,:) = obj.sample(obj.ind_igram,:);
+        obj.aux.hene_x(2,:) = obj.sample(obj.ind_hene_x,:);
+        obj.aux.hene_y(2,:) = obj.sample(obj.ind_hene_y,:);
+        obj.aux.ext(:,:,2) = obj.sample(obj.ind_ext,:);
+      case 3
+        obj.sorted(:,:,1) = obj.sorted(:,:,1) + obj.sample(obj.ind_array(1,:),:);
+        obj.sorted(:,:,2) = obj.sorted(:,:,2) + obj.sample(obj.ind_array(2,:),:);
+        obj.aux.igram(1,:) = obj.aux.igram(1,:) + obj.sample(obj.ind_igram,:);
+        obj.aux.hene_x(1,:) = obj.aux.hene_x(1,:) + obj.sample(obj.ind_hene_x,:);
+        obj.aux.hene_y(1,:) = obj.aux.hene_y(1,:) + obj.sample(obj.ind_hene_y,:);
+        obj.aux.ext(:,:,1) = obj.aux.ext(:,:,1) + obj.sample(obj.ind_ext,:);      
+      case 0
+        obj.sorted(:,:,3) = obj.sorted(:,:,3) + obj.sample(obj.ind_array(1,:),:);
+        obj.sorted(:,:,4) = obj.sorted(:,:,4) + obj.sample(obj.ind_array(2,:),:);
+        obj.aux.igram(2,:) = obj.aux.igram(2,:) + obj.sample(obj.ind_igram,:);
+        obj.aux.hene_x(2,:) = obj.aux.hene_x(2,:) + obj.sample(obj.ind_hene_x,:);
+        obj.aux.hene_y(2,:) = obj.aux.hene_y(2,:) + obj.sample(obj.ind_hene_y,:);
+        obj.aux.ext(:,:,2) = obj.aux.ext(:,:,2) + obj.sample(obj.ind_ext,:);      
+    end
+    
+  end
+
+  function ProcessSampleAvg(obj)
+    if mod(obj.i_scan,2)==0
+      obj.signal.data = squeeze(mean(obj.sorted,2))';
+      obj.signal.std = squeeze(std(obj.sorted,0,2))';
+      obj.ext = squeeze(mean(obj.aux.ext,2));
+    end
+  end
+  
+  function ProcessSampleBackAvg(obj)
+    obj.background.data = (obj.background.data.*(obj.i_scan-1) + obj.signal.data)./obj.i_scan;
+    %check this might not be right
+    obj.background.std = sqrt((obj.background.std.^2.*(obj.i_scan-1) + obj.signal.std.^2)./obj.i_scan);
+  end
+  
+  function ProcessSampleSubtBack(obj)
+    %obj.signal.data = obj.signal.data - obj.background.data;
+    %obj.signal.std = sqrt(obj.signal.std.^2 + obj.background.std.^2);
+    
+    %here we are going to subtract the background from every shot we have
+    %measured. Note that the backgrounds for different signals may be
+    %different so we must do this after sorting the data. Normally one
+    %would do this with a nested for loop, but that is slow in Matlab, so
+    %we will use the fancy function bsxfun (binary function (ie two
+    %operands) with singleton dimension expansion) to acheive this. We are
+    %subtracting the sorted data (size nPixels, nShots, nSignals) minus the
+    %bg which has size nPixels 1 nSignals). The bsxfun realizes that the
+    %middle dimension 1 needs to match nShots so it expands the size of the
+    %array automatically. 
+    
+    
+    if mod(obj.i_scan,2)==0
+ 
+      %So we first transpose the background from (nSignals x nPixels) to
+      %(nPixels x nSignals). Reshape expands that to be (nPixels x 1 x
+      %nSignals).
+      bg = reshape(obj.background.data',[obj.nPixelsPerArray 1 obj.nSignals]);
+      %now bsxfun does the subtraction
+      obj.sorted = bsxfun(@minus,obj.sorted,bg);
+    end
+  end
+
+  function ProcessSampleResult(obj)
+    %calculate the effective delta absorption (though we are plotting the
+    %signals directly)
+    if mod(obj.i_scan,2)==0
+      obj.result.data = 1000.*log10(obj.signal.data(1,:)./obj.signal.data(2,:).*obj.signal.data(4,:)./obj.signal.data(3,:));
+    end
+  end
+  
+  function ProcessSampleNoise(obj)
+    if mod(obj.i_scan,2)==0
+      %calculate the signal from each shot for an estimate of the error
+      obj.result.noise = 1000 * std(log10(obj.sorted(:,:,1)./obj.sorted(:,:,2).*obj.sorted(:,:,4)./obj.sorted(:,:,3)),0,2)'/sqrt(obj.PARAMS.nShots);
+    end
+    
+    %the other option would be a propagation of error calculation but I
+    %haven't worked through that yet. See wikipedia Propagation of
+    %Uncertainty
+  end
+  
+  %poorman's backlash
+  function MotorWrapper(obj)
+    n_seq = size(obj.sequence,2);
+    s = obj.i_scan+1; %we move one step ahead of i_scan
+    i_seq = s - floor((s-1)/n_seq)*n_seq;
+    
+    n_motors = length(obj.source.motors);
+    for i_mot = 1: n_motors
+      new_pos = obj.sequence(i_mot,i_seq);
+      str = ['editMotor' num2str(i_mot)];
+      set(obj.handles.(str),'String','moving...');
+      pos = obj.source.motors{i_mot}.MoveTo(new_pos,1700,0,0);
+      set(obj.handles.(str),'String',num2str(pos));
+    end    
+  end
+end
+
+methods %public methods
+  
+  function out = get.Raw_data(obj)
+    out = obj.signal.data;
+  end
+  function out = get.Noise(obj)
+    out = obj.result.noise;
+  end
+  
+    function delete(obj)
+        DeleteParameters(obj);
+    end
+    
+
+end
+
+        
+%
+% other inherited methods
+%
+% ScanStop(obj)
+% InitializeRawDataPlot(hAxesRawData)
+% InitializeDiagnostics(hDiagnosticsPanel)
+% UpdateDiagnostics(hDiagnosticsPanel)
+% RefreshPlots(hAxes)
+
+end
+
+
