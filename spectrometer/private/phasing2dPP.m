@@ -67,9 +67,11 @@ ind = floor(n_t/2);
 abs_array = abs_array(:,1:ind);
 phase_array = phase_array(:,1:ind);
 w = w(1:ind);
-%find max of the spectrum from pair 1/2 (strong)
-[~,i_max]=max(abs_array(1,:));
 
+%find max of the spectrum from pair 1/2 (strong)
+ii = find(w>1000);
+[~,i_max]=max(abs_array(1,ii));
+i_max = i_max +ii(1)-1;
 %---------------------------------------------------------------------
 %
 % calculate the final phase
@@ -77,19 +79,21 @@ w = w(1:ind);
 function [phase,ph,delta_t_fringes,i_fit] = phasingFinalPhase(n_pairs,abs_array,phase_array,w,i_max)
 %phasingFinalPhase
 global c_cmfs wavenumbersToInvFs fringeToFs
-n_fit_points = 5;
+n_fit_points = 51;
 fit_points_offset = (n_fit_points-1)/2;
+i_fit = i_max-fit_points_offset:i_max+fit_points_offset; %take n_points points around the max
 
 %rough guess
 %tau = 1/w(i_max)/wavenumbersToInvFs;
 disp(['rough guess frequency ' num2str(w(i_max))]);
 
-w0 = peakpos(w(i_max-2:i_max+2),abs_array(1,i_max-2:i_max+2));
+%w0 = peakpos(w(i_max-2:i_max+2),abs_array(1,i_max-2:i_max+2));
+w0 = sum(abs_array(i_fit).*w(i_fit))/sum(abs_array(i_fit));
+
 disp(['refined guess frequency ' num2str(w0)]);
 %refine guess
 tau = 1/w0/wavenumbersToInvFs;
 
-i_fit = i_max-fit_points_offset:i_max+fit_points_offset; %take n_points points around the max
 
 %this is the phase of the interferogram (mean value)
 ph = zeros(1,n_pairs);

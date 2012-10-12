@@ -7,7 +7,7 @@ end
 
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
-  df
+  
   %our result is a one dimensional spectrum of the intensity on the
   %detector (this should be some generic constructor...)
   result = struct('data',[],...
@@ -25,7 +25,7 @@ properties (SetAccess = protected)
   
   PARAMS = struct('nShots',[],'nScans',500,'start',-500, 'end', 1000, ...
       'speed', 1700, 'bin_zero', 4000, 'bin_min', timeFsToBin(-500, 4000)+1, ...
-      'bin_max', timeFsToBin(1000, 4000)-20, 'acceleration', 66713 ); % 66713 = 2*fs equiv of 10mm
+      'bin_max', timeFsToBin(1000, 4000)-20, 'acceleration', 66713,'t2',200 ); % 66713 = 2*fs equiv of 10mm
   
   source = struct('sampler',[],'gate',[],'spect',[],'motors',[]);
   position;
@@ -225,6 +225,8 @@ methods (Access = protected)
     obj.initialPosition(2) = obj.source.motors{2}.GetPosition;
     
     obj.source.motors{1}.MoveTo(obj.PARAMS.start, obj.PARAMS.speed, 0, 0);
+    obj.source.motors{2}.MoveTo(obj.PARAMS.t2,obj.PARAMS.speed,0,0);
+    
   end
   
   %start first sample. This code is executed before the scan loop starts
@@ -252,15 +254,19 @@ methods (Access = protected)
     
     %phase shift pop time
     s = obj.i_scan+1; %motors one step ahead of i_scan
-    i_seq = s - floor(s/2)*2;
+    i_seq = s - floor((s-1)/2)*2;
     global wavenumbersToInvFs
     dt = 0.5/(obj.source.spect.wavenumbers*wavenumbersToInvFs);
 
     switch i_seq
       case 1
-        obj.source.motors{2}.MoveTo(obj.initialPosition(2),1700,0,0);
+        set(obj.handles.editMotor2,'String','moving...');
+        pos = obj.source.motors{2}.MoveTo(obj.PARAMS.t2,1700,0,0);
+        set(obj.handles.editMotor2,'String',num2str(pos));
       case 2
-        obj.source.motors{2}.MoveTo(obj.initialPosition(2)+dt,1700,0,0);
+        set(obj.handles.editMotor2,'String','moving...');
+        pos = obj.source.motors{2}.MoveTo(obj.PARAMS.t2+dt,1700,0,0);
+        set(obj.handles.editMotor2,'String',num2str(pos));
     end
     
     %start the data acquisition task
@@ -313,28 +319,19 @@ methods (Access = protected)
   function ScanCleanup(obj)
     obj.source.gate.CloseClockGate;
     obj.source.sampler.ClearTask;
-    obj.source.motors{1}.MoveTo(0, obj.PARAMS.speed, 0, 0);
-  end
-%  
-%   % @@@ Figure out what this is about.
-%   %save the current result to a MAT file for storage.
-%   function SaveResult(obj)
-% %        setappdata(obj.handles.figure1,'result',obj.result);
-% %    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
-%   end
-%   
-%   %save intermediate results to a temp folder
-%   function SaveTmpResult(obj)
-%     obj.fileSystem.Save(obj.result);
-% %    setappdata(obj.handles.figure1,'result',obj.result);
-% %    setappdata(obj.handles.figure1,'bin_count',obj.bin_count);
-%   end
-%    
-  function ProcessSampleSort(obj)
-    %the easy thing
     
-%    obj.sorted(:,:,1) = obj.sample(obj.ind_array1,1:obj.nShotsSorted);
-%    obj.sorted(:,:,2) = obj.sample(obj.ind_array2,1:obj.nShotsSorted);
+     n_motors = length(obj.source.motors);
+    for i_mot = 1: n_motors
+      new_pos = obj.initialPosition(i_mot);
+      str = ['editMotor' num2str(i_mot)];
+      set(obj.handles.(str),'String','moving...');
+      pos = obj.source.motors{i_mot}.MoveTo(new_pos,1700,0,0);
+      set(obj.handles.(str),'String',num2str(pos));
+    end    
+    
+  end
+  
+  function ProcessSampleSort(obj)
 
     obj.aux.igram = obj.sample(obj.ind_igram,:);
     obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
@@ -348,31 +345,12 @@ methods (Access = protected)
         if (jj<=0) || (jj>obj.nBins), continue, end;
         obj.bin_data(:,jj) = obj.bin_data(:,jj) + obj.sample(:,ii);
         obj.bin_count(jj)  = obj.bin_count(jj)+1;
-        
-%        obj.bin_igram(jj)  = obj.bin_igram(:,jj) + obj.sorted(65,ii);
     end
-%     for ii=1:obj.nChan
-%         obj.bin_data(ii, 1:obj.nBins) = obj.bin_data(ii, 1:obj.nBins)./obj.bin_count(1:obj.nBins);
-%     end
-%     
+    
     obj.sorted(1:obj.nPixelsPerArray, 1:obj.nBins, 1) = obj.bin_data(obj.ind_array1, 1:obj.nBins);
     obj.sorted(1:obj.nPixelsPerArray, 1:obj.nBins, 2) = obj.bin_data(obj.ind_array2, 1:obj.nBins);
     obj.bin_igram = obj.bin_data(obj.ind_igram, :);
-    %obj.bin_igram = obj.bin_igram - mean(obj.bin_igram);
     
-    %unfinished:
-%     rowInd1 = obj.ind_array1;
-%     rowInd2 = obj.ind_array2;
-%     chop = 0; %this is a vector nSignals/nArrays in length 
-%     
-%     colInd1 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     colInd2 = (1:obj.nSignals/obj.nArrays:obj.PARAMS.nShots)+chop;
-%     count = 0;
-%     for ii = 1:2:obj.nSignals/2;
-%       count = count+1;
-%       obj.sorted(:,:,ii) = obj.sample(rowInd1,obj.nShotsSorted);
-%       obj.sorted(:,:,ii+1) = obj.sample(obj.nPixelsPerArray+1:2*obj.nPixelsPerArray,obj.nShotsSorted);
-%     end 
   end
 
   function ProcessSampleBackAvg(obj)
@@ -416,11 +394,6 @@ methods (Access = protected)
     
      obj.signal.data = bsxfun(@rdivide, obj.signal.data, tmp);
      obj.signal.data(isnan(obj.signal.data)) = 0;
-%    temp = reshape(obj.bin_count,[1 obj.nBins 1]);
-%    obj.signal.data = bsxfun(@rdivide,obj.sorted,temp);
-%    obj.signal.igram = obj.bin_igram./obj.bin_count;
-%    obj.signal.data = (obj.signal.data.*(obj.i_scan-1) + obj.sorted)./obj.i_scan;
-%    obj.signal.std = squeeze(std(obj.sorted,0,2))';
   end
  
   function ProcessSampleResult(obj)
@@ -443,8 +416,9 @@ methods (Access = protected)
     obj.result.time = obj.t_axis;
     obj.result.bin = obj.b_axis;
     obj.result.zeropad = 1024;
-    obj.result.PP = squeeze(obj.signal.data(:,:,1));
+    obj.result.PP = 1000*log10(obj.signal.data(:,:,1)./obj.signal.data(:,:,2));%squeeze(obj.signal.data(:,:,1));
     obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)-t0_bin_shift;
+    obj.result.PARAMS = obj.PARAMS;
     try
       obj.result = absorptive2dPP(obj.result);
     catch E
