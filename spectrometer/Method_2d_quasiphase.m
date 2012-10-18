@@ -59,6 +59,7 @@ properties (SetAccess = protected)
   i_scan;
 
   initialPosition;
+  hene_interferometer_start;
 end
 
 properties (Dependent, SetAccess = protected)
@@ -176,6 +177,8 @@ methods (Access = protected)
     obj.aux.igram = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_y = zeros(1,obj.PARAMS.nShots);
+    
+    obj.hene_interferometer_start = obj.PARAMS.start;
     
   end
     
@@ -337,7 +340,7 @@ methods (Access = protected)
     obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
     obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
 
-    [obj.position, obj.bin] = processPosition(obj.aux.hene_x,obj.aux.hene_y, obj.PARAMS.bin_zero,obj.PARAMS.start);
+    [obj.position, obj.bin] = processPosition(obj.aux.hene_x,obj.aux.hene_y, obj.PARAMS.bin_zero,obj.params.hene_interferometer_start);
 
     for ii=1:obj.PARAMS.nShots
         jj = obj.bin(ii)-obj.PARAMS.bin_min+1;
@@ -351,6 +354,10 @@ methods (Access = protected)
     obj.sorted(1:obj.nPixelsPerArray, 1:obj.nBins, 2) = obj.bin_data(obj.ind_array2, 1:obj.nBins);
     obj.bin_igram = obj.bin_data(obj.ind_igram, :);
     
+    %Keep track of actual position for starting next cycle, because stage
+    %doesn't always end up at exactly the original start position.
+    
+    obj.hene_interferometer_start = obj.position(end);
   end
 
   function ProcessSampleBackAvg(obj)

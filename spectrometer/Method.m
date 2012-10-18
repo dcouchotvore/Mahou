@@ -376,9 +376,12 @@ classdef Method < handle
     x_pos = 2;
     y_pos = -2;
     width = 12; %35;
-    height = 1.83;%25;
+%   height = 1.83;%25;
+   height = 1.54;%21;
     x_offset = 1;
-    y_offset = 0.25;
+%    y_offset = 0.25;
+    y_offset = 0.21;
+
     %loop over parameters setting a text box and an edit box for each
     for i = 1:n_params
 
