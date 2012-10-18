@@ -1,6 +1,6 @@
 
 
-FPAS_Initialize(1000);
+FPAS_Initialize;
 
 [sample, avg_sample] = FPAS_Sample;
 
