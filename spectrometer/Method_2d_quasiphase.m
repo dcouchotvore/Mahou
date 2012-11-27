@@ -8,11 +8,9 @@ end
 properties (SetAccess = protected)
   %define specific values for Abstract properties listed in superclass
   
-  %our result is a one dimensional spectrum of the intensity on the
-  %detector (this should be some generic constructor...)
-  result = struct('data',[],...
-    'freq',[],...
-    'noise',[]);
+  %initialize the result from a constructor for 2d pump-probe data
+  result =  construct2dPP;
+
   %ScanIsRunning and ScanIsStopping are inherited
 end
 
@@ -170,9 +168,7 @@ methods (Access = protected)
       obj.background.data = zeros(obj.nPixelsPerArray, obj.nSignals);
       obj.background.std = zeros(obj.nPixelsPerArray, obj.nSignals);
     end
-    obj.result.data = zeros(1,obj.nPixelsPerArray);
-    obj.result.noise = zeros(1,obj.nPixelsPerArray);
-
+    
     obj.ext = zeros(obj.nExtInputs,1);
     obj.aux.igram = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
@@ -340,7 +336,7 @@ methods (Access = protected)
     obj.aux.hene_x = obj.sample(obj.ind_hene_x,:);
     obj.aux.hene_y = obj.sample(obj.ind_hene_y,:);
 
-    [obj.position, obj.bin] = processPosition(obj.aux.hene_x,obj.aux.hene_y, obj.PARAMS.bin_zero,obj.params.hene_interferometer_start);
+    [obj.position, obj.bin] = processPosition(obj.aux.hene_x,obj.aux.hene_y, obj.PARAMS.bin_zero,obj.PARAMS.start);%obj.hene_interferometer_start);
 
     for ii=1:obj.PARAMS.nShots
         jj = obj.bin(ii)-obj.PARAMS.bin_min+1;
@@ -414,18 +410,20 @@ methods (Access = protected)
       warning('phasing failed');
       t0_bin_shift = 0;
       phase = 0;
+      disp(E);
 %    rethrow E;
     end
     
-    obj.result = construct2dPP;
+    
     obj.result.phase = phase;
     obj.result.freq = obj.freq;
     obj.result.time = obj.t_axis;
     obj.result.bin = obj.b_axis;
-    obj.result.zeropad = 1024;
+    obj.result.zeropad = 2048;
     obj.result.PP = 1000*log10(obj.signal.data(:,:,1)./obj.signal.data(:,:,2));%squeeze(obj.signal.data(:,:,1));
     obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)-t0_bin_shift;
     obj.result.PARAMS = obj.PARAMS;
+    obj.result.igram = obj.signal.igram;
     try
       obj.result = absorptive2dPP(obj.result);
     catch E
