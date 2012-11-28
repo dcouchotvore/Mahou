@@ -199,10 +199,10 @@ i_dots = i_fit;%(i_max-1):(i_max+1);
 figure(1)
 subplot(2,1,1)
 plot(t,igram)
-axis([t(1) t(end) -1.1 1.1])
+axis([t(1) t(end) -0.1 1.1])
 set(gca,'XAxisLocation','top')
 
-i_zoom_t = find(t>=-10 & t <= 10);
+i_zoom_t = find(t>=-50 & t <= 50);
 subplot(2,1,2)
 plot(t(i_zoom_t),igram(:,i_zoom_t))
 axis([t(i_zoom_t(1)) t(i_zoom_t(end)) -1.1 1.1])
