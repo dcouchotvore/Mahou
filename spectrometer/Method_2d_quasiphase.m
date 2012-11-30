@@ -168,7 +168,8 @@ methods (Access = protected)
       obj.background.data = zeros(obj.nPixelsPerArray, obj.nSignals);
       obj.background.std = zeros(obj.nPixelsPerArray, obj.nSignals);
     end
-    
+    obj.result.noise = zeros(1,obj.nPixelsPerArray);    
+
     obj.ext = zeros(obj.nExtInputs,1);
     obj.aux.igram = zeros(1,obj.PARAMS.nShots);
     obj.aux.hene_x = zeros(1,obj.PARAMS.nShots);
