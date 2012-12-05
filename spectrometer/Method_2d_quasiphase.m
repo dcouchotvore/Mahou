@@ -420,9 +420,9 @@ methods (Access = protected)
     obj.result.freq = obj.freq;
     obj.result.time = obj.t_axis;
     obj.result.bin = obj.b_axis;
-    obj.result.zeropad = 2048;
+    obj.result.zeropad = 2048;              % @@@Something smarter
     obj.result.PP = 1000*log10(obj.signal.data(:,:,1)./obj.signal.data(:,:,2));%squeeze(obj.signal.data(:,:,1));
-    obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)-t0_bin_shift;
+    obj.result.t0_bin = find(obj.result.bin==obj.PARAMS.bin_zero)+t0_bin_shift;
     obj.result.PARAMS = obj.PARAMS;
     obj.result.igram = obj.signal.igram;
     try
